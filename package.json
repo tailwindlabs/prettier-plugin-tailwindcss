@@ -1,0 +1,10 @@
+{
+  "name": "prettier-plugin-tailwindcss",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "prettier": "^2.3.2",
+    "tailwindcss": "^2.2.7"
+  }
+}

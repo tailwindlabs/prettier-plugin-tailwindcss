@@ -4,7 +4,14 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "prettier": "^2.3.2",
-    "tailwindcss": "^2.2.7"
+    "recast": "^0.20.5",
+    "tailwindcss": "^3.0.12"
+  },
+  "devDependencies": {
+    "prettier": "^2.5.1",
+    "uvu": "^0.5.1"
+  },
+  "peerDependencies": {
+    "prettier": ">=2"
   }
 }

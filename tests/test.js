@@ -36,22 +36,27 @@ function t(strings, ...values) {
   return [input, output]
 }
 
-const html = [t`<div class="${yes}"></div>`, t`<div not-class="${no}"></div>`]
+let html = [t`<div class="${yes}"></div>`, t`<div not-class="${no}"></div>`]
 
-const css = [t`@apply ${yes};`, t`@not-apply ${no};`]
+let css = [t`@apply ${yes};`, t`@not-apply ${no};`]
 
-const javascript = [
-  t`;<div className="${yes}"></div>`,
-  t`;<div className={\`${yes} \${'${yes}'} \${'${no}' ? '${yes}' : '${yes}'}\`}></div>`,
-  t`;<div className={'${yes}'}></div>`,
-  t`;<div className={'${yes}' + '${yes}'}></div>`,
-  t`;<div className={'${no}' ? '${yes}' + '${yes}' : '${yes}'}></div>`,
-  t`;<div className={clsx('${yes}', ['${yes}'])}></div>`,
-  t`;<div className={clsx({ '${no}': '${no}' })}></div>`,
-  t`;<div className={{ '${no}': '${no}' }['${no}']}></div>`,
+let javascript = [
+  t`;<div class="${yes}"></div>`,
+  t`;<div not-class="${no}"></div>`,
+  t`;<div class={\`${yes} \${'${yes}'} \${'${no}' ? '${yes}' : '${yes}'}\`}></div>`,
+  t`;<div class={'${yes}'}></div>`,
+  t`;<div class={'${yes}' + '${yes}'}></div>`,
+  t`;<div class={'${no}' ? '${yes}' + '${yes}' : '${yes}'}></div>`,
+  t`;<div class={clsx('${yes}', ['${yes}'])}></div>`,
+  t`;<div class={clsx({ '${no}': '${no}' })}></div>`,
+  t`;<div class={{ '${no}': '${no}' }['${no}']}></div>`,
 ]
+javascript = javascript.concat(
+  javascript.map((test) => test.map((t) => t.replace(/class=/g, 'className=')))
+)
 
-const vue = [
+let vue = [
+  ...html,
   t`<div :class="'${yes}'"></div>`,
   t`<div :class="'${yes}' + '${yes}'"></div>`,
   t`<div :class="['${yes}']"></div>`,
@@ -60,14 +65,13 @@ const vue = [
   t`<div :class="{ '${no}': '${no}' }['${no}']"></div>`,
 ]
 
-const tests = {
+let tests = {
   html,
   lwc: html,
-  vue: [...html, ...vue],
-  angular: [
-    ...html,
-    ...vue.map((test) => test.map((t) => t.replace(/:class/g, '[ngClass]'))),
-  ],
+  vue,
+  angular: vue.map((test) =>
+    test.map((t) => t.replace(/:class=/g, '[ngClass]='))
+  ),
   css,
   scss: css,
   less: css,

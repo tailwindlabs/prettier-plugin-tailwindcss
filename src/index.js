@@ -82,7 +82,7 @@ function createParser(original, transform) {
 
       if (prettierConfigPath) {
         let baseDir = path.dirname(prettierConfigPath)
-        let tailwindConfigPath = path.resolve(baseDir, 'tailwind.config.js')
+        let tailwindConfigPath = path.resolve(baseDir, options.tailwindConfig)
         if (fs.existsSync(tailwindConfigPath)) {
           tailwindConfig = requireFresh(tailwindConfigPath)
         }
@@ -256,18 +256,24 @@ function transformCss(ast, env) {
   })
 }
 
-// export const options = {
-//   unknownClassPosition: {
-//     type: 'choice',
-//     category: 'Tailwind CSS',
-//     default: 'start',
-//     choices: [
-//       { value: 'start', description: 'TODO' },
-//       { value: 'end', description: 'TODO' },
-//     ],
-//     description: 'TODO',
-//   },
-// }
+export const options = {
+  // unknownClassPosition: {
+  //   type: 'choice',
+  //   category: 'Tailwind CSS',
+  //   default: 'start',
+  //   choices: [
+  //     { value: 'start', description: 'TODO' },
+  //     { value: 'end', description: 'TODO' },
+  //   ],
+  //   description: 'TODO',
+  // },
+  tailwindConfig: {
+    type: 'string',
+    category: 'Tailwind CSS',
+    default: 'tailwind.config.js',
+    description: 'TODO',
+  },
+}
 
 export const parsers = {
   html: createParser(prettierParserHTML.parsers.html, transformHtml(['class'])),

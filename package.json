@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "esbuild src/index.js --bundle --platform=node --external:prettier --outdir=dist",
-    "dev": "npm run build -- --watch"
+    "dev": "npm run build -- --watch",
+    "test": "node test.mjs"
   },
   "dependencies": {
     "import-fresh": "^3.3.0",

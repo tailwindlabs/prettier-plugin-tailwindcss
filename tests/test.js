@@ -1,14 +1,17 @@
 const prettier = require('prettier')
+const path = require('path')
 
-function format(str, parser, options = {}) {
-  return prettier.format(str, {
-    parser,
-    plugins: ['.'],
-    semi: false,
-    singleQuote: true,
-    printWidth: 9999,
-    ...options,
-  })
+function format(str, options = {}) {
+  return prettier
+    .format(str, {
+      plugins: [path.resolve(__dirname, '..')],
+      semi: false,
+      singleQuote: true,
+      printWidth: 9999,
+      parser: 'html',
+      ...options,
+    })
+    .trim()
 }
 
 let yes = '__YES__'
@@ -77,10 +80,45 @@ const tests = {
   meriyah: javascript,
 }
 
-for (let parser in tests) {
-  test(parser, () => {
-    for (let [input, expected] of tests[parser]) {
-      expect(format(input, parser)).toEqual(`${expected}\n`)
-    }
-  })
-}
+describe('parsers', () => {
+  for (let parser in tests) {
+    test(parser, () => {
+      for (let [input, expected] of tests[parser]) {
+        expect(format(input, { parser })).toEqual(expected)
+      }
+    })
+  }
+})
+
+test('non-tailwind classes', () => {
+  expect(
+    format('<div class="sm:lowercase uppercase potato text-sm"></div>')
+  ).toEqual('<div class="potato text-sm uppercase sm:lowercase"></div>')
+})
+
+test('custom config', () => {
+  let input = '<div class="sm:bg-tomato bg-red-500"></div>'
+  let output = '<div class="bg-red-500 sm:bg-tomato"></div>'
+
+  // inferred config path
+  expect(
+    format(input, {
+      filepath: path.resolve(__dirname, 'fixtures/fake.html'),
+    })
+  ).toEqual(output)
+
+  // explicit config path
+  expect(
+    format(input, {
+      tailwindConfig: path.resolve(__dirname, 'fixtures/tailwind.config.js'),
+    })
+  ).toEqual(output)
+})
+
+test('plugins', () => {
+  expect(
+    format('<div class="sm:line-clamp-2 line-clamp-1 uppercase"></div>', {
+      tailwindConfig: path.resolve(__dirname, 'fixtures/tailwind.config.js'),
+    })
+  ).toEqual('<div class="uppercase line-clamp-1 sm:line-clamp-2"></div>')
+})

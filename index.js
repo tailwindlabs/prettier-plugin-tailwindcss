@@ -6,12 +6,19 @@ const prettierParserEspree = require('prettier/parser-espree')
 const prettierParserMeriyah = require('prettier/parser-meriyah')
 const prettierParserFlow = require('prettier/parser-flow')
 const prettierParserTypescript = require('prettier/parser-typescript')
-const { createContext } = require('tailwindcss/lib/lib/setupContextUtils')
-const { generateRules } = require('tailwindcss/lib/lib/generateRules')
-const resolveConfig = require('tailwindcss/resolveConfig')
+const {
+  createContext: createContextFallback,
+} = require('tailwindcss/lib/lib/setupContextUtils')
+const {
+  generateRules: generateRulesFallback,
+} = require('tailwindcss/lib/lib/generateRules')
+const resolveConfigFallback = require('tailwindcss/resolveConfig')
 const recast = require('recast')
 const astTypes = require('ast-types')
 const path = require('path')
+const fs = require('fs')
+const requireFrom = require('import-from')
+const requireFresh = require('import-fresh')
 
 /**
  * TODO
@@ -29,7 +36,7 @@ function bigSign(bigIntValue) {
   return (bigIntValue > 0n) - (bigIntValue < 0n)
 }
 
-function sortClasses(classStr, tailwindContext) {
+function sortClasses(classStr, env) {
   let result = ''
   let parts = classStr.split(/(\s+)/)
   let classes = parts.filter((_, i) => i % 2 === 0)
@@ -42,9 +49,9 @@ function sortClasses(classStr, tailwindContext) {
   let classNamesWithOrder = []
   for (let className of classes) {
     let order =
-      generateRules(new Set([className]), tailwindContext).sort(([a], [z]) =>
-        bigSign(z - a)
-      )[0]?.[0] ?? null
+      env
+        .generateRules(new Set([className]), env.context)
+        .sort(([a], [z]) => bigSign(z - a))[0]?.[0] ?? null
     classNamesWithOrder.push([className, order])
   }
 
@@ -71,15 +78,34 @@ function createParser(original, transform) {
     ...original,
     parse(text, parsers, options) {
       let ast = original.parse(text, parsers, options)
+      let tailwindConfig = {}
       let prettierConfigPath = prettier.resolveConfigFile.sync(options.filepath)
-      let tailwindConfig = prettierConfigPath
-        ? require(path.resolve(
-            path.dirname(prettierConfigPath),
-            'tailwind.config.js'
-          ))
-        : {}
-      let tailwindContext = createContext(resolveConfig(tailwindConfig))
-      transform(ast, tailwindContext)
+      let resolveConfig = resolveConfigFallback
+      let createContext = createContextFallback
+      let generateRules = generateRulesFallback
+
+      if (prettierConfigPath) {
+        let baseDir = path.dirname(prettierConfigPath)
+        let tailwindConfigPath = path.resolve(baseDir, 'tailwind.config.js')
+        if (fs.existsSync(tailwindConfigPath)) {
+          tailwindConfig = requireFresh(tailwindConfigPath)
+        }
+
+        try {
+          resolveConfig = requireFrom(baseDir, 'tailwindcss/resolveConfig')
+          createContext = requireFrom(
+            baseDir,
+            'tailwindcss/lib/lib/setupContextUtils'
+          ).createContext
+          generateRules = requireFrom(
+            baseDir,
+            'tailwindcss/lib/lib/generateRules'
+          ).generateRules
+        } catch {}
+      }
+
+      let context = createContext(resolveConfig(tailwindConfig))
+      transform(ast, { context, generateRules })
       return ast
     },
   }
@@ -96,10 +122,10 @@ function pathBelongsTo(path, type, name) {
 }
 
 function transformHtml(attributes, computedAttributes = []) {
-  let transform = (ast, tailwindContext) => {
+  let transform = (ast, env) => {
     for (let attr of ast.attrs ?? []) {
       if (attributes.includes(attr.name)) {
-        attr.value = sortClasses(attr.value, tailwindContext)
+        attr.value = sortClasses(attr.value, env)
       } else if (computedAttributes.includes(attr.name)) {
         if (!/[`'"]/.test(attr.value)) {
           continue
@@ -128,7 +154,7 @@ function transformHtml(attributes, computedAttributes = []) {
             }
 
             if (isStringLiteral(path.node.key)) {
-              if (sortStringLiteral(path.node.key, tailwindContext)) {
+              if (sortStringLiteral(path.node.key, env)) {
                 didChange = true
               }
             }
@@ -141,7 +167,7 @@ function transformHtml(attributes, computedAttributes = []) {
               return false
             }
             if (isStringLiteral(path.node)) {
-              if (sortStringLiteral(path.node, tailwindContext)) {
+              if (sortStringLiteral(path.node, env)) {
                 didChange = true
               }
             }
@@ -158,14 +184,14 @@ function transformHtml(attributes, computedAttributes = []) {
     }
 
     for (let child of ast.children ?? []) {
-      transform(child, tailwindContext)
+      transform(child, env)
     }
   }
   return transform
 }
 
-function sortStringLiteral(node, tailwindContext) {
-  let result = sortClasses(node.value, tailwindContext)
+function sortStringLiteral(node, env) {
+  let result = sortClasses(node.value, env)
   let didChange = result !== node.value
   node.value = result
   if (node.extra) {
@@ -191,12 +217,12 @@ function isStringLiteral(node) {
   )
 }
 
-function transformJavaScript(ast, tailwindContext) {
+function transformJavaScript(ast, env) {
   visit(ast, {
     JSXAttribute(node) {
       if (['class', 'className'].includes(node.name.name)) {
         if (isStringLiteral(node.value)) {
-          sortStringLiteral(node.value, tailwindContext)
+          sortStringLiteral(node.value, env)
         } else if (node.value.type === 'JSXExpressionContainer') {
           visit(node.value, (node, parent, key) => {
             if (
@@ -209,14 +235,14 @@ function transformJavaScript(ast, tailwindContext) {
               return false
             }
             if (isStringLiteral(node)) {
-              sortStringLiteral(node, tailwindContext)
+              sortStringLiteral(node, env)
             } else if (node.type === 'TemplateLiteral') {
               for (let quasi of node.quasis) {
                 let same = quasi.value.raw === quasi.value.cooked
-                quasi.value.raw = sortClasses(quasi.value.raw, tailwindContext)
+                quasi.value.raw = sortClasses(quasi.value.raw, env)
                 quasi.value.cooked = same
                   ? quasi.value.raw
-                  : sortClasses(quasi.value.cooked, tailwindContext)
+                  : sortClasses(quasi.value.cooked, env)
               }
             }
           })
@@ -226,10 +252,10 @@ function transformJavaScript(ast, tailwindContext) {
   })
 }
 
-function transformCss(ast, tailwindContext) {
+function transformCss(ast, env) {
   ast.walk((node) => {
     if (node.type === 'css-atrule' && node.name === 'apply') {
-      node.params = sortClasses(node.params, tailwindContext)
+      node.params = sortClasses(node.params, env)
     }
   })
 }

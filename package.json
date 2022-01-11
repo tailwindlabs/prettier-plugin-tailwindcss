@@ -6,7 +6,7 @@
   "scripts": {
     "build": "esbuild src/index.js --bundle --platform=node --external:prettier --outdir=dist",
     "dev": "npm run build -- --watch",
-    "test": "node test.mjs"
+    "test": "jest"
   },
   "dependencies": {
     "import-fresh": "^3.3.0",
@@ -16,8 +16,8 @@
   },
   "devDependencies": {
     "esbuild": "^0.14.11",
-    "prettier": "^2.5.1",
-    "uvu": "^0.5.1"
+    "jest": "^27.4.7",
+    "prettier": "^2.5.1"
   },
   "peerDependencies": {
     "prettier": ">=2"

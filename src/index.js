@@ -1,24 +1,20 @@
-const prettier = require('prettier')
-const prettierParserHTML = require('prettier/parser-html')
-const prettierParserPostCSS = require('prettier/parser-postcss')
-const prettierParserBabel = require('prettier/parser-babel')
-const prettierParserEspree = require('prettier/parser-espree')
-const prettierParserMeriyah = require('prettier/parser-meriyah')
-const prettierParserFlow = require('prettier/parser-flow')
-const prettierParserTypescript = require('prettier/parser-typescript')
-const {
-  createContext: createContextFallback,
-} = require('tailwindcss/lib/lib/setupContextUtils')
-const {
-  generateRules: generateRulesFallback,
-} = require('tailwindcss/lib/lib/generateRules')
-const resolveConfigFallback = require('tailwindcss/resolveConfig')
-const recast = require('recast')
-const astTypes = require('ast-types')
-const path = require('path')
-const fs = require('fs')
-const requireFrom = require('import-from')
-const requireFresh = require('import-fresh')
+import prettier from 'prettier'
+import prettierParserHTML from 'prettier/parser-html'
+import prettierParserPostCSS from 'prettier/parser-postcss'
+import prettierParserBabel from 'prettier/parser-babel'
+import prettierParserEspree from 'prettier/parser-espree'
+import prettierParserMeriyah from 'prettier/parser-meriyah'
+import prettierParserFlow from 'prettier/parser-flow'
+import prettierParserTypescript from 'prettier/parser-typescript'
+import { createContext as createContextFallback } from 'tailwindcss/lib/lib/setupContextUtils'
+import { generateRules as generateRulesFallback } from 'tailwindcss/lib/lib/generateRules'
+import resolveConfigFallback from 'tailwindcss/resolveConfig'
+import * as recast from 'recast'
+import * as astTypes from 'ast-types'
+import * as path from 'path'
+import * as fs from 'fs'
+import requireFrom from 'import-from'
+import requireFresh from 'import-fresh'
 
 /**
  * TODO
@@ -260,59 +256,55 @@ function transformCss(ast, env) {
   })
 }
 
-module.exports = {
-  // options: {
-  //   unknownClassPosition: {
-  //     type: 'choice',
-  //     category: 'Tailwind CSS',
-  //     default: 'start',
-  //     choices: [
-  //       { value: 'start', description: 'TODO' },
-  //       { value: 'end', description: 'TODO' },
-  //     ],
-  //     description: 'TODO',
-  //   },
-  // },
-  parsers: {
-    html: createParser(
-      prettierParserHTML.parsers.html,
-      transformHtml(['class'])
-    ),
-    lwc: createParser(prettierParserHTML.parsers.lwc, transformHtml(['class'])),
-    angular: createParser(
-      prettierParserHTML.parsers.angular,
-      transformHtml(['class'], ['[ngClass]'])
-    ),
-    vue: createParser(
-      prettierParserHTML.parsers.vue,
-      transformHtml(['class'], [':class'])
-    ),
-    css: createParser(prettierParserPostCSS.parsers.css, transformCss),
-    scss: createParser(prettierParserPostCSS.parsers.scss, transformCss),
-    less: createParser(prettierParserPostCSS.parsers.less, transformCss),
-    babel: createParser(prettierParserBabel.parsers.babel, transformJavaScript),
-    'babel-flow': createParser(
-      prettierParserBabel.parsers['babel-flow'],
-      transformJavaScript
-    ),
-    flow: createParser(prettierParserFlow.parsers.flow, transformJavaScript),
-    typescript: createParser(
-      prettierParserTypescript.parsers.typescript,
-      transformJavaScript
-    ),
-    'babel-ts': createParser(
-      prettierParserBabel.parsers['babel-ts'],
-      transformJavaScript
-    ),
-    espree: createParser(
-      prettierParserEspree.parsers.espree,
-      transformJavaScript
-    ),
-    meriyah: createParser(
-      prettierParserMeriyah.parsers.meriyah,
-      transformJavaScript
-    ),
-  },
+// export const options = {
+//   unknownClassPosition: {
+//     type: 'choice',
+//     category: 'Tailwind CSS',
+//     default: 'start',
+//     choices: [
+//       { value: 'start', description: 'TODO' },
+//       { value: 'end', description: 'TODO' },
+//     ],
+//     description: 'TODO',
+//   },
+// }
+
+export const parsers = {
+  html: createParser(prettierParserHTML.parsers.html, transformHtml(['class'])),
+  lwc: createParser(prettierParserHTML.parsers.lwc, transformHtml(['class'])),
+  angular: createParser(
+    prettierParserHTML.parsers.angular,
+    transformHtml(['class'], ['[ngClass]'])
+  ),
+  vue: createParser(
+    prettierParserHTML.parsers.vue,
+    transformHtml(['class'], [':class'])
+  ),
+  css: createParser(prettierParserPostCSS.parsers.css, transformCss),
+  scss: createParser(prettierParserPostCSS.parsers.scss, transformCss),
+  less: createParser(prettierParserPostCSS.parsers.less, transformCss),
+  babel: createParser(prettierParserBabel.parsers.babel, transformJavaScript),
+  'babel-flow': createParser(
+    prettierParserBabel.parsers['babel-flow'],
+    transformJavaScript
+  ),
+  flow: createParser(prettierParserFlow.parsers.flow, transformJavaScript),
+  typescript: createParser(
+    prettierParserTypescript.parsers.typescript,
+    transformJavaScript
+  ),
+  'babel-ts': createParser(
+    prettierParserBabel.parsers['babel-ts'],
+    transformJavaScript
+  ),
+  espree: createParser(
+    prettierParserEspree.parsers.espree,
+    transformJavaScript
+  ),
+  meriyah: createParser(
+    prettierParserMeriyah.parsers.meriyah,
+    transformJavaScript
+  ),
 }
 
 // https://lihautan.com/manipulating-ast-with-javascript/

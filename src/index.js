@@ -82,9 +82,21 @@ function createParser(original, transform) {
 
       if (prettierConfigPath) {
         let baseDir = path.dirname(prettierConfigPath)
-        let tailwindConfigPath = path.resolve(baseDir, options.tailwindConfig)
-        if (fs.existsSync(tailwindConfigPath)) {
-          tailwindConfig = requireFresh(tailwindConfigPath)
+        if (options.tailwindConfig) {
+          tailwindConfig = requireFresh(
+            path.resolve(baseDir, options.tailwindConfig)
+          )
+        } else {
+          let tailwindConfigPathJs = path.resolve(baseDir, 'tailwind.config.js')
+          let tailwindConfigPathCjs = path.resolve(
+            baseDir,
+            'tailwind.config.cjs'
+          )
+          if (fs.existsSync(tailwindConfigPathJs)) {
+            tailwindConfig = requireFresh(tailwindConfigPathJs)
+          } else if (fs.existsSync(tailwindConfigPathCjs)) {
+            tailwindConfig = requireFresh(tailwindConfigPathCjs)
+          }
         }
 
         try {
@@ -270,7 +282,6 @@ export const options = {
   tailwindConfig: {
     type: 'string',
     category: 'Tailwind CSS',
-    default: 'tailwind.config.js',
     description: 'TODO',
   },
 }

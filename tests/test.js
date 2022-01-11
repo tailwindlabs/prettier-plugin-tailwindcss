@@ -97,28 +97,38 @@ test('non-tailwind classes', () => {
 })
 
 test('custom config', () => {
-  let input = '<div class="sm:bg-tomato bg-red-500"></div>'
-  let output = '<div class="bg-red-500 sm:bg-tomato"></div>'
-
   // inferred config path
   expect(
-    format(input, {
-      filepath: path.resolve(__dirname, 'fixtures/fake.html'),
+    format('<div class="sm:bg-tomato bg-red-500"></div>', {
+      filepath: path.resolve(__dirname, 'fixtures/basic/fake.html'),
     })
-  ).toEqual(output)
+  ).toEqual('<div class="bg-red-500 sm:bg-tomato"></div>')
+
+  // inferred config path (.cjs)
+  expect(
+    format('<div class="sm:bg-hotpink bg-red-500"></div>', {
+      filepath: path.resolve(__dirname, 'fixtures/cjs/fake.html'),
+    })
+  ).toEqual('<div class="bg-red-500 sm:bg-hotpink"></div>')
 
   // explicit config path
   expect(
-    format(input, {
-      tailwindConfig: path.resolve(__dirname, 'fixtures/tailwind.config.js'),
+    format('<div class="sm:bg-tomato bg-red-500"></div>', {
+      tailwindConfig: path.resolve(
+        __dirname,
+        'fixtures/basic/tailwind.config.js'
+      ),
     })
-  ).toEqual(output)
+  ).toEqual('<div class="bg-red-500 sm:bg-tomato"></div>')
 })
 
 test('plugins', () => {
   expect(
     format('<div class="sm:line-clamp-2 line-clamp-1 uppercase"></div>', {
-      tailwindConfig: path.resolve(__dirname, 'fixtures/tailwind.config.js'),
+      tailwindConfig: path.resolve(
+        __dirname,
+        'fixtures/plugins/tailwind.config.js'
+      ),
     })
   ).toEqual('<div class="uppercase line-clamp-1 sm:line-clamp-2"></div>')
 })

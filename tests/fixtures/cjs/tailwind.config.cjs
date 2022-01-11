@@ -2,9 +2,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        tomato: 'tomato',
+        hotpink: "hotpink",
       },
     },
   },
-  plugins: [require('@tailwindcss/line-clamp')],
-}
+};

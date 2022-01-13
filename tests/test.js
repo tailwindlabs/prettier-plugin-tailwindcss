@@ -1,5 +1,6 @@
 const prettier = require('prettier')
 const path = require('path')
+const { execSync } = require('child_process')
 
 function format(str, options = {}) {
   return prettier
@@ -11,6 +12,21 @@ function format(str, options = {}) {
       parser: 'html',
       ...options,
     })
+    .trim()
+}
+
+function formatFixture(name) {
+  return execSync(
+    `${path.resolve(__dirname, '../node_modules/.bin/prettier')} ${path.resolve(
+      __dirname,
+      `fixtures/${name}/index.html`
+    )} --plugin=${path.resolve(
+      __dirname,
+      '..'
+    )} --print-width 9999 --no-config`,
+    { cwd: path.resolve(__dirname, `fixtures/${name}`) }
+  )
+    .toString()
     .trim()
 }
 
@@ -100,22 +116,19 @@ test('non-tailwind classes', () => {
   ).toEqual('<div class="potato text-sm uppercase sm:lowercase"></div>')
 })
 
-test('custom config', () => {
-  // inferred config path
-  expect(
-    format('<div class="sm:bg-tomato bg-red-500"></div>', {
-      filepath: path.resolve(__dirname, 'fixtures/basic/fake.html'),
-    })
-  ).toEqual('<div class="bg-red-500 sm:bg-tomato"></div>')
+test('inferred config path', () => {
+  expect(formatFixture('basic')).toEqual(
+    '<div class="bg-red-500 sm:bg-tomato"></div>'
+  )
+})
 
-  // inferred config path (.cjs)
-  expect(
-    format('<div class="sm:bg-hotpink bg-red-500"></div>', {
-      filepath: path.resolve(__dirname, 'fixtures/cjs/fake.html'),
-    })
-  ).toEqual('<div class="bg-red-500 sm:bg-hotpink"></div>')
+test('inferred config path (.cjs)', () => {
+  expect(formatFixture('cjs')).toEqual(
+    '<div class="bg-red-500 sm:bg-hotpink"></div>'
+  )
+})
 
-  // explicit config path
+test('explicit config path', () => {
   expect(
     format('<div class="sm:bg-tomato bg-red-500"></div>', {
       tailwindConfig: path.resolve(
@@ -127,12 +140,7 @@ test('custom config', () => {
 })
 
 test('plugins', () => {
-  expect(
-    format('<div class="sm:line-clamp-2 line-clamp-1 uppercase"></div>', {
-      tailwindConfig: path.resolve(
-        __dirname,
-        'fixtures/plugins/tailwind.config.js'
-      ),
-    })
-  ).toEqual('<div class="uppercase line-clamp-1 sm:line-clamp-2"></div>')
+  expect(formatFixture('plugins')).toEqual(
+    '<div class="uppercase line-clamp-1 sm:line-clamp-2"></div>'
+  )
 })

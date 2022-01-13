@@ -1,4 +1,3 @@
-import prettier from 'prettier'
 import prettierParserHTML from 'prettier/parser-html'
 import prettierParserPostCSS from 'prettier/parser-postcss'
 import prettierParserBabel from 'prettier/parser-babel'
@@ -75,42 +74,35 @@ function createParser(original, transform) {
     parse(text, parsers, options) {
       let ast = original.parse(text, parsers, options)
       let tailwindConfig = {}
-      let prettierConfigPath = prettier.resolveConfigFile.sync(options.filepath)
       let resolveConfig = resolveConfigFallback
       let createContext = createContextFallback
       let generateRules = generateRulesFallback
 
-      if (prettierConfigPath) {
-        let baseDir = path.dirname(prettierConfigPath)
-        if (options.tailwindConfig) {
-          tailwindConfig = requireFresh(
-            path.resolve(baseDir, options.tailwindConfig)
-          )
-        } else {
-          let tailwindConfigPathJs = path.resolve(baseDir, 'tailwind.config.js')
-          let tailwindConfigPathCjs = path.resolve(
-            baseDir,
-            'tailwind.config.cjs'
-          )
-          if (fs.existsSync(tailwindConfigPathJs)) {
-            tailwindConfig = requireFresh(tailwindConfigPathJs)
-          } else if (fs.existsSync(tailwindConfigPathCjs)) {
-            tailwindConfig = requireFresh(tailwindConfigPathCjs)
-          }
-        }
+      let cwd = process.env.VSCODE_CWD ?? process.cwd()
 
-        try {
-          resolveConfig = requireFrom(baseDir, 'tailwindcss/resolveConfig')
-          createContext = requireFrom(
-            baseDir,
-            'tailwindcss/lib/lib/setupContextUtils'
-          ).createContext
-          generateRules = requireFrom(
-            baseDir,
-            'tailwindcss/lib/lib/generateRules'
-          ).generateRules
-        } catch {}
+      if (options.tailwindConfig) {
+        tailwindConfig = requireFresh(path.resolve(cwd, options.tailwindConfig))
+      } else {
+        let tailwindConfigPathJs = path.resolve(cwd, 'tailwind.config.js')
+        let tailwindConfigPathCjs = path.resolve(cwd, 'tailwind.config.cjs')
+        if (fs.existsSync(tailwindConfigPathJs)) {
+          tailwindConfig = requireFresh(tailwindConfigPathJs)
+        } else if (fs.existsSync(tailwindConfigPathCjs)) {
+          tailwindConfig = requireFresh(tailwindConfigPathCjs)
+        }
       }
+
+      try {
+        resolveConfig = requireFrom(cwd, 'tailwindcss/resolveConfig')
+        createContext = requireFrom(
+          cwd,
+          'tailwindcss/lib/lib/setupContextUtils'
+        ).createContext
+        generateRules = requireFrom(
+          cwd,
+          'tailwindcss/lib/lib/generateRules'
+        ).generateRules
+      } catch {}
 
       let context = createContext(resolveConfig(tailwindConfig))
       transform(ast, { context, generateRules })

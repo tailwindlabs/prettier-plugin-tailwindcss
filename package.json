@@ -9,16 +9,16 @@
     "test": "jest"
   },
   "dependencies": {
-    "import-fresh": "^3.3.0",
-    "import-from": "^4.0.0",
-    "recast": "^0.20.5",
     "tailwindcss": "^3.0.12"
   },
   "devDependencies": {
     "@tailwindcss/line-clamp": "^0.3.0",
     "esbuild": "^0.14.11",
+    "import-fresh": "^3.3.0",
+    "import-from": "^4.0.0",
     "jest": "^27.4.7",
-    "prettier": "^2.5.1"
+    "prettier": "^2.5.1",
+    "recast": "^0.20.5"
   },
   "peerDependencies": {
     "prettier": ">=2"

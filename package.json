@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "esbuild src/index.js --bundle --platform=node --target=node12.13.0 --external:prettier --external:tailwindcss --outdir=dist",
     "dev": "npm run build -- --watch",

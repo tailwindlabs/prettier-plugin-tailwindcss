@@ -138,16 +138,6 @@ function createParser(original, transform) {
   }
 }
 
-function pathBelongsTo(path, type, name) {
-  while (path.parent) {
-    if (path.parent.value.type === type && path.name === name) {
-      return true
-    }
-    path = path.parent
-  }
-  return false
-}
-
 function transformHtml(attributes, computedAttributes = []) {
   let transform = (ast, env) => {
     for (let attr of ast.attrs ?? []) {
@@ -166,33 +156,7 @@ function transformHtml(attributes, computedAttributes = []) {
           type === 'ObjectExpression' || type === 'ArrayExpression'
 
         astTypes.visit(ast, {
-          visitArrayExpression(path) {
-            if (!transformObjectsAndArrays) {
-              return false
-            }
-            this.traverse(path)
-          },
-          visitMemberExpression(_path) {
-            return false
-          },
-          visitProperty(path) {
-            if (!transformObjectsAndArrays) {
-              return false
-            }
-
-            if (isStringLiteral(path.node.key)) {
-              if (sortStringLiteral(path.node.key, env)) {
-                didChange = true
-              }
-            }
-            // we only want to sort _keys_ within objects
-            // so we prevent further traversal here
-            return false
-          },
           visitLiteral(path) {
-            if (pathBelongsTo(path, 'ConditionalExpression', 'test')) {
-              return false
-            }
             if (isStringLiteral(path.node)) {
               if (sortStringLiteral(path.node, env)) {
                 didChange = true
@@ -252,15 +216,6 @@ function transformJavaScript(ast, env) {
           sortStringLiteral(node.value, env)
         } else if (node.value.type === 'JSXExpressionContainer') {
           visit(node.value, (node, parent, key) => {
-            if (
-              node.type === 'ObjectExpression' ||
-              node.type === 'MemberExpression'
-            ) {
-              return false
-            }
-            if (parent?.type === 'ConditionalExpression' && key === 'test') {
-              return false
-            }
             if (isStringLiteral(node)) {
               sortStringLiteral(node, env)
             } else if (node.type === 'TemplateLiteral') {

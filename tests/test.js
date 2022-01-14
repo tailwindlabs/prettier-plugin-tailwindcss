@@ -54,13 +54,13 @@ let css = [t`@apply ${yes};`, t`@not-apply ${no};`]
 let javascript = [
   t`;<div class="${yes}"></div>`,
   t`;<div not-class="${no}"></div>`,
-  t`;<div class={\`${yes} \${'${yes}'} \${'${no}' ? '${yes}' : '${yes}'}\`}></div>`,
+  t`;<div class={\`${yes} \${'${yes}'} \${'${yes}' ? '${yes}' : '${yes}'}\`}></div>`,
   t`;<div class={'${yes}'}></div>`,
   t`;<div class={'${yes}' + '${yes}'}></div>`,
-  t`;<div class={'${no}' ? '${yes}' + '${yes}' : '${yes}'}></div>`,
+  t`;<div class={'${yes}' ? '${yes}' + '${yes}' : '${yes}'}></div>`,
   t`;<div class={clsx('${yes}', ['${yes}'])}></div>`,
-  t`;<div class={clsx({ '${no}': '${no}' })}></div>`,
-  t`;<div class={{ '${no}': '${no}' }['${no}']}></div>`,
+  t`;<div class={clsx({ '${yes}': '${yes}' })}></div>`,
+  t`;<div class={{ '${yes}': '${yes}' }['${yes}']}></div>`,
 ]
 javascript = javascript.concat(
   javascript.map((test) => test.map((t) => t.replace(/class=/g, 'className=')))
@@ -70,10 +70,10 @@ let vue = [
   ...html,
   t`<div :class="'${yes}'"></div>`,
   t`<div :class="'${yes}' + '${yes}'"></div>`,
-  t`<div :class="['${yes}']"></div>`,
-  t`<div :class="['${no}' ? '${yes}' : '${yes}']"></div>`,
-  t`<div :class="{ '${yes}': true, '${yes}': '${no}' }"></div>`,
-  t`<div :class="{ '${no}': '${no}' }['${no}']"></div>`,
+  t`<div :class="['${yes}', '${yes}']"></div>`,
+  t`<div :class="[cond ? '${yes}' : '${yes}']"></div>`,
+  t`<div :class="{ '${yes}': true }"></div>`,
+  t`<div :class="clsx('${yes}')"></div>`,
 ]
 
 let tests = {

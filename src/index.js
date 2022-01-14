@@ -36,6 +36,12 @@ function bigSign(bigIntValue) {
 }
 
 function sortClasses(classStr, env) {
+  // Ignore class attributes containing `{{`, to match Prettier behaviour:
+  // https://github.com/prettier/prettier/blob/main/src/language-html/embed.js#L83-L88
+  if (classStr.includes('{{')) {
+    return classStr
+  }
+
   let result = ''
   let parts = classStr.split(/(\s+)/)
   let classes = parts.filter((_, i) => i % 2 === 0)

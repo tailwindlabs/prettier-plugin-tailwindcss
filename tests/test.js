@@ -43,7 +43,11 @@ function t(strings, ...values) {
   return [input, output]
 }
 
-let html = [t`<div class="${yes}"></div>`, t`<div not-class="${no}"></div>`]
+let html = [
+  t`<div class="${yes}"></div>`,
+  t`<div class="${no} {{ 'p-0 sm:p-0 m-0' }}"></div>`,
+  t`<div not-class="${no}"></div>`,
+]
 
 let css = [t`@apply ${yes};`, t`@not-apply ${no};`]
 

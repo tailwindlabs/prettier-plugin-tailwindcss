@@ -14,6 +14,9 @@ import * as path from 'path'
 import * as fs from 'fs'
 import requireFrom from 'import-from'
 import requireFresh from 'import-fresh'
+import objectHash from 'object-hash'
+
+let contextMap = new Map()
 
 /**
  * TODO
@@ -73,6 +76,7 @@ function createParser(original, transform) {
     ...original,
     parse(text, parsers, options) {
       let ast = original.parse(text, parsers, options)
+      let tailwindConfigPath = '__default__'
       let tailwindConfig = {}
       let resolveConfig = resolveConfigFallback
       let createContext = createContextFallback
@@ -81,13 +85,16 @@ function createParser(original, transform) {
       let cwd = process.env.VSCODE_CWD ?? process.cwd()
 
       if (options.tailwindConfig) {
-        tailwindConfig = requireFresh(path.resolve(cwd, options.tailwindConfig))
+        tailwindConfigPath = path.resolve(cwd, options.tailwindConfig)
+        tailwindConfig = requireFresh(tailwindConfigPath)
       } else {
         let tailwindConfigPathJs = path.resolve(cwd, 'tailwind.config.js')
         let tailwindConfigPathCjs = path.resolve(cwd, 'tailwind.config.cjs')
         if (fs.existsSync(tailwindConfigPathJs)) {
+          tailwindConfigPath = tailwindConfigPathJs
           tailwindConfig = requireFresh(tailwindConfigPathJs)
         } else if (fs.existsSync(tailwindConfigPathCjs)) {
+          tailwindConfigPath = tailwindConfigPathCjs
           tailwindConfig = requireFresh(tailwindConfigPathCjs)
         }
       }
@@ -104,7 +111,17 @@ function createParser(original, transform) {
         ).generateRules
       } catch {}
 
-      let context = createContext(resolveConfig(tailwindConfig))
+      let context
+      let existing = contextMap.get(tailwindConfigPath)
+      let hash = objectHash(tailwindConfig)
+
+      if (existing && existing.hash === hash) {
+        context = existing.context
+      } else {
+        context = createContext(resolveConfig(tailwindConfig))
+        contextMap.set(tailwindConfigPath, { context, hash })
+      }
+
       transform(ast, { context, generateRules })
       return ast
     },

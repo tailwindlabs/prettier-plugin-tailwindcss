@@ -16,18 +16,9 @@ function format(str, options = {}) {
 }
 
 function formatFixture(name) {
-  return execSync(
-    `${path.resolve(__dirname, '../node_modules/.bin/prettier')} ${path.resolve(
-      __dirname,
-      `fixtures/${name}/index.html`
-    )} --plugin=${path.resolve(
-      __dirname,
-      '..'
-    )} --print-width 9999 --no-config`,
-    { cwd: path.resolve(__dirname, `fixtures/${name}`) }
-  )
-    .toString()
-    .trim()
+  let binPath = path.resolve(__dirname, '../node_modules/.bin/prettier')
+  let filePath = path.resolve(__dirname, `fixtures/${name}/index.html`)
+  return execSync(`${binPath} ${filePath}`).toString().trim()
 }
 
 let yes = '__YES__'

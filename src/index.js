@@ -1,3 +1,4 @@
+import prettier from 'prettier'
 import prettierParserHTML from 'prettier/parser-html'
 import prettierParserPostCSS from 'prettier/parser-postcss'
 import prettierParserBabel from 'prettier/parser-babel'
@@ -82,14 +83,17 @@ function createParser(original, transform) {
       let createContext = createContextFallback
       let generateRules = generateRulesFallback
 
-      let cwd = process.env.VSCODE_CWD ?? process.cwd()
+      let prettierConfigPath = prettier.resolveConfigFile.sync(options.filepath)
+      let baseDir = prettierConfigPath
+        ? path.dirname(prettierConfigPath)
+        : process.env.VSCODE_CWD ?? process.cwd()
 
       if (options.tailwindConfig) {
-        tailwindConfigPath = path.resolve(cwd, options.tailwindConfig)
+        tailwindConfigPath = path.resolve(baseDir, options.tailwindConfig)
         tailwindConfig = requireFresh(tailwindConfigPath)
       } else {
-        let tailwindConfigPathJs = path.resolve(cwd, 'tailwind.config.js')
-        let tailwindConfigPathCjs = path.resolve(cwd, 'tailwind.config.cjs')
+        let tailwindConfigPathJs = path.resolve(baseDir, 'tailwind.config.js')
+        let tailwindConfigPathCjs = path.resolve(baseDir, 'tailwind.config.cjs')
         if (fs.existsSync(tailwindConfigPathJs)) {
           tailwindConfigPath = tailwindConfigPathJs
           tailwindConfig = requireFresh(tailwindConfigPathJs)
@@ -100,13 +104,13 @@ function createParser(original, transform) {
       }
 
       try {
-        resolveConfig = requireFrom(cwd, 'tailwindcss/resolveConfig')
+        resolveConfig = requireFrom(baseDir, 'tailwindcss/resolveConfig')
         createContext = requireFrom(
-          cwd,
+          baseDir,
           'tailwindcss/lib/lib/setupContextUtils'
         ).createContext
         generateRules = requireFrom(
-          cwd,
+          baseDir,
           'tailwindcss/lib/lib/generateRules'
         ).generateRules
       } catch {}

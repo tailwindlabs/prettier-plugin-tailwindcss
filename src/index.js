@@ -151,10 +151,6 @@ function transformHtml(attributes, computedAttributes = []) {
         let ast = recast.parse(`let __prettier_temp__ = ${attr.value}`)
         let didChange = false
 
-        let type = ast.program.body[0].declarations[0].init.type
-        let transformObjectsAndArrays =
-          type === 'ObjectExpression' || type === 'ArrayExpression'
-
         astTypes.visit(ast, {
           visitLiteral(path) {
             if (isStringLiteral(path.node)) {

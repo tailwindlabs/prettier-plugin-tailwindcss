@@ -74,15 +74,20 @@ let vue = [
   t`<div :class="[cond ? '${yes}' : '${yes}']"></div>`,
   t`<div :class="{ '${yes}': true }"></div>`,
   t`<div :class="clsx('${yes}')"></div>`,
+  t`<div :class="\`${yes} \${someVar}\`"></div>`,
 ]
 
 let tests = {
   html,
   lwc: html,
-  vue,
-  angular: vue.map((test) =>
-    test.map((t) => t.replace(/:class=/g, '[ngClass]='))
-  ),
+  vue: [
+    ...vue,
+    t`<div :class="\`${yes} \${someVar} ${yes} \${'${yes}'}\`"></div>`,
+  ],
+  angular: [
+    ...vue.map((test) => test.map((t) => t.replace(/:class=/g, '[ngClass]='))),
+    t`<div [ngClass]='\`${yes} \${someVar} ${yes} \${"${yes}"}\`'></div>`,
+  ],
   css,
   scss: css,
   less: css,

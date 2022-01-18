@@ -160,6 +160,12 @@ function transformHtml(attributes, computedAttributes = []) {
             }
             this.traverse(path)
           },
+          visitTemplateLiteral(path) {
+            if (sortQuasis(path.node.quasis, env)) {
+              didChange = true
+            }
+            this.traverse(path)
+          },
         })
 
         if (didChange) {
@@ -204,6 +210,26 @@ function isStringLiteral(node) {
   )
 }
 
+function sortQuasis(quasis, env) {
+  let didChange = false
+  for (let quasi of quasis) {
+    let same = quasi.value.raw === quasi.value.cooked
+    let originalRaw = quasi.value.raw
+    let originalCooked = quasi.value.cooked
+    quasi.value.raw = sortClasses(quasi.value.raw, env)
+    quasi.value.cooked = same
+      ? quasi.value.raw
+      : sortClasses(quasi.value.cooked, env)
+    if (
+      quasi.value.raw !== originalRaw ||
+      quasi.value.cooked !== originalCooked
+    ) {
+      didChange = true
+    }
+  }
+  return didChange
+}
+
 function transformJavaScript(ast, env) {
   visit(ast, {
     JSXAttribute(node) {
@@ -215,13 +241,7 @@ function transformJavaScript(ast, env) {
             if (isStringLiteral(node)) {
               sortStringLiteral(node, env)
             } else if (node.type === 'TemplateLiteral') {
-              for (let quasi of node.quasis) {
-                let same = quasi.value.raw === quasi.value.cooked
-                quasi.value.raw = sortClasses(quasi.value.raw, env)
-                quasi.value.cooked = same
-                  ? quasi.value.raw
-                  : sortClasses(quasi.value.cooked, env)
-              }
+              sortQuasis(node.quasis, env)
             }
           })
         }

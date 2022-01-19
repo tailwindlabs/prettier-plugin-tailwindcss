@@ -59,29 +59,29 @@ let css = [
 ]
 
 let javascript = [
-  t`;<div class="${yes}"></div>`,
-  t`/* <div class="${no}"></div> */`,
-  t`// <div class="${no}"></div>`,
-  t`;<div not-class="${no}"></div>`,
-  t`;<div class={\`${yes}\`}></div>`,
-  t`;<div class={\`${yes} \${'${yes}'} \${'${yes}' ? '${yes}' : '${yes}'}\`}></div>`,
-  t`;<div class={'${yes}'}></div>`,
-  t`;<div class={'${yes}' + '${yes}'}></div>`,
-  t`;<div class={'${yes}' ? '${yes}' + '${yes}' : '${yes}'}></div>`,
-  t`;<div class={clsx('${yes}', ['${yes}'])}></div>`,
-  t`;<div class={clsx({ '${yes}': '${yes}' })}></div>`,
-  t`;<div class={{ '${yes}': '${yes}' }['${yes}']}></div>`,
+  t`;<div class="${yes}" />`,
+  t`/* <div class="${no}" /> */`,
+  t`// <div class="${no}" />`,
+  t`;<div not-class="${no}" />`,
+  t`;<div class={\`${yes}\`} />`,
+  t`;<div class={\`${yes} \${'${yes}'} \${'${yes}' ? '${yes}' : '${yes}'}\`} />`,
+  t`;<div class={'${yes}'} />`,
+  t`;<div class={'${yes}' + '${yes}'} />`,
+  t`;<div class={'${yes}' ? '${yes}' + '${yes}' : '${yes}'} />`,
+  t`;<div class={clsx('${yes}', ['${yes}'])} />`,
+  t`;<div class={clsx({ '${yes}': '${yes}' })} />`,
+  t`;<div class={{ '${yes}': '${yes}' }['${yes}']} />`,
   [
-    `;<div class={\`sm:block inline flex\${someVar}\`}></div>`,
-    `;<div class={\`inline sm:block flex\${someVar}\`}></div>`,
+    `;<div class={\`sm:block inline flex\${someVar}\`} />`,
+    `;<div class={\`inline sm:block flex\${someVar}\`} />`,
   ],
   [
-    `;<div class={\`\${someVar}sm:block md:inline flex\`}></div>`,
-    `;<div class={\`\${someVar}sm:block flex md:inline\`}></div>`,
+    `;<div class={\`\${someVar}sm:block md:inline flex\`} />`,
+    `;<div class={\`\${someVar}sm:block flex md:inline\`} />`,
   ],
   [
-    `;<div class={\`sm:p-0 p-0 \${someVar}sm:block md:inline flex\`}></div>`,
-    `;<div class={\`p-0 sm:p-0 \${someVar}sm:block flex md:inline\`}></div>`,
+    `;<div class={\`sm:p-0 p-0 \${someVar}sm:block md:inline flex\`} />`,
+    `;<div class={\`p-0 sm:p-0 \${someVar}sm:block flex md:inline\`} />`,
   ],
 ]
 javascript = javascript.concat(

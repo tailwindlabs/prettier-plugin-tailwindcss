@@ -35,7 +35,10 @@ function bigSign(bigIntValue) {
   return (bigIntValue > 0n) - (bigIntValue < 0n)
 }
 
-function sortClasses(classStr, env) {
+function sortClasses(
+  classStr,
+  { env, ignoreFirst = false, ignoreLast = false }
+) {
   // Ignore class attributes containing `{{`, to match Prettier behaviour:
   // https://github.com/prettier/prettier/blob/main/src/language-html/embed.js#L83-L88
   if (classStr.includes('{{')) {
@@ -49,6 +52,16 @@ function sortClasses(classStr, env) {
 
   if (classes[classes.length - 1] === '') {
     classes.pop()
+  }
+
+  let prefix = ''
+  if (ignoreFirst) {
+    prefix = `${classes.shift() ?? ''}${whitespace.shift() ?? ''}`
+  }
+
+  let suffix = ''
+  if (ignoreLast) {
+    suffix = `${whitespace.pop() ?? ''}${classes.pop() ?? ''}`
   }
 
   let classNamesWithOrder = []
@@ -75,7 +88,7 @@ function sortClasses(classStr, env) {
     result += `${classes[i]}${whitespace[i] ?? ''}`
   }
 
-  return result
+  return prefix + result + suffix
 }
 
 function createParser(original, transform) {
@@ -132,17 +145,17 @@ function createParser(original, transform) {
         contextMap.set(tailwindConfigPath, { context, hash })
       }
 
-      transform(ast, { context, generateRules })
+      transform(ast, { env: { context, generateRules } })
       return ast
     },
   }
 }
 
 function transformHtml(attributes, computedAttributes = []) {
-  let transform = (ast, env) => {
+  let transform = (ast, { env }) => {
     for (let attr of ast.attrs ?? []) {
       if (attributes.includes(attr.name)) {
-        attr.value = sortClasses(attr.value, env)
+        attr.value = sortClasses(attr.value, { env })
       } else if (computedAttributes.includes(attr.name)) {
         if (!/[`'"]/.test(attr.value)) {
           continue
@@ -154,14 +167,14 @@ function transformHtml(attributes, computedAttributes = []) {
         astTypes.visit(ast, {
           visitLiteral(path) {
             if (isStringLiteral(path.node)) {
-              if (sortStringLiteral(path.node, env)) {
+              if (sortStringLiteral(path.node, { env })) {
                 didChange = true
               }
             }
             this.traverse(path)
           },
           visitTemplateLiteral(path) {
-            if (sortQuasis(path.node.quasis, env)) {
+            if (sortTemplateLiteral(path.node, { env })) {
               didChange = true
             }
             this.traverse(path)
@@ -177,14 +190,14 @@ function transformHtml(attributes, computedAttributes = []) {
     }
 
     for (let child of ast.children ?? []) {
-      transform(child, env)
+      transform(child, { env })
     }
   }
   return transform
 }
 
-function sortStringLiteral(node, env) {
-  let result = sortClasses(node.value, env)
+function sortStringLiteral(node, { env }) {
+  let result = sortClasses(node.value, { env })
   let didChange = result !== node.value
   node.value = result
   if (node.extra) {
@@ -210,16 +223,30 @@ function isStringLiteral(node) {
   )
 }
 
-function sortQuasis(quasis, env) {
+function sortTemplateLiteral(node, { env }) {
   let didChange = false
-  for (let quasi of quasis) {
+
+  for (let i = 0; i < node.quasis.length; i++) {
+    let quasi = node.quasis[i]
     let same = quasi.value.raw === quasi.value.cooked
     let originalRaw = quasi.value.raw
     let originalCooked = quasi.value.cooked
-    quasi.value.raw = sortClasses(quasi.value.raw, env)
+
+    quasi.value.raw = sortClasses(quasi.value.raw, {
+      env,
+      ignoreFirst: i > 0 && !/^\s/.test(quasi.value.raw),
+      ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.raw),
+    })
+
     quasi.value.cooked = same
       ? quasi.value.raw
-      : sortClasses(quasi.value.cooked, env)
+      : sortClasses(quasi.value.cooked, {
+          env,
+          ignoreFirst: i > 0 && !/^\s/.test(quasi.value.cooked),
+          ignoreLast:
+            i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
+        })
+
     if (
       quasi.value.raw !== originalRaw ||
       quasi.value.cooked !== originalCooked
@@ -227,21 +254,22 @@ function sortQuasis(quasis, env) {
       didChange = true
     }
   }
+
   return didChange
 }
 
-function transformJavaScript(ast, env) {
+function transformJavaScript(ast, { env }) {
   visit(ast, {
     JSXAttribute(node) {
       if (['class', 'className'].includes(node.name.name)) {
         if (isStringLiteral(node.value)) {
-          sortStringLiteral(node.value, env)
+          sortStringLiteral(node.value, { env })
         } else if (node.value.type === 'JSXExpressionContainer') {
           visit(node.value, (node, parent, key) => {
             if (isStringLiteral(node)) {
-              sortStringLiteral(node, env)
+              sortStringLiteral(node, { env })
             } else if (node.type === 'TemplateLiteral') {
-              sortQuasis(node.quasis, env)
+              sortTemplateLiteral(node, { env })
             }
           })
         }
@@ -250,10 +278,10 @@ function transformJavaScript(ast, env) {
   })
 }
 
-function transformCss(ast, env) {
+function transformCss(ast, { env }) {
   ast.walk((node) => {
     if (node.type === 'css-atrule' && node.name === 'apply') {
-      node.params = sortClasses(node.params, env)
+      node.params = sortClasses(node.params, { env })
     }
   })
 }

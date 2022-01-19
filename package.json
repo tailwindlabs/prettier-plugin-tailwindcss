@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "_pre": "rimraf dist && cpy node_modules/tailwindcss/lib/css dist/css",
-    "_esbuild": "esbuild src/index.js --bundle --platform=node --target=node12.13.0 --external:prettier --outdir=dist",
+    "_esbuild": "node build.js",
     "prebuild": "npm run _pre",
     "build": "npm run _esbuild -- --minify",
     "predev": "npm run _pre",

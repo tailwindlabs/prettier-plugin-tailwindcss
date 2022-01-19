@@ -54,6 +54,7 @@ let css = [t`@apply ${yes};`, t`@not-apply ${no};`]
 let javascript = [
   t`;<div class="${yes}"></div>`,
   t`;<div not-class="${no}"></div>`,
+  t`;<div class={\`${yes}\`}></div>`,
   t`;<div class={\`${yes} \${'${yes}'} \${'${yes}' ? '${yes}' : '${yes}'}\`}></div>`,
   t`;<div class={'${yes}'}></div>`,
   t`;<div class={'${yes}' + '${yes}'}></div>`,
@@ -61,6 +62,18 @@ let javascript = [
   t`;<div class={clsx('${yes}', ['${yes}'])}></div>`,
   t`;<div class={clsx({ '${yes}': '${yes}' })}></div>`,
   t`;<div class={{ '${yes}': '${yes}' }['${yes}']}></div>`,
+  [
+    `;<div class={\`sm:block inline flex\${someVar}\`}></div>`,
+    `;<div class={\`inline sm:block flex\${someVar}\`}></div>`,
+  ],
+  [
+    `;<div class={\`\${someVar}sm:block md:inline flex\`}></div>`,
+    `;<div class={\`\${someVar}sm:block flex md:inline\`}></div>`,
+  ],
+  [
+    `;<div class={\`sm:p-0 p-0 \${someVar}sm:block md:inline flex\`}></div>`,
+    `;<div class={\`p-0 sm:p-0 \${someVar}sm:block flex md:inline\`}></div>`,
+  ],
 ]
 javascript = javascript.concat(
   javascript.map((test) => test.map((t) => t.replace(/class=/g, 'className=')))
@@ -74,7 +87,20 @@ let vue = [
   t`<div :class="[cond ? '${yes}' : '${yes}']"></div>`,
   t`<div :class="{ '${yes}': true }"></div>`,
   t`<div :class="clsx('${yes}')"></div>`,
+  t`<div :class="\`${yes}\`"></div>`,
   t`<div :class="\`${yes} \${someVar}\`"></div>`,
+  [
+    `<div :class="\`sm:block inline flex\${someVar}\`"></div>`,
+    `<div :class="\`inline sm:block flex\${someVar}\`"></div>`,
+  ],
+  [
+    `<div :class="\`\${someVar}sm:block md:inline flex\`"></div>`,
+    `<div :class="\`\${someVar}sm:block flex md:inline\`"></div>`,
+  ],
+  [
+    `<div :class="\`sm:p-0 p-0 \${someVar}sm:block md:inline flex\`"></div>`,
+    `<div :class="\`p-0 sm:p-0 \${someVar}sm:block flex md:inline\`"></div>`,
+  ],
 ]
 
 let tests = {

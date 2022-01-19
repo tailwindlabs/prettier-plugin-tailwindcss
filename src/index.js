@@ -287,16 +287,6 @@ function transformCss(ast, { env }) {
 }
 
 export const options = {
-  // unknownClassPosition: {
-  //   type: 'choice',
-  //   category: 'Tailwind CSS',
-  //   default: 'start',
-  //   choices: [
-  //     { value: 'start', description: 'TODO' },
-  //     { value: 'end', description: 'TODO' },
-  //   ],
-  //   description: 'TODO',
-  // },
   tailwindConfig: {
     type: 'string',
     category: 'Tailwind CSS',

@@ -45,14 +45,23 @@ function t(strings, ...values) {
 
 let html = [
   t`<div class="${yes}"></div>`,
+  t`<!-- <div class="${no}"></div> -->`,
   t`<div class="${no} {{ 'p-0 sm:p-0 m-0' }}"></div>`,
   t`<div not-class="${no}"></div>`,
+  ['<div class="  sm:p-0   p-0 "></div>', '<div class="p-0 sm:p-0"></div>'],
 ]
 
-let css = [t`@apply ${yes};`, t`@not-apply ${no};`]
+let css = [
+  t`@apply ${yes};`,
+  t`/* @apply ${no}; */`,
+  t`@not-apply ${no};`,
+  ['@apply sm:p-0\n   p-0;', '@apply p-0\n   sm:p-0;'],
+]
 
 let javascript = [
   t`;<div class="${yes}"></div>`,
+  t`/* <div class="${no}"></div> */`,
+  t`// <div class="${no}"></div>`,
   t`;<div not-class="${no}"></div>`,
   t`;<div class={\`${yes}\`}></div>`,
   t`;<div class={\`${yes} \${'${yes}'} \${'${yes}' ? '${yes}' : '${yes}'}\`}></div>`,
@@ -82,6 +91,7 @@ javascript = javascript.concat(
 let vue = [
   ...html,
   t`<div :class="'${yes}'"></div>`,
+  t`<!-- <div :class="'${no}'"></div> -->`,
   t`<div :class="'${yes}' + '${yes}'"></div>`,
   t`<div :class="['${yes}', '${yes}']"></div>`,
   t`<div :class="[cond ? '${yes}' : '${yes}']"></div>`,

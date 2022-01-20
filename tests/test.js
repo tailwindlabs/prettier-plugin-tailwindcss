@@ -5,6 +5,7 @@ const { execSync } = require('child_process')
 function format(str, options = {}) {
   return prettier
     .format(str, {
+      pluginSearchDirs: [__dirname], // disable plugin autoload
       plugins: [path.resolve(__dirname, '..')],
       semi: false,
       singleQuote: true,
@@ -134,6 +135,31 @@ let tests = {
   'babel-flow': javascript,
   espree: javascript,
   meriyah: javascript,
+  svelte: [
+    t`<div class="${yes}" />`,
+    t`<div class="${yes} {someVar}" />`,
+    t`<div class="{someVar} ${yes}" />`,
+    t`<div class="${yes} {someVar} ${yes}" />`,
+    t`<div class={'${yes}'} />`,
+    t`<div class={'${yes}' + '${yes}'} />`,
+    t`<div class={\`${yes}\`} />`,
+    t`<div class={\`${yes} \${'${yes}' + \`${yes}\`} ${yes}\`} />`,
+    t`<div class={\`${no}\${someVar}${no}\`} />`,
+    t`<div class="${yes} {\`${yes}\`}" />`,
+    [
+      `<div class="sm:block uppercase flex{someVar}" />`,
+      `<div class="uppercase sm:block flex{someVar}" />`,
+    ],
+    [
+      `<div class="{someVar}sm:block md:inline flex" />`,
+      `<div class="{someVar}sm:block flex md:inline" />`,
+    ],
+    [
+      `<div class="sm:p-0 p-0 {someVar}sm:block md:inline flex" />`,
+      `<div class="p-0 sm:p-0 {someVar}sm:block flex md:inline" />`,
+    ],
+    ['<div class={`sm:p-0\np-0`} />', '<div\n  class={`p-0\nsm:p-0`}\n/>'],
+  ],
 }
 
 describe('parsers', () => {

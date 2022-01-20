@@ -16,6 +16,8 @@ import * as fs from 'fs'
 import requireFrom from 'import-from'
 import requireFresh from 'import-fresh'
 import objectHash from 'object-hash'
+import * as svelte from 'prettier-plugin-svelte'
+import lineColumn from 'line-column'
 
 let contextMap = new Map()
 
@@ -290,10 +292,45 @@ function transformCss(ast, { env }) {
 }
 
 export const options = {
+  ...svelte.options,
   tailwindConfig: {
     type: 'string',
     category: 'Tailwind CSS',
     description: 'TODO',
+  },
+}
+
+export const languages = svelte.languages
+export const printers = {
+  'svelte-ast': {
+    ...svelte.printers['svelte-ast'],
+    print: (path, options, print) => {
+      if (!options.__mutatedOriginalText) {
+        options.__mutatedOriginalText = true
+        let changes = path.stack[0].changes
+        if (changes?.length) {
+          let finder = lineColumn(options.originalText)
+
+          for (let change of changes) {
+            let start = finder.toIndex(
+              change.loc.start.line,
+              change.loc.start.column + 1
+            )
+            let end = finder.toIndex(
+              change.loc.end.line,
+              change.loc.end.column + 1
+            )
+
+            options.originalText =
+              options.originalText.substring(0, start) +
+              change.text +
+              options.originalText.substring(end)
+          }
+        }
+      }
+
+      return svelte.printers['svelte-ast'].print(path, options, print)
+    },
   },
 }
 
@@ -333,6 +370,58 @@ export const parsers = {
     prettierParserMeriyah.parsers.meriyah,
     transformJavaScript
   ),
+  svelte: createParser(svelte.parsers.svelte, (ast, { env }) => {
+    let changes = []
+    transformSvelte(ast.html, { env, changes })
+    ast.changes = changes
+  }),
+}
+
+function transformSvelte(ast, { env, changes }) {
+  for (let attr of ast.attributes ?? []) {
+    if (attr.name === 'class') {
+      for (let i = 0; i < attr.value.length; i++) {
+        let value = attr.value[i]
+        if (value.type === 'Text') {
+          let same = value.raw === value.data
+          value.raw = sortClasses(value.raw, {
+            env,
+            ignoreFirst: i > 0 && !/^\s/.test(value.raw),
+            ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.raw),
+          })
+          value.data = same
+            ? value.raw
+            : sortClasses(value.data, {
+                env,
+                ignoreFirst: i > 0 && !/^\s/.test(value.data),
+                ignoreLast:
+                  i < attr.value.length - 1 && !/\s$/.test(value.data),
+              })
+        } else if (value.type === 'MustacheTag') {
+          visit(value.expression, {
+            Literal(node) {
+              if (isStringLiteral(node)) {
+                if (sortStringLiteral(node, { env })) {
+                  changes.push({ text: node.raw, loc: node.loc })
+                }
+              }
+            },
+            TemplateLiteral(node) {
+              if (sortTemplateLiteral(node, { env })) {
+                for (let quasi of node.quasis) {
+                  changes.push({ text: quasi.value.raw, loc: quasi.loc })
+                }
+              }
+            },
+          })
+        }
+      }
+    }
+  }
+
+  for (let child of ast.children ?? []) {
+    transformSvelte(child, { env, changes })
+  }
 }
 
 // https://lihautan.com/manipulating-ast-with-javascript/

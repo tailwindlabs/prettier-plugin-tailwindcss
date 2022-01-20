@@ -14,7 +14,7 @@
     "predev": "npm run _pre",
     "dev": "npm run _esbuild -- --watch",
     "test": "jest",
-    "prepublishOnly": "npm test && npm run build"
+    "prepublishOnly": "npm test && npm run build && node scripts/copy-licenses.js"
   },
   "devDependencies": {
     "@tailwindcss/line-clamp": "^0.3.0",
@@ -23,6 +23,7 @@
     "import-fresh": "^3.3.0",
     "import-from": "^4.0.0",
     "jest": "^27.4.7",
+    "license-checker": "^25.0.1",
     "line-column": "^1.0.2",
     "object-hash": "^2.2.0",
     "prettier": "^2.5.1",

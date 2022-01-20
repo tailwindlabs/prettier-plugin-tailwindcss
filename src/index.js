@@ -134,6 +134,9 @@ function createParser(original, transform) {
         ).generateRules
       } catch {}
 
+      // suppress "empty content" warning
+      tailwindConfig.content = ['no-op']
+
       let context
       let existing = contextMap.get(tailwindConfigPath)
       let hash = objectHash(tailwindConfig)

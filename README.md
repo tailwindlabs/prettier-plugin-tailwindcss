@@ -31,6 +31,6 @@ If a Tailwind configuration file cannot be found then the default Tailwind confi
 
 ## Compatibility with other Prettier plugins
 
-To make this plugin work, we had to build it in a way that the Prettier plugin system was not designed for. We had to extend the core parsers in Prettier with our own custom parsers. And while this works, it makes this plugin incompatible with other Prettier plugins that are build the same way. This is a known limitation of Prettier.
+To make this plugin work, we had to build it in a way that the Prettier plugin system was not designed for. We had to extend the core parsers in Prettier with our own custom parsers. And while this works, it makes this plugin incompatible with other Prettier plugins that are built the same way. This is a known limitation of Prettier.
 
 One example of this incompatibility is with the [prettier-plugin-svelte](https://github.com/sveltejs/prettier-plugin-svelte) plugin. It's not possible to use the Svelte plugin at the same time as the Tailwind CSS plugin. However, as a workaround, we bundled the Svelte plugin into this plugin. Simply remove `prettier-plugin-svelte` from your Svelte project when installing the `prettier-plugin-tailwindcss` plugin, and everything should work fine.

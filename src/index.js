@@ -288,7 +288,10 @@ function transformJavaScript(ast, { env }) {
 function transformCss(ast, { env }) {
   ast.walk((node) => {
     if (node.type === 'css-atrule' && node.name === 'apply') {
-      node.params = sortClasses(node.params, { env })
+      node.params = sortClasses(node.params, {
+        env,
+        ignoreLast: /\s+(?:!important|#{!important})\s*$/.test(node.params),
+      })
     }
   })
 }

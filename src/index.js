@@ -166,7 +166,9 @@ function transformHtml(attributes, computedAttributes = []) {
           continue
         }
 
-        let ast = recast.parse(`let __prettier_temp__ = ${attr.value}`)
+        let ast = recast.parse(`let __prettier_temp__ = ${attr.value}`, {
+          parser: prettierParserBabel.parsers.babel,
+        })
         let didChange = false
 
         astTypes.visit(ast, {

@@ -96,6 +96,7 @@ let vue = [
   t`<div :class="'${yes}' + '${yes}'"></div>`,
   t`<div :class="['${yes}', '${yes}']"></div>`,
   t`<div :class="[cond ? '${yes}' : '${yes}']"></div>`,
+  t`<div :class="[someVar ?? '${yes}']"></div>`,
   t`<div :class="{ '${yes}': true }"></div>`,
   t`<div :class="clsx('${yes}')"></div>`,
   t`<div :class="\`${yes}\`"></div>`,

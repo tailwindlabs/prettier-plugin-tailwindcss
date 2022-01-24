@@ -1,18 +1,16 @@
-# prettier-plugin-tailwindcss
+<img src="https://raw.githubusercontent.com/tailwindlabs/prettier-plugin-tailwindcss/main/.github/banner.png" alt="prettier-plugin-tailwindcss" />
 
-A [Prettier](https://prettier.io/) plugin for Tailwind CSS that automatically sorts classes based on Tailwind's internal class sorting algorithm.
-
-> Note, this plugin is only compatible with Tailwind CSS v3.
+A [Prettier](https://prettier.io/) plugin for Tailwind CSS v3.0+ that automatically sorts classes based on our recommended class order.
 
 ## Installation
 
-Install `prettier-plugin-tailwindcss` via npm as a dev-dependency.
+To get started, just install `prettier-plugin-tailwindcss` as a dev-dependency:
 
 ```sh
-npm install --save-dev prettier prettier-plugin-tailwindcss
+npm install -D prettier prettier-plugin-tailwindcss
 ```
 
-This plugin follows the Prettier autoloading convention, so once it's installed it should automatically start working.
+This plugin follows Prettier’s autoloading convention, so as long as you’ve got Prettier set up in your project, it’ll start working automatically as soon as it’s installed.
 
 ## Resolving your Tailwind configuration
 
@@ -33,6 +31,10 @@ If a local configuration file cannot be found the plugin will fallback to the de
 
 ## Compatibility with other Prettier plugins
 
-To make this plugin work we had to build it in a way that the Prettier plugin system was not originally designed for. We had to extend the core parsers in Prettier with our own custom parsers. And while this totally works, it makes this plugin incompatible with other Prettier plugins that are built the same way.
+To make this plugin work we had to use private Prettier APIs that can only be used by a single plugin at once. This means this plugin is incompatible with other Prettier plugins that are using the same APIs.
 
-One example of this incompatibility is with the [prettier-plugin-svelte](https://github.com/sveltejs/prettier-plugin-svelte) plugin. It's not possible to use the Svelte plugin at the same time as the Tailwind CSS plugin. However, as a workaround for this specific situation, we've bundled the Svelte plugin into our plugin. Simply remove `prettier-plugin-svelte` from your Svelte project when installing the `prettier-plugin-tailwindcss` plugin, and everything should continue working.
+The most popular example we know of is [prettier-plugin-svelte](https://github.com/sveltejs/prettier-plugin-svelte), which can't be installed at the same time as the Tailwind CSS plugin.
+
+To work around this, we've bundled `prettier-plugin-svelte` directly into `prettier-plugin-tailwindcss`, so if you'd like to use this plugin with Svelte, just uninstall `prettier-plugin-svelte` and everything should work as expected.
+
+If you discover any other incompatibilities, open an issue and hopefully we can figure out a way to make it work.

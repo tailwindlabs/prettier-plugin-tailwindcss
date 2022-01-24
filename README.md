@@ -16,9 +16,11 @@ This plugin follows the Prettier autoloading convention, so once it's installed 
 
 ## Resolving your Tailwind configuration
 
-By default this plugin will look for a [Tailwind configuration file](https://tailwindcss.com/docs/configuration) (`tailwind.config.js`) in the same directory as your Prettier configuration file.
+To ensure that the class sorting is taking into consideration any of your project's Tailwind customizations, it needs access to your [Tailwind configuration file](https://tailwindcss.com/docs/configuration) (`tailwind.config.js`).
 
-If your Tailwind configuration file is somewhere else, you can specify this using the `tailwindConfig` option in your Prettier configuration. Note that paths are resolved relative to the Prettier configuration file.
+By default the plugin will look for this file in the same directory as your Prettier configuration file. However, if your Tailwind configuration is somewhere else, you can specify this using the `tailwindConfig` option in your Prettier configuration.
+
+Note that paths are resolved relative to the Prettier configuration file.
 
 ```js
 // prettier.config.js
@@ -27,10 +29,10 @@ module.exports = {
 }
 ```
 
-If a Tailwind configuration file cannot be found then the default Tailwind configuration will be used.
+If a local configuration file cannot be found the plugin will fallback to the default Tailwind configuration.
 
 ## Compatibility with other Prettier plugins
 
-To make this plugin work, we had to build it in a way that the Prettier plugin system was not designed for. We had to extend the core parsers in Prettier with our own custom parsers. And while this works, it makes this plugin incompatible with other Prettier plugins that are built the same way. This is a known limitation of Prettier.
+To make this plugin work we had to build it in a way that the Prettier plugin system was not originally designed for. We had to extend the core parsers in Prettier with our own custom parsers. And while this totally works, it makes this plugin incompatible with other Prettier plugins that are built the same way.
 
-One example of this incompatibility is with the [prettier-plugin-svelte](https://github.com/sveltejs/prettier-plugin-svelte) plugin. It's not possible to use the Svelte plugin at the same time as the Tailwind CSS plugin. However, as a workaround, we bundled the Svelte plugin into this plugin. Simply remove `prettier-plugin-svelte` from your Svelte project when installing the `prettier-plugin-tailwindcss` plugin, and everything should work fine.
+One example of this incompatibility is with the [prettier-plugin-svelte](https://github.com/sveltejs/prettier-plugin-svelte) plugin. It's not possible to use the Svelte plugin at the same time as the Tailwind CSS plugin. However, as a workaround for this specific situation, we've bundled the Svelte plugin into our plugin. Simply remove `prettier-plugin-svelte` from your Svelte project when installing the `prettier-plugin-tailwindcss` plugin, and everything should continue working.

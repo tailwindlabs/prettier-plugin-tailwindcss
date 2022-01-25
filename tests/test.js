@@ -51,6 +51,7 @@ let html = [
   t`<div not-class="${no}"></div>`,
   ['<div class="  sm:p-0   p-0 "></div>', '<div class="p-0 sm:p-0"></div>'],
   t`<div class></div>`,
+  t`<div class=""></div>`,
 ]
 
 let css = [
@@ -74,6 +75,7 @@ let javascript = [
   t`;<div class={clsx({ '${yes}': '${yes}' })} />`,
   t`;<div class={{ '${yes}': '${yes}' }['${yes}']} />`,
   t`;<div class />`,
+  t`;<div class="" />`,
   [
     `;<div class={\`sm:block inline flex\${someVar}\`} />`,
     `;<div class={\`inline sm:block flex\${someVar}\`} />`,
@@ -96,6 +98,7 @@ let vue = [
   t`<div :class="'${yes}'"></div>`,
   t`<!-- <div :class="'${no}'"></div> -->`,
   t`<div :class></div>`,
+  t`<div :class=""></div>`,
   t`<div :class="'${yes}' + '${yes}'"></div>`,
   t`<div :class="['${yes}', '${yes}']"></div>`,
   t`<div :class="[cond ? '${yes}' : '${yes}']"></div>`,
@@ -142,6 +145,7 @@ let tests = {
   svelte: [
     t`<div class="${yes}" />`,
     t`<div class />`,
+    t`<div class="" />`,
     t`<div class="${yes} {someVar}" />`,
     t`<div class="{someVar} ${yes}" />`,
     t`<div class="${yes} {someVar} ${yes}" />`,

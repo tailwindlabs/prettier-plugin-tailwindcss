@@ -41,6 +41,10 @@ function sortClasses(
   classStr,
   { env, ignoreFirst = false, ignoreLast = false }
 ) {
+  if (typeof classStr !== 'string' || classStr === '') {
+    return classStr
+  }
+
   // Ignore class attributes containing `{{`, to match Prettier behaviour:
   // https://github.com/prettier/prettier/blob/main/src/language-html/embed.js#L83-L88
   if (classStr.includes('{{')) {
@@ -268,6 +272,9 @@ function sortTemplateLiteral(node, { env }) {
 function transformJavaScript(ast, { env }) {
   visit(ast, {
     JSXAttribute(node) {
+      if (!node.value) {
+        return
+      }
       if (['class', 'className'].includes(node.name.name)) {
         if (isStringLiteral(node.value)) {
           sortStringLiteral(node.value, { env })

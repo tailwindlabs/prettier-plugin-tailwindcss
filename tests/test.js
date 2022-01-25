@@ -101,6 +101,7 @@ let vue = [
   t`<div :class="clsx('${yes}')"></div>`,
   t`<div :class="\`${yes}\`"></div>`,
   t`<div :class="\`${yes} \${someVar}\`"></div>`,
+  t`<div :class="someVar! ? \`${yes}\` : \`${yes}\`"></div>`, // ts
   [
     `<div :class="\`sm:block inline flex\${someVar}\`"></div>`,
     `<div :class="\`inline sm:block flex\${someVar}\`"></div>`,

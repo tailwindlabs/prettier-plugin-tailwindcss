@@ -6,6 +6,13 @@
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tailwindlabs/prettier-plugin-tailwindcss",
+  },
+  "bugs": {
+    "url": "https://github.com/tailwindlabs/prettier-plugin-tailwindcss/issues"
+  },
   "scripts": {
     "_pre": "rimraf dist && cpy node_modules/tailwindcss/lib/css dist/css",
     "_esbuild": "node build.js",
@@ -34,5 +41,8 @@
   },
   "peerDependencies": {
     "prettier": ">=2.2.0"
+  },
+  "engines": {
+    "node": ">=12.17.0"
   }
 }

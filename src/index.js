@@ -21,18 +21,6 @@ import lineColumn from 'line-column'
 
 let contextMap = new Map()
 
-/**
- * TODO
- *
- * Transform object _values_ if they aren't part of a boolean expression? (Probably not)
- * markdown, mdx - prettier does not format html in markdown
- *
- * Plugin languages:
- * php - no
- * pug
- * svelte
- */
-
 function bigSign(bigIntValue) {
   return (bigIntValue > 0n) - (bigIntValue < 0n)
 }

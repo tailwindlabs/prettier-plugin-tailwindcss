@@ -379,7 +379,7 @@ export const parsers = {
 
 function transformSvelte(ast, { env, changes }) {
   for (let attr of ast.attributes ?? []) {
-    if (attr.name === 'class') {
+    if (attr.name === 'class' && attr.type === 'Attribute') {
       for (let i = 0; i < attr.value.length; i++) {
         let value = attr.value[i]
         if (value.type === 'Text') {

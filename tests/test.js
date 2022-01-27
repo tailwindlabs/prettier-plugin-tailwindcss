@@ -156,6 +156,7 @@ let tests = {
     t`<div class={\`${yes} \${'${yes}' + \`${yes}\`} ${yes}\`} />`,
     t`<div class={\`${no}\${someVar}${no}\`} />`,
     t`<div class="${yes} {\`${yes}\`}" />`,
+    t`<div let:class={clazz} class="${yes} {clazz}" />`,
     [
       `<div class="sm:block uppercase flex{someVar}" />`,
       `<div class="uppercase sm:block flex{someVar}" />`,

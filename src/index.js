@@ -58,6 +58,15 @@ function sortClasses(
     suffix = `${whitespace.pop() ?? ''}${classes.pop() ?? ''}`
   }
 
+  // Remove duplicates
+  classes = classes.filter((cls, index, arr) => {
+    if (arr.indexOf(cls) === index) {
+      return true
+    }
+    whitespace.splice(index - 1, 1)
+    return false
+  })
+
   let classNamesWithOrder = []
   for (let className of classes) {
     let order =

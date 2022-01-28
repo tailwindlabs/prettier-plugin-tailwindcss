@@ -52,6 +52,7 @@ let html = [
   ['<div class="  sm:p-0   p-0 "></div>', '<div class="p-0 sm:p-0"></div>'],
   t`<div class></div>`,
   t`<div class=""></div>`,
+  ['<div class="flex flex"></div>', '<div class="flex"></div>'],
 ]
 
 let css = [
@@ -59,6 +60,7 @@ let css = [
   t`/* @apply ${no}; */`,
   t`@not-apply ${no};`,
   ['@apply sm:p-0\n   p-0;', '@apply p-0\n   sm:p-0;'],
+  ['@apply flex flex;', '@apply flex;'],
 ]
 
 let javascript = [
@@ -87,6 +89,12 @@ let javascript = [
   [
     `;<div class={\`sm:p-0 p-0 \${someVar}sm:block md:inline flex\`} />`,
     `;<div class={\`p-0 sm:p-0 \${someVar}sm:block flex md:inline\`} />`,
+  ],
+  [';<div class="flex flex" />', ';<div class="flex" />'],
+  [';<div class={`   flex  flex `} />', ';<div class={`   flex `} />'],
+  [
+    ';<div class={`   flex  flex flex${someVar}block block`} />',
+    ';<div class={`   flex flex${someVar}block block`} />',
   ],
 ]
 javascript = javascript.concat(
@@ -119,6 +127,11 @@ let vue = [
   [
     `<div :class="\`sm:p-0 p-0 \${someVar}sm:block md:inline flex\`"></div>`,
     `<div :class="\`p-0 sm:p-0 \${someVar}sm:block flex md:inline\`"></div>`,
+  ],
+  [`<div :class="'   flex  flex '"></div>`, `<div :class="'   flex '"></div>`],
+  [
+    `<div :class="\`   flex  flex \`"></div>`,
+    `<div :class="\`   flex \`"></div>`,
   ],
 ]
 
@@ -170,6 +183,7 @@ let tests = {
       `<div class="p-0 sm:p-0 {someVar}sm:block flex md:inline" />`,
     ],
     ['<div class={`sm:p-0\np-0`} />', '<div\n  class={`p-0\nsm:p-0`}\n/>'],
+    ['<div class="  flex flex " />', '<div class="  flex " />'],
   ],
 }
 

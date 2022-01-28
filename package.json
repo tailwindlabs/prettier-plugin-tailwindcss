@@ -8,7 +8,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/tailwindlabs/prettier-plugin-tailwindcss",
+    "url": "https://github.com/tailwindlabs/prettier-plugin-tailwindcss"
   },
   "bugs": {
     "url": "https://github.com/tailwindlabs/prettier-plugin-tailwindcss/issues"

@@ -143,6 +143,9 @@ let tests = {
   'babel-flow': javascript,
   espree: javascript,
   meriyah: javascript,
+  mdx: javascript
+    .filter((test) => !test.find((t) => /^\/\*/.test(t)))
+    .map((test) => test.map((t) => t.replace(/^;/, ''))),
   svelte: [
     t`<div class="${yes}" />`,
     t`<div class />`,

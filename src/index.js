@@ -370,6 +370,10 @@ export const parsers = {
     prettierParserMeriyah.parsers.meriyah,
     transformJavaScript
   ),
+  __js_expression: createParser(
+    prettierParserBabel.parsers.__js_expression,
+    transformJavaScript
+  ),
   svelte: createParser(svelte.parsers.svelte, (ast, { env }) => {
     let changes = []
     transformSvelte(ast.html, { env, changes })

@@ -37,4 +37,4 @@ The most popular example we know of is [prettier-plugin-svelte](https://github.c
 
 To work around this, we've bundled `prettier-plugin-svelte` directly into `prettier-plugin-tailwindcss`, so if you'd like to use this plugin with Svelte, just uninstall `prettier-plugin-svelte` and everything should work as expected.
 
-If you discover any other incompatibilities, open an issue and hopefully we can figure out a way to make it work.
+If you discover any other incompatibilities, please share them in [this issue](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/issues/31) and hopefully we can figure out a way to make it work.

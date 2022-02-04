@@ -21,7 +21,7 @@
     "predev": "npm run _pre",
     "dev": "npm run _esbuild -- --watch",
     "test": "jest",
-    "prepublishOnly": "npm test && npm run build && node scripts/copy-licenses.js"
+    "prepublishOnly": "npm run build && npm test && node scripts/copy-licenses.js"
   },
   "devDependencies": {
     "@tailwindcss/line-clamp": "^0.3.0",

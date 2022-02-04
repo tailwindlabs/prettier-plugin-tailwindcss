@@ -27,7 +27,12 @@ function bigSign(bigIntValue) {
 
 function sortClasses(
   classStr,
-  { env, ignoreFirst = false, ignoreLast = false }
+  {
+    env,
+    ignoreFirst = false,
+    ignoreLast = false,
+    trimWhitespace = { start: true, end: true },
+  }
 ) {
   if (typeof classStr !== 'string' || classStr === '') {
     return classStr
@@ -46,6 +51,10 @@ function sortClasses(
 
   if (classes[classes.length - 1] === '') {
     classes.pop()
+  }
+
+  if (trimWhitespace) {
+    whitespace = whitespace.map(() => ' ')
   }
 
   let prefix = ''
@@ -89,6 +98,12 @@ function sortClasses(
 
   for (let i = 0; i < classes.length; i++) {
     result += `${classes[i]}${whitespace[i] ?? ''}`
+  }
+
+  if (trimWhitespace) {
+    result = result
+      .replace(/^\s+/, trimWhitespace.start ? '' : ' ')
+      .replace(/\s+$/, trimWhitespace.end ? '' : ' ')
   }
 
   return prefix + result + suffix
@@ -244,6 +259,10 @@ function sortTemplateLiteral(node, { env }) {
       env,
       ignoreFirst: i > 0 && !/^\s/.test(quasi.value.raw),
       ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.raw),
+      trimWhitespace: {
+        start: i === 0,
+        end: i >= node.expressions.length,
+      },
     })
 
     quasi.value.cooked = same
@@ -253,6 +272,10 @@ function sortTemplateLiteral(node, { env }) {
           ignoreFirst: i > 0 && !/^\s/.test(quasi.value.cooked),
           ignoreLast:
             i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
+          trimWhitespace: {
+            start: i === 0,
+            end: i >= node.expressions.length,
+          },
         })
 
     if (
@@ -397,6 +420,10 @@ function transformSvelte(ast, { env, changes }) {
             env,
             ignoreFirst: i > 0 && !/^\s/.test(value.raw),
             ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.raw),
+            trimWhitespace: {
+              start: i === 0,
+              end: i >= attr.value.length - 1,
+            },
           })
           value.data = same
             ? value.raw
@@ -405,6 +432,10 @@ function transformSvelte(ast, { env, changes }) {
                 ignoreFirst: i > 0 && !/^\s/.test(value.data),
                 ignoreLast:
                   i < attr.value.length - 1 && !/\s$/.test(value.data),
+                trimWhitespace: {
+                  start: i === 0,
+                  end: i >= attr.value.length - 1,
+                },
               })
         } else if (value.type === 'MustacheTag') {
           visit(value.expression, {

@@ -88,7 +88,7 @@ function sortClasses(
 function createParser(original, transform) {
   return {
     ...original,
-    parse(text, parsers, options) {
+    parse(text, parsers, options = {}) {
       let ast = original.parse(text, parsers, options)
       let tailwindConfigPath = '__default__'
       let tailwindConfig = {}

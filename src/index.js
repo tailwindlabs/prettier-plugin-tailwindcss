@@ -18,6 +18,7 @@ import requireFresh from 'import-fresh'
 import objectHash from 'object-hash'
 import * as svelte from 'prettier-plugin-svelte'
 import lineColumn from 'line-column'
+import jsesc from 'jsesc'
 
 let contextMap = new Map()
 
@@ -168,6 +169,13 @@ function transformHtml(attributes, computedAttributes = []) {
             if (isStringLiteral(path.node)) {
               if (sortStringLiteral(path.node, { env })) {
                 didChange = true
+
+                // https://github.com/benjamn/recast/issues/171#issuecomment-224996336
+                let quote = path.node.extra.raw[0]
+                let value = jsesc(path.node.value, {
+                  quotes: quote === "'" ? 'single' : 'double',
+                })
+                path.node.value = new String(quote + value + quote)
               }
             }
             this.traverse(path)

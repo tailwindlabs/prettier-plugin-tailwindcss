@@ -60,12 +60,17 @@ function sortClasses(
   }
 
   let classNamesWithOrder = []
-  for (let className of classes) {
-    let order =
-      env
-        .generateRules(new Set([className]), env.context)
-        .sort(([a], [z]) => bigSign(z - a))[0]?.[0] ?? null
-    classNamesWithOrder.push([className, order])
+
+  if (env.context.getClassOrder) {
+    classNamesWithOrder = env.context.getClassOrder(classes)
+  } else {
+    for (let className of classes) {
+      let order =
+        env
+          .generateRules(new Set([className]), env.context)
+          .sort(([a], [z]) => bigSign(z - a))[0]?.[0] ?? null
+      classNamesWithOrder.push([className, order])
+    }
   }
 
   classes = classNamesWithOrder

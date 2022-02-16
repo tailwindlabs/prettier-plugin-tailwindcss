@@ -26,6 +26,11 @@ function bigSign(bigIntValue) {
   return (bigIntValue > 0n) - (bigIntValue < 0n)
 }
 
+function prefixCandidate(context, selector) {
+  let prefix = context.tailwindConfig.prefix
+  return typeof prefix === 'function' ? prefix(selector) : prefix + selector
+}
+
 function sortClasses(
   classStr,
   { env, ignoreFirst = false, ignoreLast = false }
@@ -59,19 +64,43 @@ function sortClasses(
     suffix = `${whitespace.pop() ?? ''}${classes.pop() ?? ''}`
   }
 
-  let classNamesWithOrder = []
+  let getClassOrder =
+    env.context.getClassOrder ||
+    // Polyfill for older Tailwind CSS versions
+    function getClassOrder(classes) {
+      // A list of utilities that are used by certain Tailwind CSS utilities but
+      // that don't exist on their own. This will result in them "not existing" and
+      // sorting could be weird since you still require them in order to make the
+      // host utitlies work properly. (Thanks Biology)
+      let parasiteUtilities = new Set([
+        prefixCandidate(env.context, 'group'),
+        prefixCandidate(env.context, 'peer'),
+      ])
 
-  if (env.context.getClassOrder) {
-    classNamesWithOrder = env.context.getClassOrder(classes)
-  } else {
-    for (let className of classes) {
-      let order =
-        env
-          .generateRules(new Set([className]), env.context)
-          .sort(([a], [z]) => bigSign(z - a))[0]?.[0] ?? null
-      classNamesWithOrder.push([className, order])
+      let sortedClassNames = new Map()
+      for (let [sort, rule] of env.generateRules(
+        new Set(classes),
+        env.context
+      )) {
+        if (sortedClassNames.has(rule.raws.tailwind.candidate)) continue
+        sortedClassNames.set(rule.raws.tailwind.candidate, sort)
+      }
+
+      return classes.map((className) => {
+        let order = sortedClassNames.get(className) ?? null
+
+        if (order === null && parasiteUtilities.has(className)) {
+          // This will make sure that it is at the very beginning of the
+          // `components` layer which technically means 'before any
+          // components'.
+          order = env.context.layerOrder.components
+        }
+
+        return [className, order]
+      })
     }
-  }
+
+  let classNamesWithOrder = getClassOrder(classes)
 
   classes = classNamesWithOrder
     .sort(([, a], [, z]) => {

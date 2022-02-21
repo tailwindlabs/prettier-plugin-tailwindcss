@@ -12,6 +12,15 @@ npm install -D prettier prettier-plugin-tailwindcss
 
 This plugin follows Prettier’s autoloading convention, so as long as you’ve got Prettier set up in your project, it’ll start working automatically as soon as it’s installed.
 
+_Note that plugin autoloading is not supported when using certain package managers, such as pnpm or Yarn PnP. In this case you may need to add the plugin to your Prettier config explicitly:_
+
+```js
+// prettier.config.js
+module.exports = {
+  plugins: [require('prettier-plugin-tailwindcss')],
+}
+```
+
 ## Resolving your Tailwind configuration
 
 To ensure that the class sorting is taking into consideration any of your project's Tailwind customizations, it needs access to your [Tailwind configuration file](https://tailwindcss.com/docs/configuration) (`tailwind.config.js`).
@@ -38,14 +47,3 @@ The most popular example we know of is [prettier-plugin-svelte](https://github.c
 To work around this, we've bundled `prettier-plugin-svelte` directly into `prettier-plugin-tailwindcss`, so if you'd like to use this plugin with Svelte, just uninstall `prettier-plugin-svelte` and everything should work as expected.
 
 If you discover any other incompatibilities, please share them in [this issue](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/issues/31) and hopefully we can figure out a way to make it work.
-
-## Usage with pnpm
-
-You have to require the plugin as the prettier package does not detect a plugin automatically when using pnpm.
-
-```js
-// prettier.config.js
-module.exports = {
-  plugins: [require('prettier-plugin-tailwindcss')]
-}
-```

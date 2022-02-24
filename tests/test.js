@@ -206,6 +206,12 @@ test('no prettier config', () => {
   )
 })
 
+test('parasite utilities', () => {
+  expect(
+    format('<div class="group peer unknown-class p-0 container"></div>')
+  ).toEqual('<div class="unknown-class group peer container p-0"></div>')
+})
+
 test('inferred config path', () => {
   expect(formatFixture('basic')).toEqual(
     '<div class="bg-red-500 sm:bg-tomato"></div>'

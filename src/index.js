@@ -26,6 +26,43 @@ function bigSign(bigIntValue) {
   return (bigIntValue > 0n) - (bigIntValue < 0n)
 }
 
+function prefixCandidate(context, selector) {
+  let prefix = context.tailwindConfig.prefix
+  return typeof prefix === 'function' ? prefix(selector) : prefix + selector
+}
+
+// Polyfill for older Tailwind CSS versions
+function getClassOrderPolyfill(classes, { env }) {
+  // A list of utilities that are used by certain Tailwind CSS utilities but
+  // that don't exist on their own. This will result in them "not existing" and
+  // sorting could be weird since you still require them in order to make the
+  // host utitlies work properly. (Thanks Biology)
+  let parasiteUtilities = new Set([
+    prefixCandidate(env.context, 'group'),
+    prefixCandidate(env.context, 'peer'),
+  ])
+
+  let classNamesWithOrder = []
+
+  for (let className of classes) {
+    let order =
+      env
+        .generateRules(new Set([className]), env.context)
+        .sort(([a], [z]) => bigSign(z - a))[0]?.[0] ?? null
+
+    if (order === null && parasiteUtilities.has(className)) {
+      // This will make sure that it is at the very beginning of the
+      // `components` layer which technically means 'before any
+      // components'.
+      order = env.context.layerOrder.components
+    }
+
+    classNamesWithOrder.push([className, order])
+  }
+
+  return classNamesWithOrder
+}
+
 function sortClasses(
   classStr,
   { env, ignoreFirst = false, ignoreLast = false }
@@ -59,14 +96,9 @@ function sortClasses(
     suffix = `${whitespace.pop() ?? ''}${classes.pop() ?? ''}`
   }
 
-  let classNamesWithOrder = []
-  for (let className of classes) {
-    let order =
-      env
-        .generateRules(new Set([className]), env.context)
-        .sort(([a], [z]) => bigSign(z - a))[0]?.[0] ?? null
-    classNamesWithOrder.push([className, order])
-  }
+  let classNamesWithOrder = env.context.getClassOrder
+    ? env.context.getClassOrder(classes)
+    : getClassOrderPolyfill(classes, { env })
 
   classes = classNamesWithOrder
     .sort(([, a], [, z]) => {

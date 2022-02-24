@@ -12,13 +12,13 @@ import resolveConfigFallback from 'tailwindcss/resolveConfig'
 import * as recast from 'recast'
 import * as astTypes from 'ast-types'
 import * as path from 'path'
-import * as fs from 'fs'
 import requireFrom from 'import-from'
 import requireFresh from 'import-fresh'
 import objectHash from 'object-hash'
 import * as svelte from 'prettier-plugin-svelte'
 import lineColumn from 'line-column'
 import jsesc from 'jsesc'
+import escalade from 'escalade/sync'
 
 let contextMap = new Map()
 
@@ -129,23 +129,35 @@ function createParser(original, transform) {
       let createContext = createContextFallback
       let generateRules = generateRulesFallback
 
+      let baseDir
       let prettierConfigPath = prettier.resolveConfigFile.sync(options.filepath)
-      let baseDir = prettierConfigPath
-        ? path.dirname(prettierConfigPath)
-        : process.env.VSCODE_CWD ?? process.cwd()
 
       if (options.tailwindConfig) {
+        baseDir = prettierConfigPath
+          ? path.dirname(prettierConfigPath)
+          : process.cwd()
         tailwindConfigPath = path.resolve(baseDir, options.tailwindConfig)
         tailwindConfig = requireFresh(tailwindConfigPath)
       } else {
-        let tailwindConfigPathJs = path.resolve(baseDir, 'tailwind.config.js')
-        let tailwindConfigPathCjs = path.resolve(baseDir, 'tailwind.config.cjs')
-        if (fs.existsSync(tailwindConfigPathJs)) {
-          tailwindConfigPath = tailwindConfigPathJs
-          tailwindConfig = requireFresh(tailwindConfigPathJs)
-        } else if (fs.existsSync(tailwindConfigPathCjs)) {
-          tailwindConfigPath = tailwindConfigPathCjs
-          tailwindConfig = requireFresh(tailwindConfigPathCjs)
+        baseDir = prettierConfigPath
+          ? path.dirname(prettierConfigPath)
+          : options.filepath
+          ? path.dirname(options.filepath)
+          : process.cwd()
+        let configPath
+        try {
+          configPath = escalade(baseDir, (_dir, names) => {
+            if (names.includes('tailwind.config.js')) {
+              return 'tailwind.config.js'
+            }
+            if (names.includes('tailwind.config.cjs')) {
+              return 'tailwind.config.cjs'
+            }
+          })
+        } catch {}
+        if (configPath) {
+          tailwindConfigPath = configPath
+          tailwindConfig = requireFresh(configPath)
         }
       }
 

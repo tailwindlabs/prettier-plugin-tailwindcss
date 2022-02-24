@@ -19,7 +19,14 @@ function format(str, options = {}) {
 function formatFixture(name) {
   let binPath = path.resolve(__dirname, '../node_modules/.bin/prettier')
   let filePath = path.resolve(__dirname, `fixtures/${name}/index.html`)
-  return execSync(`${binPath} ${filePath}`).toString().trim()
+  return execSync(
+    `${binPath} ${filePath} --plugin-search-dir ${__dirname} --plugin ${path.resolve(
+      __dirname,
+      '..'
+    )}`
+  )
+    .toString()
+    .trim()
 }
 
 let yes = '__YES__'
@@ -191,6 +198,12 @@ test('non-tailwind classes', () => {
   expect(
     format('<div class="sm:lowercase uppercase potato text-sm"></div>')
   ).toEqual('<div class="potato text-sm uppercase sm:lowercase"></div>')
+})
+
+test('no prettier config', () => {
+  expect(formatFixture('no-prettier-config')).toEqual(
+    '<div class="bg-red-500 sm:bg-tomato"></div>'
+  )
 })
 
 test('parasite utilities', () => {

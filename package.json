@@ -22,7 +22,7 @@
     "dev": "npm run _esbuild -- --watch",
     "test": "jest",
     "prepublishOnly": "npm run build && npm test && node scripts/copy-licenses.js",
-    "format": "prettier \"src/**/*.js\" \"tests/test.js\" --write --print-width 80 --single-quote --no-semi --plugin-search-dir ./tests"
+    "format": "prettier \"src/**/*.js\" \"scripts/**/*.js\" \"tests/test.js\" --write --print-width 80 --single-quote --no-semi --plugin-search-dir ./tests"
   },
   "devDependencies": {
     "@tailwindcss/line-clamp": "^0.3.0",

@@ -11,6 +11,7 @@ let exclude = [
   'license-checker',
   'prettier',
   'rimraf',
+  'svelte',
 ]
 
 checker.init({ start: path.resolve(__dirname, '..') }, (_err, packages) => {

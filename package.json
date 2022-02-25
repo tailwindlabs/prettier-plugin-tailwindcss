@@ -40,6 +40,7 @@
     "prettier-plugin-svelte": "^2.6.0",
     "recast": "^0.20.5",
     "rimraf": "^3.0.2",
+    "svelte": "^3.46.4",
     "tailwindcss": "^3.0.23"
   },
   "peerDependencies": {

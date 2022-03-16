@@ -329,6 +329,9 @@ function transformJavaScript(ast, { env }) {
         }
       }
     },
+    JSXSpreadAttribute(node) {
+      console.log(node)
+    }
   })
 }
 

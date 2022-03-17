@@ -65,7 +65,7 @@ function getClassOrderPolyfill(classes, { env }) {
 
 function sortClasses(
   classStr,
-  { env, ignoreFirst = false, ignoreLast = false }
+  { env, ignoreFirst = false, ignoreLast = false, reduceWhitespace = true }
 ) {
   if (typeof classStr !== 'string' || classStr === '') {
     return classStr
@@ -81,6 +81,10 @@ function sortClasses(
   let parts = classStr.split(/(\s+)/)
   let classes = parts.filter((_, i) => i % 2 === 0)
   let whitespace = parts.filter((_, i) => i % 2 !== 0)
+
+  if (reduceWhitespace) {
+    whitespace = whitespace.map((ws) => ws.replace(/[ \t\r]+/g, ' '))
+  }
 
   if (classes[classes.length - 1] === '') {
     classes.pop()
@@ -257,12 +261,12 @@ function sortStringLiteral(node, { env }) {
     node.extra = {
       ...node.extra,
       rawValue: result,
-      raw: raw[0] + result + raw.slice(-1),
+      raw: raw[0] + result.trim() + raw.slice(-1),
     }
   } else {
     // TypeScript (Literal)
     let raw = node.raw
-    node.raw = raw[0] + result + raw.slice(-1)
+    node.raw = raw[0] + result.trim() + raw.slice(-1)
   }
   return didChange
 }
@@ -297,6 +301,16 @@ function sortTemplateLiteral(node, { env }) {
           ignoreLast:
             i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
         })
+
+    if (i === 0) {
+      quasi.value.raw = quasi.value.raw.trimStart()
+      quasi.value.cooked = quasi.value.cooked.trimStart()
+    }
+
+    if (i === node.quasis.length - 1) {
+      quasi.value.raw = quasi.value.raw.trimEnd()
+      quasi.value.cooked = quasi.value.cooked.trimEnd()
+    }
 
     if (
       quasi.value.raw !== originalRaw ||
@@ -338,6 +352,7 @@ function transformCss(ast, { env }) {
       node.params = sortClasses(node.params, {
         env,
         ignoreLast: /\s+(?:!important|#{!important})\s*$/.test(node.params),
+        reduceWhitespace: false,
       })
     }
   })

@@ -83,6 +83,15 @@ let javascript = [
   t`;<div class={{ '${yes}': '${yes}' }['${yes}']} />`,
   t`;<div class />`,
   t`;<div class="" />`,
+  [';<div class="  sm:p-0   p-0 "></div>', ';<div class="p-0 sm:p-0"></div>'],
+  [
+    `;<div class={\`  sm:p-0   p-0 \`}></div>`,
+    `;<div class={\`p-0 sm:p-0\`}></div>`,
+  ],
+  [
+    `;<div class={\`  sm:p-0   p-0   \${someVar}    \`}></div>`,
+    `;<div class={\`p-0 sm:p-0 \${someVar}\`}></div>`,
+  ],
   [
     `;<div class={\`sm:block inline flex\${someVar}\`} />`,
     `;<div class={\`inline sm:block flex\${someVar}\`} />`,

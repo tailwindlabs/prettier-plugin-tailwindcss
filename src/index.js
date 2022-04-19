@@ -12,12 +12,13 @@ import resolveConfigFallback from 'tailwindcss/resolveConfig'
 import * as recast from 'recast'
 import * as astTypes from 'ast-types'
 import * as path from 'path'
-import * as fs from 'fs'
 import requireFrom from 'import-from'
 import requireFresh from 'import-fresh'
 import objectHash from 'object-hash'
 import * as svelte from 'prettier-plugin-svelte'
 import lineColumn from 'line-column'
+import jsesc from 'jsesc'
+import escalade from 'escalade/sync'
 
 let contextMap = new Map()
 
@@ -25,14 +26,46 @@ function bigSign(bigIntValue) {
   return (bigIntValue > 0n) - (bigIntValue < 0n)
 }
 
+function prefixCandidate(context, selector) {
+  let prefix = context.tailwindConfig.prefix
+  return typeof prefix === 'function' ? prefix(selector) : prefix + selector
+}
+
+// Polyfill for older Tailwind CSS versions
+function getClassOrderPolyfill(classes, { env }) {
+  // A list of utilities that are used by certain Tailwind CSS utilities but
+  // that don't exist on their own. This will result in them "not existing" and
+  // sorting could be weird since you still require them in order to make the
+  // host utitlies work properly. (Thanks Biology)
+  let parasiteUtilities = new Set([
+    prefixCandidate(env.context, 'group'),
+    prefixCandidate(env.context, 'peer'),
+  ])
+
+  let classNamesWithOrder = []
+
+  for (let className of classes) {
+    let order =
+      env
+        .generateRules(new Set([className]), env.context)
+        .sort(([a], [z]) => bigSign(z - a))[0]?.[0] ?? null
+
+    if (order === null && parasiteUtilities.has(className)) {
+      // This will make sure that it is at the very beginning of the
+      // `components` layer which technically means 'before any
+      // components'.
+      order = env.context.layerOrder.components
+    }
+
+    classNamesWithOrder.push([className, order])
+  }
+
+  return classNamesWithOrder
+}
+
 function sortClasses(
   classStr,
-  {
-    env,
-    ignoreFirst = false,
-    ignoreLast = false,
-    trimWhitespace = { start: true, end: true },
-  }
+  { env, ignoreFirst = false, ignoreLast = false, trimWhitespace = { start: true, end: true } }
 ) {
   if (typeof classStr !== 'string' || classStr === '') {
     return classStr
@@ -80,14 +113,9 @@ function sortClasses(
     return false
   })
 
-  let classNamesWithOrder = []
-  for (let className of classes) {
-    let order =
-      env
-        .generateRules(new Set([className]), env.context)
-        .sort(([a], [z]) => bigSign(z - a))[0]?.[0] ?? null
-    classNamesWithOrder.push([className, order])
-  }
+  let classNamesWithOrder = env.context.getClassOrder
+    ? env.context.getClassOrder(classes)
+    : getClassOrderPolyfill(classes, { env })
 
   classes = classNamesWithOrder
     .sort(([, a], [, z]) => {
@@ -116,7 +144,7 @@ function sortClasses(
 function createParser(original, transform) {
   return {
     ...original,
-    parse(text, parsers, options) {
+    parse(text, parsers, options = {}) {
       let ast = original.parse(text, parsers, options)
       let tailwindConfigPath = '__default__'
       let tailwindConfig = {}
@@ -124,36 +152,40 @@ function createParser(original, transform) {
       let createContext = createContextFallback
       let generateRules = generateRulesFallback
 
+      let baseDir
       let prettierConfigPath = prettier.resolveConfigFile.sync(options.filepath)
-      let baseDir = prettierConfigPath
-        ? path.dirname(prettierConfigPath)
-        : process.env.VSCODE_CWD ?? process.cwd()
 
       if (options.tailwindConfig) {
+        baseDir = prettierConfigPath ? path.dirname(prettierConfigPath) : process.cwd()
         tailwindConfigPath = path.resolve(baseDir, options.tailwindConfig)
         tailwindConfig = requireFresh(tailwindConfigPath)
       } else {
-        let tailwindConfigPathJs = path.resolve(baseDir, 'tailwind.config.js')
-        let tailwindConfigPathCjs = path.resolve(baseDir, 'tailwind.config.cjs')
-        if (fs.existsSync(tailwindConfigPathJs)) {
-          tailwindConfigPath = tailwindConfigPathJs
-          tailwindConfig = requireFresh(tailwindConfigPathJs)
-        } else if (fs.existsSync(tailwindConfigPathCjs)) {
-          tailwindConfigPath = tailwindConfigPathCjs
-          tailwindConfig = requireFresh(tailwindConfigPathCjs)
+        baseDir = prettierConfigPath
+          ? path.dirname(prettierConfigPath)
+          : options.filepath
+          ? path.dirname(options.filepath)
+          : process.cwd()
+        let configPath
+        try {
+          configPath = escalade(baseDir, (_dir, names) => {
+            if (names.includes('tailwind.config.js')) {
+              return 'tailwind.config.js'
+            }
+            if (names.includes('tailwind.config.cjs')) {
+              return 'tailwind.config.cjs'
+            }
+          })
+        } catch {}
+        if (configPath) {
+          tailwindConfigPath = configPath
+          tailwindConfig = requireFresh(configPath)
         }
       }
 
       try {
         resolveConfig = requireFrom(baseDir, 'tailwindcss/resolveConfig')
-        createContext = requireFrom(
-          baseDir,
-          'tailwindcss/lib/lib/setupContextUtils'
-        ).createContext
-        generateRules = requireFrom(
-          baseDir,
-          'tailwindcss/lib/lib/generateRules'
-        ).generateRules
+        createContext = requireFrom(baseDir, 'tailwindcss/lib/lib/setupContextUtils').createContext
+        generateRules = requireFrom(baseDir, 'tailwindcss/lib/lib/generateRules').generateRules
       } catch {}
 
       // suppress "empty content" warning
@@ -196,6 +228,13 @@ function transformHtml(attributes, computedAttributes = []) {
             if (isStringLiteral(path.node)) {
               if (sortStringLiteral(path.node, { env })) {
                 didChange = true
+
+                // https://github.com/benjamn/recast/issues/171#issuecomment-224996336
+                let quote = path.node.extra.raw[0]
+                let value = jsesc(path.node.value, {
+                  quotes: quote === "'" ? 'single' : 'double',
+                })
+                path.node.value = new String(quote + value + quote)
               }
             }
             this.traverse(path)
@@ -209,9 +248,7 @@ function transformHtml(attributes, computedAttributes = []) {
         })
 
         if (didChange) {
-          attr.value = recast.print(
-            ast.program.body[0].declarations[0].init
-          ).code
+          attr.value = recast.print(ast.program.body[0].declarations[0].init).code
         }
       }
     }
@@ -245,8 +282,7 @@ function sortStringLiteral(node, { env }) {
 
 function isStringLiteral(node) {
   return (
-    node.type === 'StringLiteral' ||
-    (node.type === 'Literal' && typeof node.value === 'string')
+    node.type === 'StringLiteral' || (node.type === 'Literal' && typeof node.value === 'string')
   )
 }
 
@@ -274,18 +310,14 @@ function sortTemplateLiteral(node, { env }) {
       : sortClasses(quasi.value.cooked, {
           env,
           ignoreFirst: i > 0 && !/^\s/.test(quasi.value.cooked),
-          ignoreLast:
-            i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
+          ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
           trimWhitespace: {
             start: i === 0,
             end: i >= node.expressions.length,
           },
         })
 
-    if (
-      quasi.value.raw !== originalRaw ||
-      quasi.value.cooked !== originalCooked
-    ) {
+    if (quasi.value.raw !== originalRaw || quasi.value.cooked !== originalCooked) {
       didChange = true
     }
   }
@@ -348,14 +380,8 @@ export const printers = {
           let finder = lineColumn(options.originalText)
 
           for (let change of changes) {
-            let start = finder.toIndex(
-              change.loc.start.line,
-              change.loc.start.column + 1
-            )
-            let end = finder.toIndex(
-              change.loc.end.line,
-              change.loc.end.column + 1
-            )
+            let start = finder.toIndex(change.loc.start.line, change.loc.start.column + 1)
+            let end = finder.toIndex(change.loc.end.line, change.loc.end.column + 1)
 
             options.originalText =
               options.originalText.substring(0, start) +
@@ -377,35 +403,18 @@ export const parsers = {
     prettierParserHTML.parsers.angular,
     transformHtml(['class'], ['[ngClass]'])
   ),
-  vue: createParser(
-    prettierParserHTML.parsers.vue,
-    transformHtml(['class'], [':class'])
-  ),
+  vue: createParser(prettierParserHTML.parsers.vue, transformHtml(['class'], [':class'])),
   css: createParser(prettierParserPostCSS.parsers.css, transformCss),
   scss: createParser(prettierParserPostCSS.parsers.scss, transformCss),
   less: createParser(prettierParserPostCSS.parsers.less, transformCss),
   babel: createParser(prettierParserBabel.parsers.babel, transformJavaScript),
-  'babel-flow': createParser(
-    prettierParserBabel.parsers['babel-flow'],
-    transformJavaScript
-  ),
+  'babel-flow': createParser(prettierParserBabel.parsers['babel-flow'], transformJavaScript),
   flow: createParser(prettierParserFlow.parsers.flow, transformJavaScript),
-  typescript: createParser(
-    prettierParserTypescript.parsers.typescript,
-    transformJavaScript
-  ),
-  'babel-ts': createParser(
-    prettierParserBabel.parsers['babel-ts'],
-    transformJavaScript
-  ),
-  espree: createParser(
-    prettierParserEspree.parsers.espree,
-    transformJavaScript
-  ),
-  meriyah: createParser(
-    prettierParserMeriyah.parsers.meriyah,
-    transformJavaScript
-  ),
+  typescript: createParser(prettierParserTypescript.parsers.typescript, transformJavaScript),
+  'babel-ts': createParser(prettierParserBabel.parsers['babel-ts'], transformJavaScript),
+  espree: createParser(prettierParserEspree.parsers.espree, transformJavaScript),
+  meriyah: createParser(prettierParserMeriyah.parsers.meriyah, transformJavaScript),
+  __js_expression: createParser(prettierParserBabel.parsers.__js_expression, transformJavaScript),
   svelte: createParser(svelte.parsers.svelte, (ast, { env }) => {
     let changes = []
     transformSvelte(ast.html, { env, changes })
@@ -434,8 +443,7 @@ function transformSvelte(ast, { env, changes }) {
             : sortClasses(value.data, {
                 env,
                 ignoreFirst: i > 0 && !/^\s/.test(value.data),
-                ignoreLast:
-                  i < attr.value.length - 1 && !/\s$/.test(value.data),
+                ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.data),
                 trimWhitespace: {
                   start: i === 0,
                   end: i >= attr.value.length - 1,

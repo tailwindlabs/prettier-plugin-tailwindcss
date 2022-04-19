@@ -19,7 +19,14 @@ function format(str, options = {}) {
 function formatFixture(name) {
   let binPath = path.resolve(__dirname, '../node_modules/.bin/prettier')
   let filePath = path.resolve(__dirname, `fixtures/${name}/index.html`)
-  return execSync(`${binPath} ${filePath}`).toString().trim()
+  return execSync(
+    `${binPath} ${filePath} --plugin-search-dir ${__dirname} --plugin ${path.resolve(
+      __dirname,
+      '..'
+    )}`
+  )
+    .toString()
+    .trim()
 }
 
 let yes = '__YES__'
@@ -127,6 +134,7 @@ let vue = [
   t`<div :class="\`${yes}\`"></div>`,
   t`<div :class="\`${yes} \${someVar}\`"></div>`,
   t`<div :class="someVar! ? \`${yes}\` : \`${yes}\`"></div>`, // ts
+  t`<div :class="someVar ? someFunc(someVar as string) + '${yes}' : ''"></div>`, // ts
   [
     `<div :class="\`sm:block inline flex\${someVar}\`"></div>`,
     `<div :class="\`inline sm:block flex\${someVar}\`"></div>`,
@@ -164,6 +172,9 @@ let tests = {
   'babel-flow': javascript,
   espree: javascript,
   meriyah: javascript,
+  mdx: javascript
+    .filter((test) => !test.find((t) => /^\/\*/.test(t)))
+    .map((test) => test.map((t) => t.replace(/^;/, ''))),
   svelte: [
     t`<div class="${yes}" />`,
     t`<div class />`,
@@ -207,6 +218,18 @@ test('non-tailwind classes', () => {
   expect(
     format('<div class="sm:lowercase uppercase potato text-sm"></div>')
   ).toEqual('<div class="potato text-sm uppercase sm:lowercase"></div>')
+})
+
+test('no prettier config', () => {
+  expect(formatFixture('no-prettier-config')).toEqual(
+    '<div class="bg-red-500 sm:bg-tomato"></div>'
+  )
+})
+
+test('parasite utilities', () => {
+  expect(
+    format('<div class="group peer unknown-class p-0 container"></div>')
+  ).toEqual('<div class="unknown-class group peer container p-0"></div>')
 })
 
 test('inferred config path', () => {

@@ -65,7 +65,7 @@ function getClassOrderPolyfill(classes, { env }) {
 
 function sortClasses(
   classStr,
-  { env, ignoreFirst = false, ignoreLast = false, trimWhitespace = { start: true, end: true } }
+  { env, ignoreFirst = false, ignoreLast = false, tidyWhitespace = { start: true, end: true } }
 ) {
   if (typeof classStr !== 'string' || classStr === '') {
     return classStr
@@ -78,7 +78,7 @@ function sortClasses(
   }
 
   if (classStr.includes('\n')) {
-    trimWhitespace = false
+    tidyWhitespace = false
   }
 
   let result = ''
@@ -90,7 +90,7 @@ function sortClasses(
     classes.pop()
   }
 
-  if (trimWhitespace) {
+  if (tidyWhitespace) {
     whitespace = whitespace.map(() => ' ')
   }
 
@@ -132,10 +132,10 @@ function sortClasses(
     result += `${classes[i]}${whitespace[i] ?? ''}`
   }
 
-  if (trimWhitespace) {
+  if (tidyWhitespace) {
     result = result
-      .replace(/^\s+/, trimWhitespace.start ? '' : ' ')
-      .replace(/\s+$/, trimWhitespace.end ? '' : ' ')
+      .replace(/^\s+/, tidyWhitespace.start ? '' : ' ')
+      .replace(/\s+$/, tidyWhitespace.end ? '' : ' ')
   }
 
   return prefix + result + suffix
@@ -299,7 +299,7 @@ function sortTemplateLiteral(node, { env }) {
       env,
       ignoreFirst: i > 0 && !/^\s/.test(quasi.value.raw),
       ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.raw),
-      trimWhitespace: {
+      tidyWhitespace: {
         start: i === 0,
         end: i >= node.expressions.length,
       },
@@ -311,7 +311,7 @@ function sortTemplateLiteral(node, { env }) {
           env,
           ignoreFirst: i > 0 && !/^\s/.test(quasi.value.cooked),
           ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
-          trimWhitespace: {
+          tidyWhitespace: {
             start: i === 0,
             end: i >= node.expressions.length,
           },
@@ -433,7 +433,7 @@ function transformSvelte(ast, { env, changes }) {
             env,
             ignoreFirst: i > 0 && !/^\s/.test(value.raw),
             ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.raw),
-            trimWhitespace: {
+            tidyWhitespace: {
               start: i === 0,
               end: i >= attr.value.length - 1,
             },
@@ -444,7 +444,7 @@ function transformSvelte(ast, { env, changes }) {
                 env,
                 ignoreFirst: i > 0 && !/^\s/.test(value.data),
                 ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.data),
-                trimWhitespace: {
+                tidyWhitespace: {
                   start: i === 0,
                   end: i >= attr.value.length - 1,
                 },

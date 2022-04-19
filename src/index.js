@@ -65,7 +65,12 @@ function getClassOrderPolyfill(classes, { env }) {
 
 function sortClasses(
   classStr,
-  { env, ignoreFirst = false, ignoreLast = false }
+  {
+    env,
+    ignoreFirst = false,
+    ignoreLast = false,
+    tidyWhitespace = { start: true, end: true },
+  }
 ) {
   if (typeof classStr !== 'string' || classStr === '') {
     return classStr
@@ -77,6 +82,10 @@ function sortClasses(
     return classStr
   }
 
+  if (classStr.includes('\n')) {
+    tidyWhitespace = false
+  }
+
   let result = ''
   let parts = classStr.split(/(\s+)/)
   let classes = parts.filter((_, i) => i % 2 === 0)
@@ -84,6 +93,10 @@ function sortClasses(
 
   if (classes[classes.length - 1] === '') {
     classes.pop()
+  }
+
+  if (tidyWhitespace) {
+    whitespace = whitespace.map(() => ' ')
   }
 
   let prefix = ''
@@ -95,6 +108,15 @@ function sortClasses(
   if (ignoreLast) {
     suffix = `${whitespace.pop() ?? ''}${classes.pop() ?? ''}`
   }
+
+  // Remove duplicates
+  classes = classes.filter((cls, index, arr) => {
+    if (arr.indexOf(cls) === index) {
+      return true
+    }
+    whitespace.splice(index - 1, 1)
+    return false
+  })
 
   let classNamesWithOrder = env.context.getClassOrder
     ? env.context.getClassOrder(classes)
@@ -113,6 +135,12 @@ function sortClasses(
 
   for (let i = 0; i < classes.length; i++) {
     result += `${classes[i]}${whitespace[i] ?? ''}`
+  }
+
+  if (tidyWhitespace) {
+    result = result
+      .replace(/^\s+/, tidyWhitespace.start ? '' : ' ')
+      .replace(/\s+$/, tidyWhitespace.end ? '' : ' ')
   }
 
   return prefix + result + suffix
@@ -287,6 +315,10 @@ function sortTemplateLiteral(node, { env }) {
       env,
       ignoreFirst: i > 0 && !/^\s/.test(quasi.value.raw),
       ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.raw),
+      tidyWhitespace: {
+        start: i === 0,
+        end: i >= node.expressions.length,
+      },
     })
 
     quasi.value.cooked = same
@@ -296,6 +328,10 @@ function sortTemplateLiteral(node, { env }) {
           ignoreFirst: i > 0 && !/^\s/.test(quasi.value.cooked),
           ignoreLast:
             i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
+          tidyWhitespace: {
+            start: i === 0,
+            end: i >= node.expressions.length,
+          },
         })
 
     if (
@@ -444,6 +480,10 @@ function transformSvelte(ast, { env, changes }) {
             env,
             ignoreFirst: i > 0 && !/^\s/.test(value.raw),
             ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.raw),
+            tidyWhitespace: {
+              start: i === 0,
+              end: i >= attr.value.length - 1,
+            },
           })
           value.data = same
             ? value.raw
@@ -452,6 +492,10 @@ function transformSvelte(ast, { env, changes }) {
                 ignoreFirst: i > 0 && !/^\s/.test(value.data),
                 ignoreLast:
                   i < attr.value.length - 1 && !/\s$/.test(value.data),
+                tidyWhitespace: {
+                  start: i === 0,
+                  end: i >= attr.value.length - 1,
+                },
               })
         } else if (value.type === 'MustacheTag') {
           visit(value.expression, {

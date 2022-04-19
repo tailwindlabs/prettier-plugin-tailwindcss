@@ -44,6 +44,10 @@ function sortClasses(
     return classStr
   }
 
+  if (classStr.includes('\n')) {
+    trimWhitespace = false
+  }
+
   let result = ''
   let parts = classStr.split(/(\s+)/)
   let classes = parts.filter((_, i) => i % 2 === 0)

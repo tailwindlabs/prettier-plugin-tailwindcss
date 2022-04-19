@@ -96,18 +96,9 @@ let javascript = [
     `;<div class={\`sm:p-0 p-0 \${someVar}sm:block md:inline flex\`} />`,
     `;<div class={\`p-0 sm:p-0 \${someVar}sm:block flex md:inline\`} />`,
   ],
-  [
-    ';<div class="   m-0  sm:p-0  p-0   " />',
-    ';<div class="m-0 p-0 sm:p-0" />',
-  ],
-  [
-    ";<div class={'   m-0  sm:p-0  p-0   '} />",
-    ";<div class={'m-0 p-0 sm:p-0'} />",
-  ],
-  [
-    ';<div class={` sm:p-0\n  p-0   `} />',
-    ';<div\n  class={` p-0\n  sm:p-0   `}\n/>',
-  ],
+  [';<div class="   m-0  sm:p-0  p-0   " />', ';<div class="m-0 p-0 sm:p-0" />'],
+  [";<div class={'   m-0  sm:p-0  p-0   '} />", ";<div class={'m-0 p-0 sm:p-0'} />"],
+  [';<div class={` sm:p-0\n  p-0   `} />', ';<div\n  class={` p-0\n  sm:p-0   `}\n/>'],
   [';<div class="flex flex" />', ';<div class="flex" />'],
   [';<div class={`   flex  flex `} />', ';<div class={`flex`} />'],
   [
@@ -154,10 +145,7 @@ let vue = [
 let tests = {
   html,
   lwc: html,
-  vue: [
-    ...vue,
-    t`<div :class="\`${yes} \${someVar} ${yes} \${'${yes}'}\`"></div>`,
-  ],
+  vue: [...vue, t`<div :class="\`${yes} \${someVar} ${yes} \${'${yes}'}\`"></div>`],
   angular: [
     ...vue.map((test) => test.map((t) => t.replace(/:class=/g, '[ngClass]='))),
     t`<div [ngClass]='\`${yes} \${someVar} ${yes} \${"${yes}"}\`'></div>`,
@@ -215,42 +203,33 @@ describe('parsers', () => {
 })
 
 test('non-tailwind classes', () => {
-  expect(
-    format('<div class="sm:lowercase uppercase potato text-sm"></div>')
-  ).toEqual('<div class="potato text-sm uppercase sm:lowercase"></div>')
+  expect(format('<div class="sm:lowercase uppercase potato text-sm"></div>')).toEqual(
+    '<div class="potato text-sm uppercase sm:lowercase"></div>'
+  )
 })
 
 test('no prettier config', () => {
-  expect(formatFixture('no-prettier-config')).toEqual(
-    '<div class="bg-red-500 sm:bg-tomato"></div>'
-  )
+  expect(formatFixture('no-prettier-config')).toEqual('<div class="bg-red-500 sm:bg-tomato"></div>')
 })
 
 test('parasite utilities', () => {
-  expect(
-    format('<div class="group peer unknown-class p-0 container"></div>')
-  ).toEqual('<div class="unknown-class group peer container p-0"></div>')
+  expect(format('<div class="group peer unknown-class p-0 container"></div>')).toEqual(
+    '<div class="unknown-class group peer container p-0"></div>'
+  )
 })
 
 test('inferred config path', () => {
-  expect(formatFixture('basic')).toEqual(
-    '<div class="bg-red-500 sm:bg-tomato"></div>'
-  )
+  expect(formatFixture('basic')).toEqual('<div class="bg-red-500 sm:bg-tomato"></div>')
 })
 
 test('inferred config path (.cjs)', () => {
-  expect(formatFixture('cjs')).toEqual(
-    '<div class="bg-red-500 sm:bg-hotpink"></div>'
-  )
+  expect(formatFixture('cjs')).toEqual('<div class="bg-red-500 sm:bg-hotpink"></div>')
 })
 
 test('explicit config path', () => {
   expect(
     format('<div class="sm:bg-tomato bg-red-500"></div>', {
-      tailwindConfig: path.resolve(
-        __dirname,
-        'fixtures/basic/tailwind.config.js'
-      ),
+      tailwindConfig: path.resolve(__dirname, 'fixtures/basic/tailwind.config.js'),
     })
   ).toEqual('<div class="bg-red-500 sm:bg-tomato"></div>')
 })

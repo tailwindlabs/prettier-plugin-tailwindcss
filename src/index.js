@@ -65,12 +65,7 @@ function getClassOrderPolyfill(classes, { env }) {
 
 function sortClasses(
   classStr,
-  {
-    env,
-    ignoreFirst = false,
-    ignoreLast = false,
-    tidyWhitespace = { start: true, end: true },
-  }
+  { env, ignoreFirst = false, ignoreLast = false, tidyWhitespace = { start: true, end: true } }
 ) {
   if (typeof classStr !== 'string' || classStr === '') {
     return classStr
@@ -161,9 +156,7 @@ function createParser(original, transform) {
       let prettierConfigPath = prettier.resolveConfigFile.sync(options.filepath)
 
       if (options.tailwindConfig) {
-        baseDir = prettierConfigPath
-          ? path.dirname(prettierConfigPath)
-          : process.cwd()
+        baseDir = prettierConfigPath ? path.dirname(prettierConfigPath) : process.cwd()
         tailwindConfigPath = path.resolve(baseDir, options.tailwindConfig)
         tailwindConfig = requireFresh(tailwindConfigPath)
       } else {
@@ -191,14 +184,8 @@ function createParser(original, transform) {
 
       try {
         resolveConfig = requireFrom(baseDir, 'tailwindcss/resolveConfig')
-        createContext = requireFrom(
-          baseDir,
-          'tailwindcss/lib/lib/setupContextUtils'
-        ).createContext
-        generateRules = requireFrom(
-          baseDir,
-          'tailwindcss/lib/lib/generateRules'
-        ).generateRules
+        createContext = requireFrom(baseDir, 'tailwindcss/lib/lib/setupContextUtils').createContext
+        generateRules = requireFrom(baseDir, 'tailwindcss/lib/lib/generateRules').generateRules
       } catch {}
 
       // suppress "empty content" warning
@@ -261,9 +248,7 @@ function transformHtml(attributes, computedAttributes = []) {
         })
 
         if (didChange) {
-          attr.value = recast.print(
-            ast.program.body[0].declarations[0].init
-          ).code
+          attr.value = recast.print(ast.program.body[0].declarations[0].init).code
         }
       }
     }
@@ -297,8 +282,7 @@ function sortStringLiteral(node, { env }) {
 
 function isStringLiteral(node) {
   return (
-    node.type === 'StringLiteral' ||
-    (node.type === 'Literal' && typeof node.value === 'string')
+    node.type === 'StringLiteral' || (node.type === 'Literal' && typeof node.value === 'string')
   )
 }
 
@@ -326,18 +310,14 @@ function sortTemplateLiteral(node, { env }) {
       : sortClasses(quasi.value.cooked, {
           env,
           ignoreFirst: i > 0 && !/^\s/.test(quasi.value.cooked),
-          ignoreLast:
-            i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
+          ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
           tidyWhitespace: {
             start: i === 0,
             end: i >= node.expressions.length,
           },
         })
 
-    if (
-      quasi.value.raw !== originalRaw ||
-      quasi.value.cooked !== originalCooked
-    ) {
+    if (quasi.value.raw !== originalRaw || quasi.value.cooked !== originalCooked) {
       didChange = true
     }
   }
@@ -400,14 +380,8 @@ export const printers = {
           let finder = lineColumn(options.originalText)
 
           for (let change of changes) {
-            let start = finder.toIndex(
-              change.loc.start.line,
-              change.loc.start.column + 1
-            )
-            let end = finder.toIndex(
-              change.loc.end.line,
-              change.loc.end.column + 1
-            )
+            let start = finder.toIndex(change.loc.start.line, change.loc.start.column + 1)
+            let end = finder.toIndex(change.loc.end.line, change.loc.end.column + 1)
 
             options.originalText =
               options.originalText.substring(0, start) +
@@ -429,39 +403,18 @@ export const parsers = {
     prettierParserHTML.parsers.angular,
     transformHtml(['class'], ['[ngClass]'])
   ),
-  vue: createParser(
-    prettierParserHTML.parsers.vue,
-    transformHtml(['class'], [':class'])
-  ),
+  vue: createParser(prettierParserHTML.parsers.vue, transformHtml(['class'], [':class'])),
   css: createParser(prettierParserPostCSS.parsers.css, transformCss),
   scss: createParser(prettierParserPostCSS.parsers.scss, transformCss),
   less: createParser(prettierParserPostCSS.parsers.less, transformCss),
   babel: createParser(prettierParserBabel.parsers.babel, transformJavaScript),
-  'babel-flow': createParser(
-    prettierParserBabel.parsers['babel-flow'],
-    transformJavaScript
-  ),
+  'babel-flow': createParser(prettierParserBabel.parsers['babel-flow'], transformJavaScript),
   flow: createParser(prettierParserFlow.parsers.flow, transformJavaScript),
-  typescript: createParser(
-    prettierParserTypescript.parsers.typescript,
-    transformJavaScript
-  ),
-  'babel-ts': createParser(
-    prettierParserBabel.parsers['babel-ts'],
-    transformJavaScript
-  ),
-  espree: createParser(
-    prettierParserEspree.parsers.espree,
-    transformJavaScript
-  ),
-  meriyah: createParser(
-    prettierParserMeriyah.parsers.meriyah,
-    transformJavaScript
-  ),
-  __js_expression: createParser(
-    prettierParserBabel.parsers.__js_expression,
-    transformJavaScript
-  ),
+  typescript: createParser(prettierParserTypescript.parsers.typescript, transformJavaScript),
+  'babel-ts': createParser(prettierParserBabel.parsers['babel-ts'], transformJavaScript),
+  espree: createParser(prettierParserEspree.parsers.espree, transformJavaScript),
+  meriyah: createParser(prettierParserMeriyah.parsers.meriyah, transformJavaScript),
+  __js_expression: createParser(prettierParserBabel.parsers.__js_expression, transformJavaScript),
   svelte: createParser(svelte.parsers.svelte, (ast, { env }) => {
     let changes = []
     transformSvelte(ast.html, { env, changes })
@@ -490,8 +443,7 @@ function transformSvelte(ast, { env, changes }) {
             : sortClasses(value.data, {
                 env,
                 ignoreFirst: i > 0 && !/^\s/.test(value.data),
-                ignoreLast:
-                  i < attr.value.length - 1 && !/\s$/.test(value.data),
+                ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.data),
                 tidyWhitespace: {
                   start: i === 0,
                   end: i >= attr.value.length - 1,

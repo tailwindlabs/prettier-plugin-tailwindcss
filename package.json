@@ -37,7 +37,7 @@
     "line-column": "^1.0.2",
     "object-hash": "^2.2.0",
     "prettier": "^2.5.1",
-    "prettier-plugin-svelte": "^2.6.0",
+    "prettier-plugin-svelte": "^2.7.0",
     "recast": "^0.20.5",
     "rimraf": "^3.0.2",
     "svelte": "^3.46.4",

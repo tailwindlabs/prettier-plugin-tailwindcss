@@ -432,6 +432,12 @@ function transformSvelte(ast, { env, changes }) {
   for (let child of ast.children ?? []) {
     transformSvelte(child, { env, changes })
   }
+
+  if (ast.type === 'IfBlock') {
+    for (let child of ast.else?.children ?? []) {
+      transformSvelte(child, { env, changes })
+    }
+  }
 }
 
 // https://lihautan.com/manipulating-ast-with-javascript/

@@ -130,8 +130,20 @@ let vue = [
   ],
 ]
 
+let glimmer = [
+  t`<div class='${yes}'></div>`,
+  t`<!-- <div class='${no}'></div> -->`,
+  t`<div class='${no} {{"p-0 sm:p-0 m-0"}}'></div>`,
+  t`<div not-class='${no}'></div>`,
+  ["<div class='  sm:p-0   p-0 '></div>", "<div class='p-0 sm:p-0'></div>"],
+  t`<div class></div>`,
+  t`<div class=''></div>`,
+  t`{{link 'Some page' href=person.url class='${no}'}}`
+]
+
 let tests = {
   html,
+  glimmer,
   lwc: html,
   vue: [...vue, t`<div :class="\`${yes} \${someVar} ${yes} \${'${yes}'}\`"></div>`],
   angular: [

@@ -3,6 +3,7 @@ import prettierParserHTML from 'prettier/parser-html'
 import prettierParserPostCSS from 'prettier/parser-postcss'
 import prettierParserBabel from 'prettier/parser-babel'
 import prettierParserEspree from 'prettier/parser-espree'
+import prettierParserGlimmer from 'prettier/parser-glimmer'
 import prettierParserMeriyah from 'prettier/parser-meriyah'
 import prettierParserFlow from 'prettier/parser-flow'
 import prettierParserTypescript from 'prettier/parser-typescript'
@@ -234,6 +235,48 @@ function transformHtml(attributes, computedAttributes = []) {
   return transform
 }
 
+function transformGlimmer(attributes) {
+  let transform = (ast, { env, sortTextNodes = false }) => {
+    if (sortTextNodes && ast.type === 'TextNode') {
+      ast.chars = sortClasses(ast.chars, { env })
+    }
+
+    if (sortTextNodes && ast.type === 'StringLiteral') {
+      ast.value = sortClasses(ast.value, { env })
+    }
+
+    // Traverse attributes in the AST
+    for (const attr of ast.attributes ?? []) {
+      if (! attributes.includes(attr.name)) {
+        continue
+      }
+
+      if (!attr.value) {
+        continue
+      }
+
+      transform(attr.value, { env, sortTextNodes: true })
+    }
+
+    if (ast.type === 'ConcatStatement') {
+      for (let child of ast.parts ?? []) {
+        transform(child, { env })
+      }
+      return
+    }
+
+    if (ast.type === 'MustacheStatement') {
+      transform(ast.path, { env })
+      return
+    }
+
+    for (let child of ast.children ?? ast.body ?? []) {
+      transform(child, { env })
+    }
+  }
+  return transform
+}
+
 function sortStringLiteral(node, { env }) {
   let result = sortClasses(node.value, { env })
   let didChange = result !== node.value
@@ -364,6 +407,7 @@ export const printers = {
 
 export const parsers = {
   html: createParser(prettierParserHTML.parsers.html, transformHtml(['class'])),
+  glimmer: createParser(prettierParserGlimmer.parsers.glimmer, transformGlimmer(['class'])),
   lwc: createParser(prettierParserHTML.parsers.lwc, transformHtml(['class'])),
   angular: createParser(
     prettierParserHTML.parsers.angular,

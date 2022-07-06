@@ -236,9 +236,22 @@ function transformHtml(attributes, computedAttributes = []) {
 }
 
 function transformGlimmer(attributes) {
-  let transform = (ast, { env, sortTextNodes = false }) => {
+  function transform(
+    ast,
+    { env, parent = null, sortTextNodes = false, siblings = null }
+  ) {
     if (sortTextNodes && ast.type === 'TextNode') {
-      ast.chars = sortClasses(ast.chars, { env })
+      ast.chars = sortClasses(ast.chars, {
+        env,
+        ignoreFirst:
+          parent?.type === 'ConcatStatement' &&
+          siblings?.prev &&
+          !/^\s/.test(ast.chars),
+        ignoreLast:
+          parent?.type === 'ConcatStatement' &&
+          siblings?.next &&
+          !/\s$/.test(ast.chars),
+      })
     }
 
     if (sortTextNodes && ast.type === 'StringLiteral') {
@@ -247,7 +260,7 @@ function transformGlimmer(attributes) {
 
     // Traverse attributes in the AST
     for (const attr of ast.attributes ?? []) {
-      if (! attributes.includes(attr.name)) {
+      if (!attributes.includes(attr.name)) {
         continue
       }
 
@@ -255,23 +268,36 @@ function transformGlimmer(attributes) {
         continue
       }
 
-      transform(attr.value, { env, sortTextNodes: true })
+      transform(attr.value, { env, sortTextNodes: true, parent: ast })
     }
 
     if (ast.type === 'ConcatStatement') {
       for (let child of ast.parts ?? []) {
-        transform(child, { env })
+        transform(child, {
+          env,
+          sortTextNodes,
+          parent: ast,
+          siblings: {
+            prev: ast.parts[ast.parts.indexOf(child) - 1],
+            next: ast.parts[ast.parts.indexOf(child) + 1],
+          },
+        })
       }
       return
     }
 
     if (ast.type === 'MustacheStatement') {
-      transform(ast.path, { env })
+      transform(ast.path, { env, sortTextNodes, parent: ast })
+
+      for (const param of ast.params) {
+        transform(param, { env, sortTextNodes, parent: ast })
+      }
+
       return
     }
 
     for (let child of ast.children ?? ast.body ?? []) {
-      transform(child, { env })
+      transform(child, { env, sortTextNodes, parent: ast })
     }
   }
   return transform

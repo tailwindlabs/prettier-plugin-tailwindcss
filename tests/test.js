@@ -136,6 +136,7 @@ let glimmer = [
   t`<div class='${yes} {{"${yes}"}}'></div>`,
   t`<div class='${yes} {{"${yes}"}} ${yes}'></div>`,
   t`<div class='${yes} {{"${yes}"}} {{if someVar "${yes}" "${yes}"}}'></div>`,
+  t`<div class='${yes} {{"${yes}"}} {{if someVar "${yes}" "${yes}"}}' {{if someVar "attr='${no}'" "attr='${no}'"}}></div>`,
   [
     `<div class='md:inline flex sm:block{{someVar}}'></div>`,
     `<div class='flex md:inline sm:block{{someVar}}'></div>`,

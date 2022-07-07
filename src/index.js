@@ -236,11 +236,10 @@ function transformHtml(attributes, computedAttributes = []) {
 }
 
 function transformGlimmer(ast, { env }) {
-  // Traverse attributes in the AST
-  let attributes = ['class']
-
   visit(ast, {
     AttrNode(attr, parent, key, index, meta) {
+      let attributes = ['class']
+
       if (attributes.includes(attr.name) && attr.value) {
         meta.sortTextNodes = true
       }
@@ -258,14 +257,8 @@ function transformGlimmer(ast, { env }) {
 
       node.chars = sortClasses(node.chars, {
         env,
-        ignoreFirst:
-          parent?.type === 'ConcatStatement' &&
-          siblings?.prev &&
-          !/^\s/.test(node.chars),
-        ignoreLast:
-          parent?.type === 'ConcatStatement' &&
-          siblings?.next &&
-          !/\s$/.test(node.chars),
+        ignoreFirst: siblings?.prev && !/^\s/.test(node.chars),
+        ignoreLast: siblings?.next && !/\s$/.test(node.chars),
       })
     },
 

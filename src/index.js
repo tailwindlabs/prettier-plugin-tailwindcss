@@ -235,19 +235,19 @@ function transformHtml(attributes, computedAttributes = []) {
   return transform
 }
 
-function transformGlimmer(ast, { env, sortTextNodes = false }) {
+function transformGlimmer(ast, { env }) {
   // Traverse attributes in the AST
   let attributes = ['class']
 
   visit(ast, {
-    AttrNode(attr) {
+    AttrNode(attr, parent, key, index, meta) {
       if (attributes.includes(attr.name) && attr.value) {
-        transformGlimmer(attr.value, { env, sortTextNodes: true, parent: ast })
+        meta.sortTextNodes = true
       }
     },
 
-    TextNode(node, parent, _, index) {
-      if (!sortTextNodes) {
+    TextNode(node, parent, key, index, meta) {
+      if (!meta.sortTextNodes) {
         return
       }
 
@@ -269,8 +269,8 @@ function transformGlimmer(ast, { env, sortTextNodes = false }) {
       })
     },
 
-    StringLiteral(node) {
-      if (! sortTextNodes) {
+    StringLiteral(node, parent, key, index, meta) {
+      if (!meta.sortTextNodes) {
         return
       }
 
@@ -488,13 +488,13 @@ function transformSvelte(ast, { env, changes }) {
 
 // https://lihautan.com/manipulating-ast-with-javascript/
 function visit(ast, callbackMap) {
-  function _visit(node, parent, key, index) {
+  function _visit(node, parent, key, index, meta = {}) {
     if (typeof callbackMap === 'function') {
-      if (callbackMap(node, parent, key, index) === false) {
+      if (callbackMap(node, parent, key, index, meta) === false) {
         return
       }
     } else if (node.type in callbackMap) {
-      if (callbackMap[node.type](node, parent, key, index) === false) {
+      if (callbackMap[node.type](node, parent, key, index, meta) === false) {
         return
       }
     }
@@ -505,11 +505,11 @@ function visit(ast, callbackMap) {
       if (Array.isArray(child)) {
         for (let j = 0; j < child.length; j++) {
           if (child[j] !== null) {
-            _visit(child[j], node, keys[i], j)
+            _visit(child[j], node, keys[i], j, {...meta})
           }
         }
       } else if (typeof child?.type === 'string') {
-        _visit(child, node, keys[i], i)
+        _visit(child, node, keys[i], i, {...meta})
       }
     }
   }

@@ -235,68 +235,48 @@ function transformHtml(attributes, computedAttributes = []) {
   return transform
 }
 
-function transformGlimmer(ast, { env, parent = null, sortTextNodes = false, siblings = null }) {
-  if (sortTextNodes && ast.type === 'TextNode') {
-    ast.chars = sortClasses(ast.chars, {
-      env,
-      ignoreFirst:
-        parent?.type === 'ConcatStatement' &&
-        siblings?.prev &&
-        !/^\s/.test(ast.chars),
-      ignoreLast:
-        parent?.type === 'ConcatStatement' &&
-        siblings?.next &&
-        !/\s$/.test(ast.chars),
-    })
-  }
-
-  if (sortTextNodes && ast.type === 'StringLiteral') {
-    ast.value = sortClasses(ast.value, { env })
-  }
-
+function transformGlimmer(ast, { env, sortTextNodes = false }) {
   // Traverse attributes in the AST
   let attributes = ['class']
 
-  for (const attr of ast.attributes ?? []) {
-    if (!attributes.includes(attr.name)) {
-      continue
-    }
+  visit(ast, {
+    AttrNode(attr) {
+      if (attributes.includes(attr.name) && attr.value) {
+        transformGlimmer(attr.value, { env, sortTextNodes: true, parent: ast })
+      }
+    },
 
-    if (!attr.value) {
-      continue
-    }
+    TextNode(node, parent, _, index) {
+      if (!sortTextNodes) {
+        return
+      }
 
-    transformGlimmer(attr.value, { env, sortTextNodes: true, parent: ast })
-  }
+      let siblings = parent?.type === 'ConcatStatement' ? {
+        prev: parent.parts[index - 1],
+        next: parent.parts[index + 1],
+      } : null
 
-  if (ast.type === 'ConcatStatement') {
-    for (let child of ast.parts ?? []) {
-      transformGlimmer(child, {
+      node.chars = sortClasses(node.chars, {
         env,
-        sortTextNodes,
-        parent: ast,
-        siblings: {
-          prev: ast.parts[ast.parts.indexOf(child) - 1],
-          next: ast.parts[ast.parts.indexOf(child) + 1],
-        },
+        ignoreFirst:
+          parent?.type === 'ConcatStatement' &&
+          siblings?.prev &&
+          !/^\s/.test(node.chars),
+        ignoreLast:
+          parent?.type === 'ConcatStatement' &&
+          siblings?.next &&
+          !/\s$/.test(node.chars),
       })
-    }
-    return
-  }
+    },
 
-  if (ast.type === 'MustacheStatement') {
-    transformGlimmer(ast.path, { env, sortTextNodes, parent: ast })
+    StringLiteral(node) {
+      if (! sortTextNodes) {
+        return
+      }
 
-    for (const param of ast.params) {
-      transformGlimmer(param, { env, sortTextNodes, parent: ast })
-    }
-
-    return
-  }
-
-  for (let child of ast.children ?? ast.body ?? []) {
-    transformGlimmer(child, { env, sortTextNodes, parent: ast })
-  }
+      node.value = sortClasses(node.value, { env })
+    },
+  })
 }
 
 function sortStringLiteral(node, { env }) {

@@ -235,72 +235,68 @@ function transformHtml(attributes, computedAttributes = []) {
   return transform
 }
 
-function transformGlimmer(attributes) {
-  function transform(
-    ast,
-    { env, parent = null, sortTextNodes = false, siblings = null }
-  ) {
-    if (sortTextNodes && ast.type === 'TextNode') {
-      ast.chars = sortClasses(ast.chars, {
+function transformGlimmer(ast, { env, parent = null, sortTextNodes = false, siblings = null }) {
+  if (sortTextNodes && ast.type === 'TextNode') {
+    ast.chars = sortClasses(ast.chars, {
+      env,
+      ignoreFirst:
+        parent?.type === 'ConcatStatement' &&
+        siblings?.prev &&
+        !/^\s/.test(ast.chars),
+      ignoreLast:
+        parent?.type === 'ConcatStatement' &&
+        siblings?.next &&
+        !/\s$/.test(ast.chars),
+    })
+  }
+
+  if (sortTextNodes && ast.type === 'StringLiteral') {
+    ast.value = sortClasses(ast.value, { env })
+  }
+
+  // Traverse attributes in the AST
+  let attributes = ['class']
+
+  for (const attr of ast.attributes ?? []) {
+    if (!attributes.includes(attr.name)) {
+      continue
+    }
+
+    if (!attr.value) {
+      continue
+    }
+
+    transformGlimmer(attr.value, { env, sortTextNodes: true, parent: ast })
+  }
+
+  if (ast.type === 'ConcatStatement') {
+    for (let child of ast.parts ?? []) {
+      transformGlimmer(child, {
         env,
-        ignoreFirst:
-          parent?.type === 'ConcatStatement' &&
-          siblings?.prev &&
-          !/^\s/.test(ast.chars),
-        ignoreLast:
-          parent?.type === 'ConcatStatement' &&
-          siblings?.next &&
-          !/\s$/.test(ast.chars),
+        sortTextNodes,
+        parent: ast,
+        siblings: {
+          prev: ast.parts[ast.parts.indexOf(child) - 1],
+          next: ast.parts[ast.parts.indexOf(child) + 1],
+        },
       })
     }
-
-    if (sortTextNodes && ast.type === 'StringLiteral') {
-      ast.value = sortClasses(ast.value, { env })
-    }
-
-    // Traverse attributes in the AST
-    for (const attr of ast.attributes ?? []) {
-      if (!attributes.includes(attr.name)) {
-        continue
-      }
-
-      if (!attr.value) {
-        continue
-      }
-
-      transform(attr.value, { env, sortTextNodes: true, parent: ast })
-    }
-
-    if (ast.type === 'ConcatStatement') {
-      for (let child of ast.parts ?? []) {
-        transform(child, {
-          env,
-          sortTextNodes,
-          parent: ast,
-          siblings: {
-            prev: ast.parts[ast.parts.indexOf(child) - 1],
-            next: ast.parts[ast.parts.indexOf(child) + 1],
-          },
-        })
-      }
-      return
-    }
-
-    if (ast.type === 'MustacheStatement') {
-      transform(ast.path, { env, sortTextNodes, parent: ast })
-
-      for (const param of ast.params) {
-        transform(param, { env, sortTextNodes, parent: ast })
-      }
-
-      return
-    }
-
-    for (let child of ast.children ?? ast.body ?? []) {
-      transform(child, { env, sortTextNodes, parent: ast })
-    }
+    return
   }
-  return transform
+
+  if (ast.type === 'MustacheStatement') {
+    transformGlimmer(ast.path, { env, sortTextNodes, parent: ast })
+
+    for (const param of ast.params) {
+      transformGlimmer(param, { env, sortTextNodes, parent: ast })
+    }
+
+    return
+  }
+
+  for (let child of ast.children ?? ast.body ?? []) {
+    transformGlimmer(child, { env, sortTextNodes, parent: ast })
+  }
 }
 
 function sortStringLiteral(node, { env }) {
@@ -433,7 +429,7 @@ export const printers = {
 
 export const parsers = {
   html: createParser(prettierParserHTML.parsers.html, transformHtml(['class'])),
-  glimmer: createParser(prettierParserGlimmer.parsers.glimmer, transformGlimmer(['class'])),
+  glimmer: createParser(prettierParserGlimmer.parsers.glimmer, transformGlimmer),
   lwc: createParser(prettierParserHTML.parsers.lwc, transformHtml(['class'])),
   angular: createParser(
     prettierParserHTML.parsers.angular,

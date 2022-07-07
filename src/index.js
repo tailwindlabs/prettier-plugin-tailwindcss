@@ -3,6 +3,7 @@ import prettierParserHTML from 'prettier/parser-html'
 import prettierParserPostCSS from 'prettier/parser-postcss'
 import prettierParserBabel from 'prettier/parser-babel'
 import prettierParserEspree from 'prettier/parser-espree'
+import prettierParserGlimmer from 'prettier/parser-glimmer'
 import prettierParserMeriyah from 'prettier/parser-meriyah'
 import prettierParserFlow from 'prettier/parser-flow'
 import prettierParserTypescript from 'prettier/parser-typescript'
@@ -234,6 +235,43 @@ function transformHtml(attributes, computedAttributes = []) {
   return transform
 }
 
+function transformGlimmer(ast, { env }) {
+  visit(ast, {
+    AttrNode(attr, parent, key, index, meta) {
+      let attributes = ['class']
+
+      if (attributes.includes(attr.name) && attr.value) {
+        meta.sortTextNodes = true
+      }
+    },
+
+    TextNode(node, parent, key, index, meta) {
+      if (!meta.sortTextNodes) {
+        return
+      }
+
+      let siblings = parent?.type === 'ConcatStatement' ? {
+        prev: parent.parts[index - 1],
+        next: parent.parts[index + 1],
+      } : null
+
+      node.chars = sortClasses(node.chars, {
+        env,
+        ignoreFirst: siblings?.prev && !/^\s/.test(node.chars),
+        ignoreLast: siblings?.next && !/\s$/.test(node.chars),
+      })
+    },
+
+    StringLiteral(node, parent, key, index, meta) {
+      if (!meta.sortTextNodes) {
+        return
+      }
+
+      node.value = sortClasses(node.value, { env })
+    },
+  })
+}
+
 function sortStringLiteral(node, { env }) {
   let result = sortClasses(node.value, { env })
   let didChange = result !== node.value
@@ -364,6 +402,7 @@ export const printers = {
 
 export const parsers = {
   html: createParser(prettierParserHTML.parsers.html, transformHtml(['class'])),
+  glimmer: createParser(prettierParserGlimmer.parsers.glimmer, transformGlimmer),
   lwc: createParser(prettierParserHTML.parsers.lwc, transformHtml(['class'])),
   angular: createParser(
     prettierParserHTML.parsers.angular,
@@ -442,13 +481,13 @@ function transformSvelte(ast, { env, changes }) {
 
 // https://lihautan.com/manipulating-ast-with-javascript/
 function visit(ast, callbackMap) {
-  function _visit(node, parent, key, index) {
+  function _visit(node, parent, key, index, meta = {}) {
     if (typeof callbackMap === 'function') {
-      if (callbackMap(node, parent, key, index) === false) {
+      if (callbackMap(node, parent, key, index, meta) === false) {
         return
       }
     } else if (node.type in callbackMap) {
-      if (callbackMap[node.type](node, parent, key, index) === false) {
+      if (callbackMap[node.type](node, parent, key, index, meta) === false) {
         return
       }
     }
@@ -459,11 +498,11 @@ function visit(ast, callbackMap) {
       if (Array.isArray(child)) {
         for (let j = 0; j < child.length; j++) {
           if (child[j] !== null) {
-            _visit(child[j], node, keys[i], j)
+            _visit(child[j], node, keys[i], j, {...meta})
           }
         }
       } else if (typeof child?.type === 'string') {
-        _visit(child, node, keys[i], i)
+        _visit(child, node, keys[i], i, {...meta})
       }
     }
   }

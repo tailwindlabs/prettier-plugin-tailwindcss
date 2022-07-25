@@ -250,10 +250,13 @@ function transformGlimmer(ast, { env }) {
         return
       }
 
-      let siblings = parent?.type === 'ConcatStatement' ? {
-        prev: parent.parts[index - 1],
-        next: parent.parts[index + 1],
-      } : null
+      let siblings =
+        parent?.type === 'ConcatStatement'
+          ? {
+              prev: parent.parts[index - 1],
+              next: parent.parts[index + 1],
+            }
+          : null
 
       node.chars = sortClasses(node.chars, {
         env,
@@ -498,11 +501,11 @@ function visit(ast, callbackMap) {
       if (Array.isArray(child)) {
         for (let j = 0; j < child.length; j++) {
           if (child[j] !== null) {
-            _visit(child[j], node, keys[i], j, {...meta})
+            _visit(child[j], node, keys[i], j, { ...meta })
           }
         }
       } else if (typeof child?.type === 'string') {
-        _visit(child, node, keys[i], i, {...meta})
+        _visit(child, node, keys[i], i, { ...meta })
       }
     }
   }

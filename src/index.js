@@ -1,5 +1,6 @@
 import prettier from 'prettier'
 import prettierParserHTML from 'prettier/parser-html'
+import prettierParserAngular from 'prettier/parser-angular'
 import prettierParserPostCSS from 'prettier/parser-postcss'
 import prettierParserBabel from 'prettier/parser-babel'
 import prettierParserEspree from 'prettier/parser-espree'
@@ -177,19 +178,37 @@ function createParser(original, transform) {
         contextMap.set(tailwindConfigPath, { context, hash })
       }
 
-      transform(ast, { env: { context, generateRules } })
+      transform(ast, { env: { context, generateRules, parsers, options } })
       return ast
     },
   }
 }
 
-function transformHtml(attributes, computedAttributes = []) {
+function transformHtml(attributes, computedAttributes = [], computedType = 'js') {
   let transform = (ast, { env }) => {
     for (let attr of ast.attrs ?? []) {
       if (attributes.includes(attr.name)) {
         attr.value = sortClasses(attr.value, { env })
       } else if (computedAttributes.includes(attr.name)) {
         if (!/[`'"]/.test(attr.value)) {
+          continue
+        }
+
+        if (computedType === 'angular') {
+          let directiveAst = prettierParserAngular.parsers.__ng_directive.parse(
+            attr.value,
+            env.parsers,
+            env.options
+          )
+          visit(directiveAst, {
+            StringLiteral(node) {
+              if (!node.value) return
+              attr.value =
+                attr.value.slice(0, node.start + 1) +
+                sortClasses(node.value, { env }) +
+                attr.value.slice(node.end - 1)
+            },
+          })
           continue
         }
 
@@ -409,7 +428,7 @@ export const parsers = {
   lwc: createParser(prettierParserHTML.parsers.lwc, transformHtml(['class'])),
   angular: createParser(
     prettierParserHTML.parsers.angular,
-    transformHtml(['class'], ['[ngClass]'])
+    transformHtml(['class'], ['[ngClass]'], 'angular')
   ),
   vue: createParser(prettierParserHTML.parsers.vue, transformHtml(['class'], [':class'])),
   css: createParser(prettierParserPostCSS.parsers.css, transformCss),

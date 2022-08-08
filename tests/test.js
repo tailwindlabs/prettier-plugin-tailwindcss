@@ -6,7 +6,10 @@ function format(str, options = {}) {
   return prettier
     .format(str, {
       pluginSearchDirs: [__dirname], // disable plugin autoload
-      plugins: [path.resolve(__dirname, '..')],
+      plugins: [
+        require.resolve('prettier-plugin-astro'),
+        path.resolve(__dirname, '..'),
+      ],
       semi: false,
       singleQuote: true,
       printWidth: 9999,
@@ -213,7 +216,26 @@ let tests = {
     ],
     ['<div class={`sm:p-0\np-0`} />', '<div\n  class={`p-0\nsm:p-0`}\n/>'],
   ],
-}
+  astro: [
+    ...html,
+    [
+      `{<div class="p-20 bg-red-100 w-full"></div>}`,
+      `{(<div class="w-full bg-red-100 p-20" />)}`,
+    ],
+    [
+      `<style>
+  h1 {
+    @apply bg-fuchsia-50 p-20 w-full;
+  }
+</style>`,
+      `<style>
+  h1 {
+    @apply w-full bg-fuchsia-50 p-20;
+  }
+</style>`,
+    ],
+  ],
+};
 
 describe('parsers', () => {
   for (let parser in tests) {

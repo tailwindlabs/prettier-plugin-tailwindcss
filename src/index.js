@@ -18,6 +18,7 @@ import requireFrom from 'import-from'
 import requireFresh from 'import-fresh'
 import objectHash from 'object-hash'
 import * as svelte from 'prettier-plugin-svelte'
+import * as astro from 'prettier-plugin-astro'
 import lineColumn from 'line-column'
 import jsesc from 'jsesc'
 import escalade from 'escalade/sync'
@@ -447,6 +448,23 @@ export const parsers = {
     transformSvelte(ast.html, { env, changes })
     ast.changes = changes
   }),
+  astro: createParser(astro.parsers.astro, transformAstro)
+}
+
+function transformAstro(ast, { env, changes }) {
+  if (ast.type === "element") {
+    for (let attr of ast.attributes ?? []) {
+      if (attr.name === "class" && attr.type === "attribute" && attr.kind === "quoted") {
+        attr.value = sortClasses(attr.value, {
+          env
+        });
+      }
+    }
+  }
+
+  for (let child of ast.children ?? []) {
+    transformAstro(child, { env, changes });
+  }
 }
 
 function transformSvelte(ast, { env, changes }) {

@@ -213,6 +213,25 @@ let tests = {
     ],
     ['<div class={`sm:p-0\np-0`} />', '<div\n  class={`p-0\nsm:p-0`}\n/>'],
   ],
+  astro: [
+    ...html,
+    [
+      `{<div class="p-20 bg-red-100 w-full"></div>}`,
+      `{<div class="p-20 w-full bg-red-100"></div>}`,
+    ],
+    [
+      `<style>
+      h1 {
+        @apply p-20 w-full bg-fuchsia-50;
+      }
+    </style>`,
+      `<style>
+      h1 {
+        @apply p-20 w-full bg-fuchsia-50;
+      }
+    </style>`,
+    ],
+  ],
 }
 
 describe('parsers', () => {

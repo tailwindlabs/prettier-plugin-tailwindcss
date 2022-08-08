@@ -159,7 +159,10 @@ let tests = {
   html,
   glimmer,
   lwc: html,
-  vue: [...vue, t`<div :class="\`${yes} \${someVar} ${yes} \${'${yes}'}\`"></div>`],
+  vue: [
+    ...vue,
+    t`<div :class="\`${yes} \${someVar} ${yes} \${'${yes}'}\`"></div>`,
+  ],
   angular: [
     ...html,
     t`<div [ngClass]="'${yes}'"></div>`,
@@ -179,14 +182,14 @@ let tests = {
   less: [...css, t`@apply ${yes} !important;`],
   babel: javascript,
   typescript: javascript,
-  'babel-ts': javascript,
+  "babel-ts": javascript,
   flow: javascript,
-  'babel-flow': javascript,
+  "babel-flow": javascript,
   espree: javascript,
   meriyah: javascript,
   mdx: javascript
     .filter((test) => !test.find((t) => /^\/\*/.test(t)))
-    .map((test) => test.map((t) => t.replace(/^;/, ''))),
+    .map((test) => test.map((t) => t.replace(/^;/, ""))),
   svelte: [
     t`<div class="${yes}" />`,
     t`<div class />`,
@@ -214,28 +217,28 @@ let tests = {
       `<div class="sm:p-0 p-0 {someVar}sm:block md:inline flex" />`,
       `<div class="p-0 sm:p-0 {someVar}sm:block flex md:inline" />`,
     ],
-    ['<div class={`sm:p-0\np-0`} />', '<div\n  class={`p-0\nsm:p-0`}\n/>'],
+    ["<div class={`sm:p-0\np-0`} />", "<div\n  class={`p-0\nsm:p-0`}\n/>"],
   ],
   astro: [
     ...html,
     [
       `{<div class="p-20 bg-red-100 w-full"></div>}`,
-      `{<div class="p-20 w-full bg-red-100"></div>}`,
+      `{(<div class="w-full bg-red-100 p-20" />)}`,
     ],
     [
       `<style>
-      h1 {
-        @apply p-20 w-full bg-fuchsia-50;
-      }
-    </style>`,
+  h1 {
+    @apply bg-fuchsia-50 p-20 w-full;
+  }
+</style>`,
       `<style>
-      h1 {
-        @apply p-20 w-full bg-fuchsia-50;
-      }
-    </style>`,
+  h1 {
+    @apply w-full bg-fuchsia-50 p-20;
+  }
+</style>`,
     ],
   ],
-}
+};
 
 describe('parsers', () => {
   for (let parser in tests) {

@@ -387,6 +387,7 @@ function transformCss(ast, { env }) {
 }
 
 export const options = {
+  ...astro.options,
   ...svelte.options,
   tailwindConfig: {
     type: 'string',
@@ -395,8 +396,14 @@ export const options = {
   },
 }
 
-export const languages = svelte.languages
+export const languages = [
+  ...astro.languages,
+  ...svelte.languages,
+]
 export const printers = {
+  'astro': {
+    ...astro.printers.astro,
+  },
   'svelte-ast': {
     ...svelte.printers['svelte-ast'],
     print: (path, options, print) => {

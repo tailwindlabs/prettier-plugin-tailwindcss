@@ -18,10 +18,13 @@ import requireFrom from 'import-from'
 import requireFresh from 'import-fresh'
 import objectHash from 'object-hash'
 import * as svelte from 'prettier-plugin-svelte'
-import * as astro from 'prettier-plugin-astro'
 import lineColumn from 'line-column'
 import jsesc from 'jsesc'
 import escalade from 'escalade/sync'
+
+// We need to load this plugin dynamically because it's not available by default
+// And we are not bundling it with the main Prettier plugin
+let astro = loadIfExists('prettier-plugin-astro')
 
 let contextMap = new Map()
 
@@ -448,7 +451,7 @@ export const parsers = {
     transformSvelte(ast.html, { env, changes })
     ast.changes = changes
   }),
-  astro: createParser(astro.parsers.astro, transformAstro)
+  ...astro ? { astro: createParser(astro.parsers.astro, transformAstro) } : {},
 }
 
 function transformAstro(ast, { env, changes }) {
@@ -547,4 +550,15 @@ function visit(ast, callbackMap) {
     }
   }
   _visit(ast)
+}
+
+// For loading prettier plugins only if they exist
+function loadIfExists(name) {
+  try {
+    if (require.resolve(name)) {
+      return require(name)
+    }
+  } catch (e) {
+    return null
+  }
 }

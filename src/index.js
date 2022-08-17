@@ -125,6 +125,10 @@ function createParser(original, transform) {
   return {
     ...original,
     parse(text, parsers, options = {}) {
+      if (original === svelte.parsers.svelte) {
+        options.printer = printers['svelte-ast']
+      }
+
       let ast = original.parse(text, parsers, options)
       let tailwindConfigPath = '__default__'
       let tailwindConfig = {}

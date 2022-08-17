@@ -17,7 +17,6 @@ import * as path from 'path'
 import requireFrom from 'import-from'
 import requireFresh from 'import-fresh'
 import objectHash from 'object-hash'
-import * as svelte from 'prettier-plugin-svelte'
 import lineColumn from 'line-column'
 import jsesc from 'jsesc'
 import escalade from 'escalade/sync'
@@ -25,6 +24,7 @@ import escalade from 'escalade/sync'
 // We need to load this plugin dynamically because it's not available by default
 // And we are not bundling it with the main Prettier plugin
 let astro = loadIfExists('prettier-plugin-astro')
+let svelte = loadIfExists('prettier-plugin-svelte')
 
 let contextMap = new Map()
 
@@ -390,7 +390,6 @@ function transformCss(ast, { env }) {
 }
 
 export const options = {
-  ...svelte.options,
   tailwindConfig: {
     type: 'string',
     category: 'Tailwind CSS',
@@ -398,9 +397,8 @@ export const options = {
   },
 }
 
-export const languages = svelte.languages
 export const printers = {
-  'svelte-ast': {
+  ...svelte ? {'svelte-ast': {
     ...svelte.printers['svelte-ast'],
     print: (path, options, print) => {
       if (!options.__mutatedOriginalText) {
@@ -423,7 +421,7 @@ export const printers = {
 
       return svelte.printers['svelte-ast'].print(path, options, print)
     },
-  },
+  } } : {},
 }
 
 export const parsers = {
@@ -446,11 +444,11 @@ export const parsers = {
   espree: createParser(prettierParserEspree.parsers.espree, transformJavaScript),
   meriyah: createParser(prettierParserMeriyah.parsers.meriyah, transformJavaScript),
   __js_expression: createParser(prettierParserBabel.parsers.__js_expression, transformJavaScript),
-  svelte: createParser(svelte.parsers.svelte, (ast, { env }) => {
+  ...svelte ? { svelte: createParser(svelte.parsers.svelte, (ast, { env }) => {
     let changes = []
     transformSvelte(ast.html, { env, changes })
     ast.changes = changes
-  }),
+  }) } : {},
   ...astro ? { astro: createParser(astro.parsers.astro, transformAstro) } : {},
 }
 

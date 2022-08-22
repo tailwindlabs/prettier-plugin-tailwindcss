@@ -609,5 +609,37 @@ function getBaseParsers() {
 }
 
 function getCompatibleParser(parserFormat, options) {
-  return baseParsers[parserFormat]
+  if (!options.plugins) {
+    return baseParsers[parserFormat]
+  }
+
+  let parser = {
+    ...baseParsers[parserFormat],
+  }
+
+  // Now load parsers from plugins
+  let compatiblePlugins = [
+    '@trivago/prettier-plugin-sort-imports',
+  ]
+
+  for (const name of compatiblePlugins) {
+    let path = null
+
+    try {
+      path = require.resolve(name)
+    } catch (err) {
+      continue
+    }
+
+    let plugin = options.plugins.find(plugin => plugin.name === path)
+
+    // The plugin is not loaded
+    if (!plugin) {
+      continue
+    }
+
+    Object.assign(parser, plugin.parsers[parserFormat])
+  }
+
+  return parser
 }

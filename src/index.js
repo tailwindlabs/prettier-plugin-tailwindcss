@@ -620,6 +620,7 @@ function getCompatibleParser(parserFormat, options) {
   // Now load parsers from plugins
   let compatiblePlugins = [
     '@trivago/prettier-plugin-sort-imports',
+    'prettier-plugin-organize-imports',
   ]
 
   for (const name of compatiblePlugins) {

@@ -50,6 +50,32 @@ let tests = [
       ],
     }
   },
+  {
+    plugins: [
+      'prettier-plugin-organize-imports',
+    ],
+    options: {},
+    tests: {
+      babel: [
+        [
+          `import './three'\nimport '@two/file'\nimport '@one/file'`,
+          `import '@one/file'\nimport '@two/file'\nimport './three'`,
+        ],
+      ],
+      typescript: [
+        [
+          `import './three'\nimport '@two/file'\nimport '@one/file'`,
+          `import '@one/file'\nimport '@two/file'\nimport './three'`,
+        ],
+      ],
+      'babel-ts': [
+        [
+          `import './three'\nimport '@two/file'\nimport '@one/file'`,
+          `import '@one/file'\nimport '@two/file'\nimport './three'`,
+        ],
+      ],
+    }
+  },
 ]
 
 for (const group of tests) {

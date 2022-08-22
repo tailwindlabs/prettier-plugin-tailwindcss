@@ -632,7 +632,7 @@ function getCompatibleParser(parserFormat, options) {
       continue
     }
 
-    let plugin = options.plugins.find(plugin => plugin.name === path)
+    let plugin = options.plugins.find(plugin => plugin.name === name || plugin.name === path)
 
     // The plugin is not loaded
     if (!plugin) {

@@ -76,6 +76,26 @@ let tests = [
       ],
     }
   },
+  {
+    plugins: [
+      'prettier-plugin-twig-melody',
+    ],
+    options: {
+      twigAlwaysBreakObjects: false,
+    },
+    tests: {
+      melody: [
+        [
+          `<section class="{{ {base:css.prices}|classes }}"></section>`,
+          `<section class="{{ { base: css.prices }|classes }}"></section>`,
+        ],
+        [
+          `<section class="sm:0 p-4"></section>`,
+          `<section class="p-4 sm:0"></section>`,
+        ],
+      ],
+    }
+  },
 ]
 
 for (const group of tests) {

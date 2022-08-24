@@ -21,7 +21,7 @@ import lineColumn from 'line-column'
 import jsesc from 'jsesc'
 import escalade from 'escalade/sync'
 
-let { baseParsers, basePrinters } = getBaseParsers()
+let base = getBasePlugins()
 
 let contextMap = new Map()
 
@@ -120,7 +120,7 @@ function sortClasses(classStr, { env, ignoreFirst = false, ignoreLast = false })
 
 function createParser(parserFormat, transform) {
   return {
-    ...baseParsers[parserFormat],
+    ...base.parsers[parserFormat],
     preprocess(code, options) {
       let original = getCompatibleParser(parserFormat, options)
 
@@ -411,8 +411,8 @@ export const options = {
 }
 
 export const printers = {
-  ...basePrinters['svelte-ast'] ? {'svelte-ast': {
-    ...basePrinters['svelte-ast'],
+  ...base.printers['svelte-ast'] ? {'svelte-ast': {
+    ...base.printers['svelte-ast'],
     print: (path, options, print) => {
       if (!options.__mutatedOriginalText) {
         options.__mutatedOriginalText = true
@@ -432,7 +432,7 @@ export const printers = {
         }
       }
 
-      return basePrinters['svelte-ast'].print(path, options, print)
+      return base.printers['svelte-ast'].print(path, options, print)
     },
   } } : {},
 }
@@ -457,12 +457,12 @@ export const parsers = {
   espree: createParser('espree', transformJavaScript),
   meriyah: createParser('meriyah', transformJavaScript),
   __js_expression: createParser('__js_expression', transformJavaScript),
-  ...baseParsers.svelte ? { svelte: createParser('svelte', (ast, { env }) => {
+  ...base.parsers.svelte ? { svelte: createParser('svelte', (ast, { env }) => {
     let changes = []
     transformSvelte(ast.html, { env, changes })
     ast.changes = changes
   }) } : {},
-  ...baseParsers.astro ? { astro: createParser('astro', transformAstro) } : {},
+  ...base.parsers.astro ? { astro: createParser('astro', transformAstro) } : {},
 }
 
 function transformAstro(ast, { env, changes }) {
@@ -574,14 +574,14 @@ function loadIfExists(name) {
   }
 }
 
-function getBaseParsers() {
+function getBasePlugins() {
   // We need to load this plugin dynamically because it's not available by default
   // And we are not bundling it with the main Prettier plugin
   let astro = loadIfExists('prettier-plugin-astro')
   let svelte = loadIfExists('prettier-plugin-svelte')
 
   return {
-    baseParsers: {
+    parsers: {
       html: prettierParserHTML.parsers.html,
       glimmer: prettierParserGlimmer.parsers.glimmer,
       lwc: prettierParserHTML.parsers.lwc,
@@ -602,7 +602,7 @@ function getBaseParsers() {
       ...(svelte?.parsers ?? {}),
       ...(astro?.parsers ?? {}),
     },
-    basePrinters: {
+    printers: {
       ...(svelte ? { 'svelte-ast': svelte.printers['svelte-ast'] } : {}),
     },
   };
@@ -610,11 +610,11 @@ function getBaseParsers() {
 
 function getCompatibleParser(parserFormat, options) {
   if (!options.plugins) {
-    return baseParsers[parserFormat]
+    return base.parsers[parserFormat]
   }
 
   let parser = {
-    ...baseParsers[parserFormat],
+    ...base.parsers[parserFormat],
   }
 
   // Now load parsers from plugins

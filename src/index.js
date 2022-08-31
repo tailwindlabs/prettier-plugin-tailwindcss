@@ -188,6 +188,32 @@ function createParser(original, transform) {
   }
 }
 
+function tryParseAngularAttribute(value, env) {
+  let parsers = [
+    // Try parsing as an angular directive
+    prettierParserAngular.parsers.__ng_directive,
+
+    // If this fails we fall back to arbitrary parsing of a JS expression
+    { parse: env.parsers.__js_expression },
+  ]
+
+  let errors = []
+  for (const parser of parsers) {
+    try {
+      return parser.parse(
+        value,
+        env.parsers,
+        env.options
+      )
+    } catch (err) {
+      errors.push(err)
+    }
+  }
+
+  console.warn("prettier-plugin-tailwindcss: Unable to parse angular directive")
+  errors.forEach(err => console.warn(err))
+}
+
 function transformHtml(attributes, computedAttributes = [], computedType = 'js') {
   let transform = (ast, { env }) => {
     for (let attr of ast.attrs ?? []) {
@@ -199,11 +225,15 @@ function transformHtml(attributes, computedAttributes = [], computedType = 'js')
         }
 
         if (computedType === 'angular') {
-          let directiveAst = prettierParserAngular.parsers.__ng_directive.parse(
-            attr.value,
-            env.parsers,
-            env.options
-          )
+          let directiveAst = tryParseAngularAttribute(attr.value, env)
+
+          // If we've reached this point we couldn't parse the expression we we should bail
+          // `tryParseAngularAttribute` will display some warnings/errors
+          // But we shouldn't fail outright — just miss parsing some attributes
+          if (!directiveAst) {
+            continue
+          }
+
           visit(directiveAst, {
             StringLiteral(node) {
               if (!node.value) return

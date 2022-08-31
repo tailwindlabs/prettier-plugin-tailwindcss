@@ -1,15 +1,12 @@
 const prettier = require('prettier')
 const path = require('path')
-const { execSync } = require('child_process')
+const {execSync} = require('child_process')
 
 function format(str, options = {}) {
   return prettier
     .format(str, {
       pluginSearchDirs: [__dirname], // disable plugin autoload
-      plugins: [
-        require.resolve('prettier-plugin-astro'),
-        path.resolve(__dirname, '..'),
-      ],
+      plugins: [require.resolve('prettier-plugin-astro'), path.resolve(__dirname, '..')],
       semi: false,
       singleQuote: true,
       printWidth: 9999,
@@ -25,8 +22,8 @@ function formatFixture(name) {
   return execSync(
     `${binPath} ${filePath} --plugin-search-dir ${__dirname} --plugin ${path.resolve(
       __dirname,
-      '..'
-    )}`
+      '..',
+    )}`,
   )
     .toString()
     .trim()
@@ -68,7 +65,7 @@ let css = [
   t`@apply ${yes};`,
   t`/* @apply ${no}; */`,
   t`@not-apply ${no};`,
-  ['@apply sm:p-0\n   p-0;', '@apply p-0\n   sm:p-0;'],
+  ['@apply  sm:p-0\n   p-0; ', '@apply p-0\n sm:p-0;'],
 ]
 
 let javascript = [
@@ -98,9 +95,13 @@ let javascript = [
     `;<div class={\`sm:p-0 p-0 \${someVar}sm:block md:inline flex\`} />`,
     `;<div class={\`p-0 sm:p-0 \${someVar}sm:block flex md:inline\`} />`,
   ],
+  [
+    `;<div class={\`  sm:block  inline   flex\${someVar}   \`} />`,
+    `;<div class={\`inline sm:block flex\${someVar}\`} />`,
+  ],
 ]
 javascript = javascript.concat(
-  javascript.map((test) => test.map((t) => t.replace(/class/g, 'className')))
+  javascript.map(test => test.map(t => t.replace(/class/g, 'className'))),
 )
 
 let vue = [
@@ -124,7 +125,7 @@ let vue = [
     `<div :class="\`inline sm:block flex\${someVar}\`"></div>`,
   ],
   [
-    `<div :class="\`\${someVar}sm:block md:inline flex\`"></div>`,
+    `<div :class="\`  \${someVar}sm:block    md:inline   flex   \`"></div>`,
     `<div :class="\`\${someVar}sm:block flex md:inline\`"></div>`,
   ],
   [
@@ -185,8 +186,8 @@ let tests = {
   espree: javascript,
   meriyah: javascript,
   mdx: javascript
-    .filter((test) => !test.find((t) => /^\/\*/.test(t)))
-    .map((test) => test.map((t) => t.replace(/^;/, ''))),
+    .filter(test => !test.find(t => /^\/\*/.test(t)))
+    .map(test => test.map(t => t.replace(/^;/, ''))),
   svelte: [
     t`<div class="${yes}" />`,
     t`<div class />`,
@@ -218,10 +219,7 @@ let tests = {
   ],
   astro: [
     ...html,
-    [
-      `{<div class="p-20 bg-red-100 w-full"></div>}`,
-      `{(<div class="w-full bg-red-100 p-20" />)}`,
-    ],
+    [`{<div class="p-20 bg-red-100 w-full"></div>}`, `{(<div class="w-full bg-red-100 p-20" />)}`],
     [
       `<style>
   h1 {
@@ -235,13 +233,13 @@ let tests = {
 </style>`,
     ],
   ],
-};
+}
 
 describe('parsers', () => {
   for (let parser in tests) {
     test(parser, () => {
       for (let [input, expected] of tests[parser]) {
-        expect(format(input, { parser })).toEqual(expected)
+        expect(format(input, {parser})).toEqual(expected)
       }
     })
   }
@@ -249,7 +247,7 @@ describe('parsers', () => {
 
 test('non-tailwind classes', () => {
   expect(format('<div class="sm:lowercase uppercase potato text-sm"></div>')).toEqual(
-    '<div class="potato text-sm uppercase sm:lowercase"></div>'
+    '<div class="potato text-sm uppercase sm:lowercase"></div>',
   )
 })
 
@@ -259,7 +257,7 @@ test('no prettier config', () => {
 
 test('parasite utilities', () => {
   expect(format('<div class="group peer unknown-class p-0 container"></div>')).toEqual(
-    '<div class="unknown-class group peer container p-0"></div>'
+    '<div class="unknown-class group peer container p-0"></div>',
   )
 })
 
@@ -275,12 +273,12 @@ test('explicit config path', () => {
   expect(
     format('<div class="sm:bg-tomato bg-red-500"></div>', {
       tailwindConfig: path.resolve(__dirname, 'fixtures/basic/tailwind.config.js'),
-    })
+    }),
   ).toEqual('<div class="bg-red-500 sm:bg-tomato"></div>')
 })
 
 test('plugins', () => {
   expect(formatFixture('plugins')).toEqual(
-    '<div class="uppercase line-clamp-1 sm:line-clamp-2"></div>'
+    '<div class="uppercase line-clamp-1 sm:line-clamp-2"></div>',
   )
 })

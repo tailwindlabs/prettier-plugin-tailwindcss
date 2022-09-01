@@ -8,6 +8,7 @@ function format(str, options = {}) {
       pluginSearchDirs: [__dirname], // disable plugin autoload
       plugins: [
         require.resolve('prettier-plugin-astro'),
+        require.resolve('prettier-plugin-svelte'),
         path.resolve(__dirname, '..'),
       ],
       semi: false,

@@ -17,14 +17,11 @@ import * as path from 'path'
 import requireFrom from 'import-from'
 import requireFresh from 'import-fresh'
 import objectHash from 'object-hash'
-import * as svelte from 'prettier-plugin-svelte'
 import lineColumn from 'line-column'
 import jsesc from 'jsesc'
 import escalade from 'escalade/sync'
 
-// We need to load this plugin dynamically because it's not available by default
-// And we are not bundling it with the main Prettier plugin
-let astro = loadIfExists('prettier-plugin-astro')
+let base = getBasePlugins()
 
 let contextMap = new Map()
 
@@ -121,10 +118,26 @@ function sortClasses(classStr, { env, ignoreFirst = false, ignoreLast = false })
   return prefix + result + suffix
 }
 
-function createParser(original, transform) {
+function createParser(parserFormat, transform) {
   return {
-    ...original,
+    ...base.parsers[parserFormat],
+    preprocess(code, options) {
+      let original = getCompatibleParser(parserFormat, options)
+
+      if (original.preprocess) {
+        return original.preprocess(code, options)
+      }
+
+      return code
+    },
+
     parse(text, parsers, options = {}) {
+      let original = getCompatibleParser(parserFormat, options)
+
+      if (original.astFormat === 'svelte-ast') {
+        options.printer = printers['svelte-ast']
+      }
+
       let ast = original.parse(text, parsers, options)
       let tailwindConfigPath = '__default__'
       let tailwindConfig = {}
@@ -420,7 +433,6 @@ function transformCss(ast, { env }) {
 }
 
 export const options = {
-  ...svelte.options,
   tailwindConfig: {
     type: 'string',
     category: 'Tailwind CSS',
@@ -428,10 +440,9 @@ export const options = {
   },
 }
 
-export const languages = svelte.languages
 export const printers = {
-  'svelte-ast': {
-    ...svelte.printers['svelte-ast'],
+  ...base.printers['svelte-ast'] ? {'svelte-ast': {
+    ...base.printers['svelte-ast'],
     print: (path, options, print) => {
       if (!options.__mutatedOriginalText) {
         options.__mutatedOriginalText = true
@@ -451,37 +462,37 @@ export const printers = {
         }
       }
 
-      return svelte.printers['svelte-ast'].print(path, options, print)
+      return base.printers['svelte-ast'].print(path, options, print)
     },
-  },
+  } } : {},
 }
 
 export const parsers = {
-  html: createParser(prettierParserHTML.parsers.html, transformHtml(['class'])),
-  glimmer: createParser(prettierParserGlimmer.parsers.glimmer, transformGlimmer),
-  lwc: createParser(prettierParserHTML.parsers.lwc, transformHtml(['class'])),
+  html: createParser('html', transformHtml(['class'])),
+  glimmer: createParser('glimmer', transformGlimmer),
+  lwc: createParser('lwc', transformHtml(['class'])),
   angular: createParser(
-    prettierParserHTML.parsers.angular,
+    'angular',
     transformHtml(['class'], ['[ngClass]'], 'angular')
   ),
-  vue: createParser(prettierParserHTML.parsers.vue, transformHtml(['class'], [':class'])),
-  css: createParser(prettierParserPostCSS.parsers.css, transformCss),
-  scss: createParser(prettierParserPostCSS.parsers.scss, transformCss),
-  less: createParser(prettierParserPostCSS.parsers.less, transformCss),
-  babel: createParser(prettierParserBabel.parsers.babel, transformJavaScript),
-  'babel-flow': createParser(prettierParserBabel.parsers['babel-flow'], transformJavaScript),
-  flow: createParser(prettierParserFlow.parsers.flow, transformJavaScript),
-  typescript: createParser(prettierParserTypescript.parsers.typescript, transformJavaScript),
-  'babel-ts': createParser(prettierParserBabel.parsers['babel-ts'], transformJavaScript),
-  espree: createParser(prettierParserEspree.parsers.espree, transformJavaScript),
-  meriyah: createParser(prettierParserMeriyah.parsers.meriyah, transformJavaScript),
-  __js_expression: createParser(prettierParserBabel.parsers.__js_expression, transformJavaScript),
-  svelte: createParser(svelte.parsers.svelte, (ast, { env }) => {
+  vue: createParser('vue', transformHtml(['class'], [':class'])),
+  css: createParser('css', transformCss),
+  scss: createParser('scss', transformCss),
+  less: createParser('less', transformCss),
+  babel: createParser('babel', transformJavaScript),
+  'babel-flow': createParser('babel-flow', transformJavaScript),
+  flow: createParser('flow', transformJavaScript),
+  typescript: createParser('typescript', transformJavaScript),
+  'babel-ts': createParser('babel-ts', transformJavaScript),
+  espree: createParser('espree', transformJavaScript),
+  meriyah: createParser('meriyah', transformJavaScript),
+  __js_expression: createParser('__js_expression', transformJavaScript),
+  ...base.parsers.svelte ? { svelte: createParser('svelte', (ast, { env }) => {
     let changes = []
     transformSvelte(ast.html, { env, changes })
     ast.changes = changes
-  }),
-  ...astro ? { astro: createParser(astro.parsers.astro, transformAstro) } : {},
+  }) } : {},
+  ...base.parsers.astro ? { astro: createParser('astro', transformAstro) } : {},
 }
 
 function transformAstro(ast, { env, changes }) {
@@ -591,4 +602,75 @@ function loadIfExists(name) {
   } catch (e) {
     return null
   }
+}
+
+function getBasePlugins() {
+  // We need to load this plugin dynamically because it's not available by default
+  // And we are not bundling it with the main Prettier plugin
+  let astro = loadIfExists('prettier-plugin-astro')
+  let svelte = loadIfExists('prettier-plugin-svelte')
+
+  return {
+    parsers: {
+      html: prettierParserHTML.parsers.html,
+      glimmer: prettierParserGlimmer.parsers.glimmer,
+      lwc: prettierParserHTML.parsers.lwc,
+      angular: prettierParserHTML.parsers.angular,
+      vue: prettierParserHTML.parsers.vue,
+      css: prettierParserPostCSS.parsers.css,
+      scss: prettierParserPostCSS.parsers.scss,
+      less: prettierParserPostCSS.parsers.less,
+      babel: prettierParserBabel.parsers.babel,
+      'babel-flow': prettierParserBabel.parsers['babel-flow'],
+      flow: prettierParserFlow.parsers.flow,
+      typescript: prettierParserTypescript.parsers.typescript,
+      'babel-ts': prettierParserBabel.parsers['babel-ts'],
+      espree: prettierParserEspree.parsers.espree,
+      meriyah: prettierParserMeriyah.parsers.meriyah,
+      __js_expression: prettierParserBabel.parsers.__js_expression,
+
+      ...(svelte?.parsers ?? {}),
+      ...(astro?.parsers ?? {}),
+    },
+    printers: {
+      ...(svelte ? { 'svelte-ast': svelte.printers['svelte-ast'] } : {}),
+    },
+  };
+}
+
+function getCompatibleParser(parserFormat, options) {
+  if (!options.plugins) {
+    return base.parsers[parserFormat]
+  }
+
+  let parser = {
+    ...base.parsers[parserFormat],
+  }
+
+  // Now load parsers from plugins
+  let compatiblePlugins = [
+    '@trivago/prettier-plugin-sort-imports',
+    'prettier-plugin-organize-imports',
+  ]
+
+  for (const name of compatiblePlugins) {
+    let path = null
+
+    try {
+      path = require.resolve(name)
+    } catch (err) {
+      continue
+    }
+
+    let plugin = options.plugins.find(plugin => plugin.name === name || plugin.name === path)
+
+    // The plugin is not loaded
+    if (!plugin) {
+      continue
+    }
+
+    Object.assign(parser, plugin.parsers[parserFormat])
+  }
+
+  return parser
 }

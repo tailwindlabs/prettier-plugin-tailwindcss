@@ -8,7 +8,7 @@ esbuild.build({
   bundle: true,
   platform: 'node',
   target: 'node12.13.0',
-  external: ['prettier', 'svelte'],
+  external: ['prettier'],
   minify: process.argv.includes('--minify'),
   watch: process.argv.includes('--watch'),
   plugins: [

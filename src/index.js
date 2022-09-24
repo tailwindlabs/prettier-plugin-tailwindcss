@@ -404,7 +404,8 @@ function transformJavaScript(ast, { env }) {
       if (!node.value) {
         return
       }
-      if (['class', 'className'].includes(node.name.name)) {
+
+      if (['class', 'className', 'style'].includes(node.name.name)) {
         if (isStringLiteral(node.value)) {
           sortStringLiteral(node.value, { env })
         } else if (node.value.type === 'JSXExpressionContainer') {

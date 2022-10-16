@@ -72,7 +72,7 @@ let css = [
   ['@apply sm:p-0\n   p-0;', '@apply p-0\n   sm:p-0;'],
 ]
 
-let javascript = [
+let jsx = [
   t`;<div class="${yes}" />`,
   t`/* <div class="${no}" /> */`,
   t`// <div class="${no}" />`,
@@ -100,9 +100,24 @@ let javascript = [
     `;<div class={\`p-0 sm:p-0 \${someVar}sm:block flex md:inline\`} />`,
   ],
 ]
-javascript = javascript.concat(
-  javascript.map((test) => test.map((t) => t.replace(/class/g, 'className')))
+jsx = jsx.concat(
+  jsx.map((test) => test.map((t) => t.replace(/class/g, 'className')))
 )
+
+let javascript = [
+  ...jsx,
+  t`var className = '${yes}'`,
+  t`var notClassName = '${no}'`,
+  t`let className = '${yes}'`,
+  t`let notClassName = '${no}'`,
+  t`const className = '${yes}'`,
+  t`const notClassName = '${no}'`,
+  t`let className = \`${yes} \${'${yes}'} \${'${yes}' ? '${yes}' : '${yes}'}\``,
+  t`let obj = { className: \`${yes} \${'${yes}'} \${'${yes}' ? '${yes}' : '${yes}'}\` }`,
+  t`let obj = { className: '${yes}' ? '${yes}' + '${yes}' : '${yes}' }`,
+  t`let obj = { ['className']: \`${yes} \${'${yes}'} \${'${yes}' ? '${yes}' : '${yes}'}\` }`,
+  t`let obj = { ['className']: '${yes}' ? '${yes}' + '${yes}' : '${yes}' }`,
+]
 
 let vue = [
   ...html,
@@ -189,7 +204,7 @@ let tests = {
   'babel-flow': javascript,
   espree: javascript,
   meriyah: javascript,
-  mdx: javascript
+  mdx: jsx
     .filter((test) => !test.find((t) => /^\/\*/.test(t)))
     .map((test) => test.map((t) => t.replace(/^;/, ''))),
   svelte: [

@@ -398,6 +398,14 @@ function sortTemplateLiteral(node, { env }) {
   return didChange
 }
 
+function trySortIfLiteral(node, { env }) {
+  if (isStringLiteral(node)) {
+    sortStringLiteral(node, { env })
+  } else if (node.type === 'TemplateLiteral') {
+    sortTemplateLiteral(node, { env })
+  }
+}
+
 function transformJavaScript(ast, { env }) {
   visit(ast, {
     JSXAttribute(node) {
@@ -409,14 +417,33 @@ function transformJavaScript(ast, { env }) {
           sortStringLiteral(node.value, { env })
         } else if (node.value.type === 'JSXExpressionContainer') {
           visit(node.value, (node, parent, key) => {
-            if (isStringLiteral(node)) {
-              sortStringLiteral(node, { env })
-            } else if (node.type === 'TemplateLiteral') {
-              sortTemplateLiteral(node, { env })
-            }
+            trySortIfLiteral(node, { env })
           })
         }
       }
+    },
+    VariableDeclarator(node) {
+      if (!node.init) {
+        return
+      }
+      if (node.id.name === 'className') {
+        visit(node.init, (node) => {
+          trySortIfLiteral(node, { env })
+        })
+      }
+    },
+    Property(node) {
+      if (
+        (node.key.type === 'Identifier' && node.key.name === 'className') ||
+        (isStringLiteral(node.key) && node.key.value === 'className')
+      ) {
+        visit(node.value, (node) => {
+          trySortIfLiteral(node, { env })
+        })
+      }
+    },
+    ObjectProperty(node) {
+      return this.Property(node)
     },
   })
 }

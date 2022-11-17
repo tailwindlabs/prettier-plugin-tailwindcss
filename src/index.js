@@ -96,11 +96,21 @@ function sortClasses(classStr, { env, ignoreFirst = false, ignoreLast = false })
     suffix = `${whitespace.pop() ?? ''}${classes.pop() ?? ''}`
   }
 
-  let classNamesWithOrder = env.context.getClassOrder
-    ? env.context.getClassOrder(classes)
-    : getClassOrderPolyfill(classes, { env })
+  classes = sortClassList(classes, { env })
 
-  classes = classNamesWithOrder
+  for (let i = 0; i < classes.length; i++) {
+    result += `${classes[i]}${whitespace[i] ?? ''}`
+  }
+
+  return prefix + result + suffix
+}
+
+function sortClassList(classList, { env }) {
+  let classNamesWithOrder = env.context.getClassOrder
+    ? env.context.getClassOrder(classList)
+    : getClassOrderPolyfill(classList, { env })
+
+  return classNamesWithOrder
     .sort(([, a], [, z]) => {
       if (a === z) return 0
       // if (a === null) return options.unknownClassPosition === 'start' ? -1 : 1
@@ -110,12 +120,6 @@ function sortClasses(classStr, { env, ignoreFirst = false, ignoreLast = false })
       return bigSign(a - z)
     })
     .map(([className]) => className)
-
-  for (let i = 0; i < classes.length; i++) {
-    result += `${classes[i]}${whitespace[i] ?? ''}`
-  }
-
-  return prefix + result + suffix
 }
 
 function createParser(parserFormat, transform) {

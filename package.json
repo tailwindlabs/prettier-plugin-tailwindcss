@@ -62,5 +62,10 @@
   },
   "engines": {
     "node": ">=12.17.0"
+  },
+  "importSort": {
+    ".js, .jsx, .ts, .tsx": {
+      "style": "module"
+    }
   }
 }

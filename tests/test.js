@@ -342,7 +342,7 @@ describe.only('plugin-tests', () => {
     expect(format(input, options)).toEqual(output)
   })
 
-  test.only('prettier-plugin-jsdoc', () => {
+  test('prettier-plugin-jsdoc', () => {
     let options = {
       parser: 'babel',
       plugins: [require.resolve('prettier-plugin-jsdoc')],

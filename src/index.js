@@ -494,6 +494,7 @@ export const parsers = {
   }) } : {},
   ...base.parsers.astro ? { astro: createParser('astro', transformAstro) } : {},
   ...base.parsers.php ? { php: createParser('php', transformPHP) } : {},
+  ...base.parsers.melody ? { melody: createParser('melody', transformMelody) } : {},
   // ...base.parsers.blade ? { blade: createParser('blade', transformBlade) } : {},
 }
 
@@ -546,6 +547,32 @@ function transformBlade(ast, { env, changes }) {
   // This means we'd have to parse the blade ourselves and figure out what's HTML and what isn't
 }
 */
+
+function transformMelody(ast, { env, changes }) {
+  for (let child of ast.expressions ?? []) {
+    transformMelody(child, { env })
+  }
+
+  visit(ast, {
+    Attribute(node, _parent, _key, _index, meta) {
+      if (node.name.name !== "class") {
+        return
+      }
+
+      meta.sortTextNodes = true
+    },
+
+    StringLiteral(node, _parent, _key, _index, meta) {
+      if (!meta.sortTextNodes) {
+        return
+      }
+
+      node.value = sortClasses(node.value, {
+        env,
+      });
+    }
+  })
+}
 
 function transformSvelte(ast, { env, changes }) {
   for (let attr of ast.attributes ?? []) {
@@ -646,6 +673,7 @@ function getBasePlugins() {
   let astro = loadIfExists('prettier-plugin-astro')
   let svelte = loadIfExists('prettier-plugin-svelte')
   let php = loadIfExists('@prettier/plugin-php')
+  let melody = loadIfExists('prettier-plugin-twig-melody')
   // let blade = loadIfExists('@shufo/prettier-plugin-blade')
 
   return {
@@ -670,6 +698,7 @@ function getBasePlugins() {
       ...(svelte?.parsers ?? {}),
       ...(astro?.parsers ?? {}),
       ...(php?.parsers ?? {}),
+      ...(melody?.parsers ?? {}),
       // ...(blade?.parsers ?? {}),
     },
     printers: {

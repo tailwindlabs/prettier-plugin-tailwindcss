@@ -250,10 +250,10 @@ let tests = {
 describe.only('plugin-tests', () => {
   // let plugins = [
   //   '@prettier/plugin-pug', // x
-  //   '@shufo/prettier-plugin-blade', // x
-  //   'prettier-plugin-import-sort', // x
   //   'prettier-plugin-twig-melody', // x
+  //   '@shufo/prettier-plugin-blade', // x
 
+  //   'prettier-plugin-import-sort', // √
   //   '@prettier/plugin-php', // √
   //   'prettier-plugin-css-order', // √
   //   'prettier-plugin-style-order', // √

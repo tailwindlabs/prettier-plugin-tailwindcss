@@ -96,11 +96,21 @@ function sortClasses(classStr, { env, ignoreFirst = false, ignoreLast = false })
     suffix = `${whitespace.pop() ?? ''}${classes.pop() ?? ''}`
   }
 
-  let classNamesWithOrder = env.context.getClassOrder
-    ? env.context.getClassOrder(classes)
-    : getClassOrderPolyfill(classes, { env })
+  classes = sortClassList(classes, { env })
 
-  classes = classNamesWithOrder
+  for (let i = 0; i < classes.length; i++) {
+    result += `${classes[i]}${whitespace[i] ?? ''}`
+  }
+
+  return prefix + result + suffix
+}
+
+function sortClassList(classList, { env }) {
+  let classNamesWithOrder = env.context.getClassOrder
+    ? env.context.getClassOrder(classList)
+    : getClassOrderPolyfill(classList, { env })
+
+  return classNamesWithOrder
     .sort(([, a], [, z]) => {
       if (a === z) return 0
       // if (a === null) return options.unknownClassPosition === 'start' ? -1 : 1
@@ -110,12 +120,6 @@ function sortClasses(classStr, { env, ignoreFirst = false, ignoreLast = false })
       return bigSign(a - z)
     })
     .map(([className]) => className)
-
-  for (let i = 0; i < classes.length; i++) {
-    result += `${classes[i]}${whitespace[i] ?? ''}`
-  }
-
-  return prefix + result + suffix
 }
 
 function createParser(parserFormat, transform) {
@@ -493,6 +497,10 @@ export const parsers = {
     ast.changes = changes
   }) } : {},
   ...base.parsers.astro ? { astro: createParser('astro', transformAstro) } : {},
+  ...base.parsers.php ? { php: createParser('php', transformPHP) } : {},
+  ...base.parsers.melody ? { melody: createParser('melody', transformMelody) } : {},
+  ...base.parsers.pug ? { pug: createParser('pug', transformPug) } : {},
+  // ...base.parsers.blade ? { blade: createParser('blade', transformBlade) } : {},
 }
 
 function transformAstro(ast, { env, changes }) {
@@ -508,6 +516,119 @@ function transformAstro(ast, { env, changes }) {
 
   for (let child of ast.children ?? []) {
     transformAstro(child, { env, changes });
+  }
+}
+
+function transformPHP(ast, { env, changes }) {
+  if (ast.kind === "inline") {
+    let leading = ast.raw.match(/^\s*/)[0]
+    let trailing = ast.raw.match(/\s*$/)[0]
+
+    // If the inline block is just whitespace then we don't need to format
+    if (ast.raw === leading) {
+      return
+    }
+
+    // We have to parse this as HTML with prettier
+    let parsed = prettier.format(ast.raw, {
+      ...env.options,
+      parser: "html",
+    })
+
+    let formatted = `${leading}${parsed.trimEnd()}${trailing}`
+
+    ast.raw = formatted
+    ast.value = formatted
+  }
+
+  for (let child of ast.children ?? []) {
+    transformPHP(child, { env, changes });
+  }
+}
+
+/*
+function transformBlade(ast, { env, changes }) {
+  // Blade gets formatted on parse
+  // This means we'd have to parse the blade ourselves and figure out what's HTML and what isn't
+}
+*/
+
+function transformMelody(ast, { env, changes }) {
+  for (let child of ast.expressions ?? []) {
+    transformMelody(child, { env })
+  }
+
+  visit(ast, {
+    Attribute(node, _parent, _key, _index, meta) {
+      if (node.name.name !== "class") {
+        return
+      }
+
+      meta.sortTextNodes = true
+    },
+
+    StringLiteral(node, _parent, _key, _index, meta) {
+      if (!meta.sortTextNodes) {
+        return
+      }
+
+      node.value = sortClasses(node.value, {
+        env,
+      });
+    }
+  })
+}
+
+function transformPug(ast, { env }) {
+
+  // This isn't optimal
+  // We should merge the classes together across class attributes and class tokens
+  // And then we sort them
+  // But this is good enough for now
+
+  // First sort the classes in attributes
+  for (const token of ast.tokens) {
+    if (token.type === 'attribute' && token.name === 'class') {
+      token.val = [
+        token.val.slice(0, 1),
+        sortClasses(token.val.slice(1, -1), { env }),
+        token.val.slice(-1)
+      ].join('')
+    }
+  }
+
+  // Collect lists of consecutive class tokens
+  let startIdx = -1;
+  let endIdx = -1;
+  let ranges = [];
+
+  for (let i = 0; i < ast.tokens.length; i++) {
+    const token = ast.tokens[i];
+
+    if (token.type === 'class') {
+      startIdx = startIdx === -1 ? i : startIdx;
+      endIdx = i;
+    } else if (startIdx !== -1) {
+      ranges.push([startIdx, endIdx]);
+      startIdx = -1;
+      endIdx = -1;
+    }
+  }
+
+  if (startIdx !== -1) {
+    ranges.push([startIdx, endIdx]);
+    startIdx = -1;
+    endIdx = -1;
+  }
+
+  // Sort the lists of class tokens
+  for (const [startIdx, endIdx] of ranges) {
+    const classes = ast.tokens.slice(startIdx, endIdx + 1).map(token => token.val);
+    const classList = sortClassList(classes, { env })
+
+    for (let i = startIdx; i <= endIdx; i++) {
+      ast.tokens[i].val = classList[i - startIdx];
+    }
   }
 }
 
@@ -609,6 +730,10 @@ function getBasePlugins() {
   // And we are not bundling it with the main Prettier plugin
   let astro = loadIfExists('prettier-plugin-astro')
   let svelte = loadIfExists('prettier-plugin-svelte')
+  let php = loadIfExists('@prettier/plugin-php')
+  let melody = loadIfExists('prettier-plugin-twig-melody')
+  let pug = loadIfExists('@prettier/plugin-pug')
+  // let blade = loadIfExists('@shufo/prettier-plugin-blade')
 
   return {
     parsers: {
@@ -631,6 +756,10 @@ function getBasePlugins() {
 
       ...(svelte?.parsers ?? {}),
       ...(astro?.parsers ?? {}),
+      ...(php?.parsers ?? {}),
+      ...(melody?.parsers ?? {}),
+      ...(pug?.parsers ?? {}),
+      // ...(blade?.parsers ?? {}),
     },
     printers: {
       ...(svelte ? { 'svelte-ast': svelte.printers['svelte-ast'] } : {}),
@@ -651,6 +780,15 @@ function getCompatibleParser(parserFormat, options) {
   let compatiblePlugins = [
     '@trivago/prettier-plugin-sort-imports',
     'prettier-plugin-organize-imports',
+    '@prettier/plugin-php',
+    '@prettier/plugin-pug',
+    '@shufo/prettier-plugin-blade',
+    'prettier-plugin-css-order',
+    'prettier-plugin-import-sort',
+    'prettier-plugin-jsdoc',
+    'prettier-plugin-organize-attributes',
+    'prettier-plugin-style-order',
+    'prettier-plugin-twig-melody',
   ]
 
   for (const name of compatiblePlugins) {

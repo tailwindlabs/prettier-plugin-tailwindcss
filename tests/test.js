@@ -3,14 +3,19 @@ const path = require('path')
 const { execSync } = require('child_process')
 
 function format(str, options = {}) {
+  options.plugins = options.plugins ?? [
+    require.resolve('prettier-plugin-astro'),
+    require.resolve('prettier-plugin-svelte'),
+  ]
+
+  options.plugins = [
+    ...options.plugins,
+    path.resolve(__dirname, '..'),
+  ]
+
   return prettier
     .format(str, {
       pluginSearchDirs: [__dirname], // disable plugin autoload
-      plugins: [
-        require.resolve('prettier-plugin-astro'),
-        require.resolve('prettier-plugin-svelte'),
-        path.resolve(__dirname, '..'),
-      ],
       semi: false,
       singleQuote: true,
       printWidth: 9999,

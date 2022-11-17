@@ -19,7 +19,6 @@ function format(str, options = {}) {
 
 
 let tests = [
-  /*
   {
     plugins: [
       '@trivago/prettier-plugin-sort-imports',
@@ -97,7 +96,6 @@ let tests = [
       ],
     }
   },
-  */
   {
     plugins: [
       '@prettier/plugin-pug',
@@ -123,6 +121,89 @@ let tests = [
         [
           `a.p-4.bg-blue-600(class='sm:p-0 md:p-4', href='//example.com') Example`,
           `a.bg-blue-600.p-4(class='sm:p-0 md:p-4', href='//example.com') Example`,
+        ],
+      ],
+    }
+  },
+  {
+    plugins: [
+      '@prettier/plugin-php',
+    ],
+    tests: {
+      php: [
+        [
+          `<?php $test = function($a,$b){}\n          ?>\n          <div class="sm:p-0 p-4">Example</div>\n          <?php $test = function($c,$d)use($e) {}`,
+          `<?php $test = function ($a, $b) {}; ?>\n          <div class="p-4 sm:p-0">Example</div>\n          <?php $test = function ($c, $d) use ($e) {};`
+        ],
+      ],
+    }
+  },
+  {
+    plugins: [
+      'prettier-plugin-import-sort',
+    ],
+    tests: {
+      babel: [
+        [
+          `
+            import './three'
+            import '@one/file'
+            import '@two/file'
+            export default function Foo() { return <div className="sm:p-0 p-4"></div> }
+          `,
+          `import '@one/file'\nimport '@two/file'\n\nimport './three'\n\nexport default function Foo() {\n  return <div className="p-4 sm:p-0"></div>\n}`,
+        ],
+      ],
+    }
+  },
+  {
+    plugins: [
+      'prettier-plugin-jsdoc',
+    ],
+    tests: {
+      babel: [
+        [
+          `/**\n             * @param {  string   }    param0 description\n             */\n            export default function Foo(param0) { return <div className="sm:p-0 p-4"></div> }`,
+          `/** @param {string} param0 Description */\nexport default function Foo(param0) {\n  return <div className="p-4 sm:p-0"></div>\n}`,
+        ],
+      ],
+    }
+  },
+  {
+    plugins: [
+      'prettier-plugin-css-order',
+    ],
+    tests: {
+      css: [
+        [
+          `.foo {\n  color: red;\n  background-color: blue;\n  @apply sm:p-0 p-4 bg-blue-600;\n}`,
+          `.foo {\n  background-color: blue;\n  color: red;\n  @apply bg-blue-600 p-4 sm:p-0;\n}`,
+        ],
+      ],
+    }
+  },
+  {
+    plugins: [
+      'prettier-plugin-style-order',
+    ],
+    tests: {
+      css: [
+        [
+          `.foo {\n  color: red;\n  margin-left: 1px;\n  background-color: blue;\n  margin-right: 1px;\n  @apply sm:p-0 p-4 bg-blue-600;\n}`,
+          `.foo {\n  margin-right: 1px;\n  margin-left: 1px;\n  color: red;\n  background-color: blue;\n  @apply bg-blue-600 p-4 sm:p-0;\n}`,
+        ],
+      ],
+    }
+  },
+  {
+    plugins: [
+      'prettier-plugin-organize-attributes',
+    ],
+    tests: {
+      html: [
+        [
+          `<a href="https://www.example.com" class="sm:p-0 p-4">Example</a>`,
+          `<a class="p-4 sm:p-0" href="https://www.example.com">Example</a>`,
         ],
       ],
     }

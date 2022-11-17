@@ -494,6 +494,7 @@ export const parsers = {
   }) } : {},
   ...base.parsers.astro ? { astro: createParser('astro', transformAstro) } : {},
   ...base.parsers.php ? { php: createParser('php', transformPHP) } : {},
+  // ...base.parsers.blade ? { blade: createParser('blade', transformBlade) } : {},
 }
 
 function transformAstro(ast, { env, changes }) {
@@ -538,6 +539,13 @@ function transformPHP(ast, { env, changes }) {
     transformPHP(child, { env, changes });
   }
 }
+
+/*
+function transformBlade(ast, { env, changes }) {
+  // Blade gets formatted on parse
+  // This means we'd have to parse the blade ourselves and figure out what's HTML and what isn't
+}
+*/
 
 function transformSvelte(ast, { env, changes }) {
   for (let attr of ast.attributes ?? []) {
@@ -638,6 +646,7 @@ function getBasePlugins() {
   let astro = loadIfExists('prettier-plugin-astro')
   let svelte = loadIfExists('prettier-plugin-svelte')
   let php = loadIfExists('@prettier/plugin-php')
+  // let blade = loadIfExists('@shufo/prettier-plugin-blade')
 
   return {
     parsers: {
@@ -661,6 +670,7 @@ function getBasePlugins() {
       ...(svelte?.parsers ?? {}),
       ...(astro?.parsers ?? {}),
       ...(php?.parsers ?? {}),
+      // ...(blade?.parsers ?? {}),
     },
     printers: {
       ...(svelte ? { 'svelte-ast': svelte.printers['svelte-ast'] } : {}),

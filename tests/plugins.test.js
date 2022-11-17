@@ -76,6 +76,7 @@ let tests = [
       ],
     }
   },
+  /*
   {
     plugins: [
       'prettier-plugin-twig-melody',
@@ -96,6 +97,7 @@ let tests = [
       ],
     }
   },
+  */
 ]
 
 for (const group of tests) {

@@ -249,20 +249,20 @@ let tests = {
 
 describe.only('plugin-tests', () => {
   // let plugins = [
-  //   '@prettier/plugin-php', // x
   //   '@prettier/plugin-pug', // x
   //   '@shufo/prettier-plugin-blade', // x
   //   'prettier-plugin-import-sort', // x
+  //   'prettier-plugin-twig-melody', // x
+
+  //   '@prettier/plugin-php', // √
   //   'prettier-plugin-css-order', // √
   //   'prettier-plugin-style-order', // √
   //   'prettier-plugin-jsdoc', // √
-  //   'prettier-plugin-twig-melody',
-
   //   require.resolve('prettier-plugin-organize-attributes'), // √
   // ];
 
   // Requires more work on our part…
-  test.skip('@prettier/plugin-php', () => {
+  test('@prettier/plugin-php', () => {
     let options = {
       parser: 'php',
       plugins: [require.resolve('@prettier/plugin-php')]
@@ -295,7 +295,7 @@ describe.only('plugin-tests', () => {
     expect(format(input, options)).toEqual(output)
   })
 
-  // Requires more work on our part…
+  // This requires us to parse the blade templates ourselves. We don't get a proper AST back — just text.
   test.skip('@shufo/prettier-plugin-blade', () => {
     let options = {
       parser: 'blade',
@@ -303,41 +303,35 @@ describe.only('plugin-tests', () => {
     }
 
     let input = `@section('header') <div class="sm:p-0 p-4">Example</div> @endsection`;
-    let output = `
-@section('header')
+    let output = `@section('header')
     <div class="p-4 sm:p-0">Example</div>
-@endsection
-`;
+@endsection`;
 
     expect(format(input, options)).toEqual(output)
   })
 
   // Requires more work on our part…
   // Possibly some test setup
-  test.skip('prettier-plugin-import-sort', () => {
+  test.only('prettier-plugin-import-sort', () => {
     let options = {
       parser: 'babel',
       plugins: [require.resolve('prettier-plugin-import-sort')],
-      importSort: {
-        ".js, .jsx, .ts, .tsx": {
-          "style": "module",
-          "parser": "babel"
-        }
-      }
     }
 
     let input = `
       import './three'
-      import '@two/file'
       import '@one/file'
+      import '@two/file'
       export default function Foo() { return <div className="sm:p-0 p-4"></div> }
     `;
-    let output = `
-      import './three'
-      import '@two/file'
-      import '@one/file'
-      export default function Foo() { return <div className="p-4 sm:p-0"></div> }
-    `;
+    let output = `import '@one/file'
+import '@two/file'
+
+import './three'
+
+export default function Foo() {
+  return <div className="p-4 sm:p-0"></div>
+}`;
 
     expect(format(input, options)).toEqual(output)
   })

@@ -3,14 +3,19 @@ const path = require('path')
 const { execSync } = require('child_process')
 
 function format(str, options = {}) {
+  options.plugins = options.plugins ?? [
+    require.resolve('prettier-plugin-astro'),
+    require.resolve('prettier-plugin-svelte'),
+  ]
+
+  options.plugins = [
+    ...options.plugins,
+    path.resolve(__dirname, '..'),
+  ]
+
   return prettier
     .format(str, {
       pluginSearchDirs: [__dirname], // disable plugin autoload
-      plugins: [
-        require.resolve('prettier-plugin-astro'),
-        require.resolve('prettier-plugin-svelte'),
-        path.resolve(__dirname, '..'),
-      ],
       semi: false,
       singleQuote: true,
       printWidth: 9999,
@@ -241,6 +246,182 @@ let tests = {
     ],
   ],
 };
+
+describe.only('plugin-tests', () => {
+  // let plugins = [
+  //   '@prettier/plugin-php', // x
+  //   '@prettier/plugin-pug', // x
+  //   '@shufo/prettier-plugin-blade', // x
+  //   'prettier-plugin-import-sort', // x
+  //   'prettier-plugin-css-order', // √
+  //   'prettier-plugin-style-order', // √
+  //   'prettier-plugin-jsdoc', // √
+  //   'prettier-plugin-twig-melody',
+
+  //   require.resolve('prettier-plugin-organize-attributes'), // √
+  // ];
+
+  // Requires more work on our part…
+  test.skip('@prettier/plugin-php', () => {
+    let options = {
+      parser: 'php',
+      plugins: [require.resolve('@prettier/plugin-php')]
+    }
+
+    let input = `
+      <?php
+      $test = function($a,$b){}
+      ?>
+      <div class="sm:p-0 p-4">Example</div>
+      <?php $test = function($c,$d)use($e) {}
+    `;
+    let output = `<?php $test = function ($a, $b) {}; ?>
+      <div class="p-4 sm:p-0">Example</div>
+      <?php $test = function ($c, $d) use ($e) {};`;
+
+    expect(format(input, options)).toEqual(output)
+  })
+
+  // Requires more work on our part…
+  test.skip('@prettier/plugin-pug', () => {
+    let options = {
+      parser: 'pug',
+      plugins: [require.resolve('@prettier/plugin-pug')]
+    }
+
+    let input = `a(class='md:p-4 sm:p-0 p-4 bg-blue-600' href='//example.com') Example`;
+    let output = `a.bg-blue-600.p-4(class='sm:p-0 md:p-4' href='//example.com') Example`;
+
+    expect(format(input, options)).toEqual(output)
+  })
+
+  // Requires more work on our part…
+  test.skip('@shufo/prettier-plugin-blade', () => {
+    let options = {
+      parser: 'blade',
+      plugins: [require.resolve('@shufo/prettier-plugin-blade')]
+    }
+
+    let input = `@section('header') <div class="sm:p-0 p-4">Example</div> @endsection`;
+    let output = `
+@section('header')
+    <div class="p-4 sm:p-0">Example</div>
+@endsection
+`;
+
+    expect(format(input, options)).toEqual(output)
+  })
+
+  // Requires more work on our part…
+  // Possibly some test setup
+  test.skip('prettier-plugin-import-sort', () => {
+    let options = {
+      parser: 'babel',
+      plugins: [require.resolve('prettier-plugin-import-sort')],
+      importSort: {
+        ".js, .jsx, .ts, .tsx": {
+          "style": "module",
+          "parser": "babel"
+        }
+      }
+    }
+
+    let input = `
+      import './three'
+      import '@two/file'
+      import '@one/file'
+      export default function Foo() { return <div className="sm:p-0 p-4"></div> }
+    `;
+    let output = `
+      import './three'
+      import '@two/file'
+      import '@one/file'
+      export default function Foo() { return <div className="p-4 sm:p-0"></div> }
+    `;
+
+    expect(format(input, options)).toEqual(output)
+  })
+
+  test.only('prettier-plugin-jsdoc', () => {
+    let options = {
+      parser: 'babel',
+      plugins: [require.resolve('prettier-plugin-jsdoc')],
+    }
+
+    let input = `
+    /**
+     * @param {  string   }    param0 description
+     */
+    export default function Foo(param0) { return <div className="sm:p-0 p-4"></div> }
+    `;
+    let output = `/** @param {string} param0 Description */
+export default function Foo(param0) {
+  return <div className="p-4 sm:p-0"></div>
+}`;
+
+    expect(format(input, options)).toEqual(output)
+  })
+
+  test('prettier-plugin-css-order', () => {
+    let options = {
+      parser: 'css',
+      plugins: [require.resolve('prettier-plugin-css-order')],
+    }
+
+    let input = `
+      .foo {
+        color: red;
+        background-color: blue;
+        @apply sm:p-0 p-4 bg-blue-600;
+      }
+    `;
+    let output = `.foo {
+  background-color: blue;
+  color: red;
+  @apply bg-blue-600 p-4 sm:p-0;
+}`;
+
+    expect(format(input, options)).toEqual(output)
+  })
+
+  test('prettier-plugin-style-order', () => {
+    let options = {
+      parser: 'css',
+      plugins: [require.resolve('prettier-plugin-style-order')],
+    }
+
+    let input = `
+      .foo {
+        color: red;
+        margin-left: 1px;
+        background-color: blue;
+        margin-right: 1px;
+        @apply sm:p-0 p-4 bg-blue-600;
+      }
+    `;
+    let output = `.foo {
+  margin-right: 1px;
+  margin-left: 1px;
+  color: red;
+  background-color: blue;
+  @apply bg-blue-600 p-4 sm:p-0;
+}`;
+
+    expect(format(input, options)).toEqual(output)
+  })
+
+  test('prettier-plugin-organize-attributes', () => {
+    let options = {
+      parser: 'html',
+      plugins: [require.resolve('prettier-plugin-organize-attributes')]
+    }
+
+    let input = `<a href="https://www.example.com" class="sm:p-0 p-4">Example</a>`;
+    let output = `<a class="p-4 sm:p-0" href="https://www.example.com">Example</a>`;
+
+    expect(format(input, options)).toEqual(output)
+  })
+})
 
 describe('parsers', () => {
   for (let parser in tests) {

@@ -19,6 +19,7 @@ function format(str, options = {}) {
 
 
 let tests = [
+  /*
   {
     plugins: [
       '@trivago/prettier-plugin-sort-imports',
@@ -92,6 +93,36 @@ let tests = [
         [
           `<section class="sm:p-0 p-4"></section>`,
           `<section class="p-4 sm:p-0"></section>`,
+        ],
+      ],
+    }
+  },
+  */
+  {
+    plugins: [
+      '@prettier/plugin-pug',
+    ],
+    tests: {
+      pug: [
+        [
+          `a(class='md:p-4 sm:p-0 p-4 bg-blue-600' href='//example.com') Example`,
+          `a.bg-blue-600.p-4(class='sm:p-0 md:p-4', href='//example.com') Example`,
+        ],
+        [
+          `a.p-4.bg-blue-600(class='sm:p-0 md:p-4', href='//example.com') Example`,
+          `a.bg-blue-600.p-4(class='sm:p-0 md:p-4', href='//example.com') Example`,
+        ],
+
+        // These two tests show how our sorting the two class lists separately is suboptimal
+        // Two consecutive saves will result in different output
+        // Where the second save is the most correct
+        [
+          `a.p-4(class='bg-blue-600 sm:p-0 md:p-4', href='//example.com') Example`,
+          `a.p-4.bg-blue-600(class='sm:p-0 md:p-4', href='//example.com') Example`,
+        ],
+        [
+          `a.p-4.bg-blue-600(class='sm:p-0 md:p-4', href='//example.com') Example`,
+          `a.bg-blue-600.p-4(class='sm:p-0 md:p-4', href='//example.com') Example`,
         ],
       ],
     }

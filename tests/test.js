@@ -249,10 +249,10 @@ let tests = {
 
 describe.only('plugin-tests', () => {
   // let plugins = [
-  //   '@prettier/plugin-pug', // x
-  //   'prettier-plugin-twig-melody', // x
-  //   '@shufo/prettier-plugin-blade', // x
+    //   '@shufo/prettier-plugin-blade', // x
 
+  //   '@prettier/plugin-pug', // √
+  //   'prettier-plugin-twig-melody', // √
   //   'prettier-plugin-import-sort', // √
   //   '@prettier/plugin-php', // √
   //   'prettier-plugin-css-order', // √
@@ -278,19 +278,6 @@ describe.only('plugin-tests', () => {
     let output = `<?php $test = function ($a, $b) {}; ?>
       <div class="p-4 sm:p-0">Example</div>
       <?php $test = function ($c, $d) use ($e) {};`;
-
-    expect(format(input, options)).toEqual(output)
-  })
-
-  // Requires more work on our part…
-  test.skip('@prettier/plugin-pug', () => {
-    let options = {
-      parser: 'pug',
-      plugins: [require.resolve('@prettier/plugin-pug')]
-    }
-
-    let input = `a(class='md:p-4 sm:p-0 p-4 bg-blue-600' href='//example.com') Example`;
-    let output = `a.bg-blue-600.p-4(class='sm:p-0 md:p-4' href='//example.com') Example`;
 
     expect(format(input, options)).toEqual(output)
   })

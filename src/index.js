@@ -499,6 +499,7 @@ export const parsers = {
   ...base.parsers.astro ? { astro: createParser('astro', transformAstro) } : {},
   ...base.parsers.php ? { php: createParser('php', transformPHP) } : {},
   ...base.parsers.melody ? { melody: createParser('melody', transformMelody) } : {},
+  ...base.parsers.pug ? { pug: createParser('pug', transformPug) } : {},
   // ...base.parsers.blade ? { blade: createParser('blade', transformBlade) } : {},
 }
 
@@ -576,6 +577,59 @@ function transformMelody(ast, { env, changes }) {
       });
     }
   })
+}
+
+function transformPug(ast, { env }) {
+
+  // This isn't optimal
+  // We should merge the classes together across class attributes and class tokens
+  // And then we sort them
+  // But this is good enough for now
+
+  // First sort the classes in attributes
+  for (const token of ast.tokens) {
+    if (token.type === 'attribute' && token.name === 'class') {
+      token.val = [
+        token.val.slice(0, 1),
+        sortClasses(token.val.slice(1, -1), { env }),
+        token.val.slice(-1)
+      ].join('')
+    }
+  }
+
+  // Collect lists of consecutive class tokens
+  let startIdx = -1;
+  let endIdx = -1;
+  let ranges = [];
+
+  for (let i = 0; i < ast.tokens.length; i++) {
+    const token = ast.tokens[i];
+
+    if (token.type === 'class') {
+      startIdx = startIdx === -1 ? i : startIdx;
+      endIdx = i;
+    } else if (startIdx !== -1) {
+      ranges.push([startIdx, endIdx]);
+      startIdx = -1;
+      endIdx = -1;
+    }
+  }
+
+  if (startIdx !== -1) {
+    ranges.push([startIdx, endIdx]);
+    startIdx = -1;
+    endIdx = -1;
+  }
+
+  // Sort the lists of class tokens
+  for (const [startIdx, endIdx] of ranges) {
+    const classes = ast.tokens.slice(startIdx, endIdx + 1).map(token => token.val);
+    const classList = sortClassList(classes, { env })
+
+    for (let i = startIdx; i <= endIdx; i++) {
+      ast.tokens[i].val = classList[i - startIdx];
+    }
+  }
 }
 
 function transformSvelte(ast, { env, changes }) {
@@ -678,6 +732,7 @@ function getBasePlugins() {
   let svelte = loadIfExists('prettier-plugin-svelte')
   let php = loadIfExists('@prettier/plugin-php')
   let melody = loadIfExists('prettier-plugin-twig-melody')
+  let pug = loadIfExists('@prettier/plugin-pug')
   // let blade = loadIfExists('@shufo/prettier-plugin-blade')
 
   return {
@@ -703,6 +758,7 @@ function getBasePlugins() {
       ...(astro?.parsers ?? {}),
       ...(php?.parsers ?? {}),
       ...(melody?.parsers ?? {}),
+      ...(pug?.parsers ?? {}),
       // ...(blade?.parsers ?? {}),
     },
     printers: {

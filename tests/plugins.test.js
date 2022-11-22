@@ -208,6 +208,23 @@ let tests = [
       ],
     }
   },
+  {
+    plugins: [
+      '@shopify/prettier-plugin-liquid',
+    ],
+    tests: {
+      'liquid-html': [
+        [
+          `<a class="sm:p-0 p-4" href="https://www.example.com">Example</a>`,
+          `<a class='p-4 sm:p-0' href='https://www.example.com'>Example</a>`,
+        ],
+        [
+          `{% if state == true %}\n  <a class="{{ "sm:p-0 p-4" | escape }}" href="https://www.example.com">Example</a>\n{% endif %}`,
+          `{% if state == true -%}\n  <a class='{{ "p-4 sm:p-0" | escape }}' href='https://www.example.com'>Example</a>\n{%- endif %}`,
+        ],
+      ],
+    }
+  },
 ]
 
 for (const group of tests) {

@@ -345,6 +345,63 @@ function transformGlimmer(ast, { env }) {
   })
 }
 
+function transformLiquid(ast, { env }) {
+  visit(ast, {
+    HtmlElement(node) {
+      node.source = ''
+      console.log({node})
+    },
+
+    AttrSingleQuoted(node, _parent, _key, _index, meta) {
+      if (node.name !== "class") {
+        return;
+      }
+
+      meta.sortTextNodes = true;
+      meta.sourceNode = node;
+    },
+
+    AttrDoubleQuoted(node, _parent, _key, _index, meta) {
+      if (node.name !== "class") {
+        return;
+      }
+
+      meta.sortTextNodes = true;
+
+      // With Liquid Script it uses the "source" of certain nodes as the "source of truth"
+      // We must modify that node's source to get the desired output
+      // Even if we modify the AST it will be ignored
+      meta.sourceNode = node;
+    },
+
+    TextNode(node, _parent, _key, _index, meta) {
+      if (!meta.sortTextNodes) {
+        return;
+      }
+
+      node.value = sortClasses(node.value, { env });
+
+      // This feels hacky but it's necessary
+      node.source = node.source.slice(0, node.position.start) + node.value + node.source.slice(node.position.end);
+      meta.sourceNode.source = node.source;
+    },
+
+    String(node, _parent, _key, _index, meta) {
+      if (!meta.sortTextNodes) {
+        return;
+      }
+
+      node.value = sortClasses(node.value, { env });
+
+      // This feels hacky but it's necessary
+      // String position includes the quotes even if the value doesn't
+      // Hence the +1 and -1 when slicing
+      node.source = node.source.slice(0, node.position.start+1) + node.value + node.source.slice(node.position.end-1);
+      meta.sourceNode.source = node.source;
+    },
+  });
+}
+
 function sortStringLiteral(node, { env }) {
   let result = sortClasses(node.value, { env })
   let didChange = result !== node.value
@@ -500,6 +557,9 @@ export const parsers = {
   ...base.parsers.php ? { php: createParser('php', transformPHP) } : {},
   ...base.parsers.melody ? { melody: createParser('melody', transformMelody) } : {},
   ...base.parsers.pug ? { pug: createParser('pug', transformPug) } : {},
+  ...(base.parsers['liquid-html']
+    ? { 'liquid-html': createParser("liquid-html", transformLiquid) }
+    : {}),
   // ...base.parsers.blade ? { blade: createParser('blade', transformBlade) } : {},
 }
 
@@ -733,6 +793,7 @@ function getBasePlugins() {
   let php = loadIfExists('@prettier/plugin-php')
   let melody = loadIfExists('prettier-plugin-twig-melody')
   let pug = loadIfExists('@prettier/plugin-pug')
+  let liquid = loadIfExists('@shopify/prettier-plugin-liquid')
   // let blade = loadIfExists('@shufo/prettier-plugin-blade')
 
   return {
@@ -759,6 +820,7 @@ function getBasePlugins() {
       ...(php?.parsers ?? {}),
       ...(melody?.parsers ?? {}),
       ...(pug?.parsers ?? {}),
+      ...(liquid?.parsers ?? {}),
       // ...(blade?.parsers ?? {}),
     },
     printers: {
@@ -782,6 +844,7 @@ function getCompatibleParser(parserFormat, options) {
     'prettier-plugin-organize-imports',
     '@prettier/plugin-php',
     '@prettier/plugin-pug',
+    '@shopify/prettier-plugin-liquid',
     '@shufo/prettier-plugin-blade',
     'prettier-plugin-css-order',
     'prettier-plugin-import-sort',

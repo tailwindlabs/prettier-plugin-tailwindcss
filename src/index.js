@@ -347,11 +347,6 @@ function transformGlimmer(ast, { env }) {
 
 function transformLiquid(ast, { env }) {
   visit(ast, {
-    HtmlElement(node) {
-      node.source = ''
-      console.log({node})
-    },
-
     AttrSingleQuoted(node, _parent, _key, _index, meta) {
       if (node.name !== "class") {
         return;

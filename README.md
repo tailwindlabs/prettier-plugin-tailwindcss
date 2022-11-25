@@ -40,10 +40,33 @@ If a local configuration file cannot be found the plugin will fallback to the de
 
 ## Compatibility with other Prettier plugins
 
-To make this plugin work we had to use private Prettier APIs that can only be used by a single plugin at once. This means this plugin is incompatible with other Prettier plugins that are using the same APIs.
+This plugin uses Prettier APIs that can only be used by one plugin at a time, making it incompatible with other Prettier plugins implemented the same way. To solve this we've added explicit per-plugin workarounds that enable compatibility with the following Prettier plugins:
 
-The most popular example we know of is [prettier-plugin-svelte](https://github.com/sveltejs/prettier-plugin-svelte), which can't be installed at the same time as the Tailwind CSS plugin.
+- `@prettier/plugin-php`
+- `@prettier/plugin-pug`
+- `@shopify/prettier-plugin-liquid`
+- `@trivago/prettier-plugin-sort-imports`
+- `prettier-plugin-astro`
+- `prettier-plugin-css-order`
+- `prettier-plugin-import-sort`
+- `prettier-plugin-jsdoc`
+- `prettier-plugin-organize-attributes`
+- `prettier-plugin-organize-imports`
+- `prettier-plugin-style-order`
+- `prettier-plugin-svelte`
+- `prettier-plugin-twig-melody`
 
-To work around this, we've bundled `prettier-plugin-svelte` directly into `prettier-plugin-tailwindcss`, so if you'd like to use this plugin with Svelte, just uninstall `prettier-plugin-svelte` and everything should work as expected.
+One limitation with this approach is that `prettier-plugin-tailwindcss` *must* be loaded last, meaning Prettier auto-loading needs to be disabled. You can do this by setting the `pluginSearchDirs` option to `false` and then listing each of your Prettier plugins in the `plugins` array:
 
-If you discover any other incompatibilities, please share them in [this issue](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/issues/31) and hopefully we can figure out a way to make it work.
+```json5
+// .prettierrc
+{
+  // ..
+  "plugins": [
+    "prettier-plugin-svelte",
+    "prettier-plugin-organize-imports",
+    "prettier-plugin-tailwindcss" // MUST come last
+  ],
+  "pluginSearchDirs": false
+}
+```

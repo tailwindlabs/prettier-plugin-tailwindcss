@@ -36,6 +36,15 @@ module.exports = {
 }
 ```
 
+Or, with vite:
+
+```js
+// prettier.config.js
+module.exports = {
+  tailwindConfig: './styles/tailwind.config.cjs',
+}
+```
+
 If a local configuration file cannot be found the plugin will fallback to the default Tailwind configuration.
 
 ## Compatibility with other Prettier plugins

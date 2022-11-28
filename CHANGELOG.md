@@ -11,9 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.0] - 2022-11-25
 
+### Changed
+
+- Don't bundle `prettier-plugin-svelte` ([#101](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/101))
+
 ### Added
 
-- Improve compatibility with other Prettier plugins ([#31](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/31))
+- Improve compatibility with other Prettier plugins ([#101](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/101), [#102](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/102))
 
 ## [0.1.13] - 2022-07-25
 

@@ -346,9 +346,18 @@ function transformGlimmer(ast, { env }) {
 }
 
 function transformLiquid(ast, { env }) {
+  /** @param {{name: string | {type: string, value: string}[]}} node */
+  function isClassAttr(node) {
+    if (Array.isArray(node.name)) {
+      return node.name.every((n) => n.type === 'TextNode' && n.value === 'class');
+    }
+
+    return node.name === 'class'
+  }
+
   visit(ast, {
     AttrSingleQuoted(node, _parent, _key, _index, meta) {
-      if (node.name !== "class") {
+      if (!isClassAttr(node)) {
         return;
       }
 
@@ -357,7 +366,7 @@ function transformLiquid(ast, { env }) {
     },
 
     AttrDoubleQuoted(node, _parent, _key, _index, meta) {
-      if (node.name !== "class") {
+      if (!isClassAttr(node)) {
         return;
       }
 

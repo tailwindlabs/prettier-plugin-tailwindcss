@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.1] - 2022-12-08
 
+### Fixed
+
 - Fix support for latest Shopify Liquid plugin ([#109](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/109))
 
 ## [0.2.0] - 2022-11-25

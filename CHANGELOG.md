@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Nothing yet!
+
+## [0.2.1] - 2022-12-08
+
 - Fix support for latest Shopify Liquid plugin ([#109](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/109))
 
 ## [0.2.0] - 2022-11-25
@@ -105,7 +109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.0...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.1.13...v0.2.0
 [0.1.13]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.1.12...v0.1.13
 [0.1.12]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.1.11...v0.1.12

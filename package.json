@@ -28,10 +28,10 @@
   "devDependencies": {
     "@prettier/plugin-php": "^0.19.2",
     "@prettier/plugin-pug": "^2.3.0",
-    "@shopify/prettier-plugin-liquid": "^1.0.0-rc.2",
-    "@shufo/prettier-plugin-blade": "^1.8.0",
+    "@shopify/prettier-plugin-liquid": "^1.0.3",
+    "@shufo/prettier-plugin-blade": "^1.8.4",
     "@tailwindcss/line-clamp": "^0.3.0",
-    "@trivago/prettier-plugin-sort-imports": "^3.3.0",
+    "@trivago/prettier-plugin-sort-imports": "^3.4.0",
     "cpy-cli": "^3.1.1",
     "esbuild": "^0.14.11",
     "escalade": "^3.1.1",
@@ -49,17 +49,75 @@
     "prettier-plugin-import-sort": "^0.0.7",
     "prettier-plugin-jsdoc": "^0.4.2",
     "prettier-plugin-organize-attributes": "^0.0.5",
-    "prettier-plugin-organize-imports": "^3.1.0",
+    "prettier-plugin-organize-imports": "^3.2.1",
     "prettier-plugin-style-order": "^0.2.2",
-    "prettier-plugin-svelte": "^2.7.0",
+    "prettier-plugin-svelte": "^2.9.0",
     "prettier-plugin-twig-melody": "^0.4.6",
     "recast": "^0.20.5",
     "rimraf": "^3.0.2",
-    "svelte": "^3.46.4",
+    "svelte": "^3.55.0",
     "tailwindcss": "^3.0.23"
   },
   "peerDependencies": {
-    "prettier": ">=2.2.0"
+    "@prettier/plugin-php": "*",
+    "@prettier/plugin-pug": "*",
+    "@shopify/prettier-plugin-liquid": "*",
+    "@shufo/prettier-plugin-blade": "*",
+    "@trivago/prettier-plugin-sort-imports": "*",
+    "prettier": ">=2.2.0",
+    "prettier-plugin-astro": "*",
+    "prettier-plugin-css-order": "*",
+    "prettier-plugin-import-sort": "*",
+    "prettier-plugin-jsdoc": "*",
+    "prettier-plugin-organize-attributes": "*",
+    "prettier-plugin-organize-imports": "*",
+    "prettier-plugin-style-order": "*",
+    "prettier-plugin-svelte": "*",
+    "prettier-plugin-twig-melody": "*"
+  },
+  "peerDependenciesMeta": {
+    "@prettier/plugin-php": {
+      "optional": true
+    },
+    "@prettier/plugin-pug": {
+      "optional": true
+    },
+    "@shopify/prettier-plugin-liquid": {
+      "optional": true
+    },
+    "@shufo/prettier-plugin-blade": {
+      "optional": true
+    },
+    "@trivago/prettier-plugin-sort-imports": {
+      "optional": true
+    },
+    "prettier-plugin-astro": {
+      "optional": true
+    },
+    "prettier-plugin-css-order": {
+      "optional": true
+    },
+    "prettier-plugin-import-sort": {
+      "optional": true
+    },
+    "prettier-plugin-jsdoc": {
+      "optional": true
+    },
+    "prettier-plugin-organize-attributes": {
+      "optional": true
+    },
+    "prettier-plugin-organize-imports": {
+      "optional": true
+    },
+    "prettier-plugin-style-order": {
+      "optional": true
+    },
+    "prettier-plugin-svelte": {
+      "optional": true
+    },
+    "prettier-plugin-twig-melody": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=12.17.0"

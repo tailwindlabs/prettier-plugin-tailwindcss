@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+- Add prettier plugins to peer dependencies ([#114](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/114))
+- Traverse await expression blocks in Svelte ([#118](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/118))
 
 ## [0.2.1] - 2022-12-08
 

@@ -225,6 +225,14 @@ let tests = {
       `<div class="p-0 sm:p-0 {someVar}sm:block flex md:inline" />`,
     ],
     ['<div class={`sm:p-0\np-0`} />', '<div\n  class={`p-0\nsm:p-0`}\n/>'],
+    [
+      `{#await promise()} <div class="sm:p-0 p-0"></div> {:then} <div class="sm:p-0 p-0"></div> {/await}`,
+      `{#await promise()} <div class="p-0 sm:p-0" /> {:then} <div class="p-0 sm:p-0" /> {/await}`,
+    ],
+    [
+      `{#await promise() then} <div class="sm:p-0 p-0"></div> {/await}`,
+      `{#await promise() then} <div class="p-0 sm:p-0" /> {/await}`,
+    ],
   ],
   astro: [
     ...html,

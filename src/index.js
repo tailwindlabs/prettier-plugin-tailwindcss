@@ -746,6 +746,14 @@ function transformSvelte(ast, { env, changes }) {
       transformSvelte(child, { env, changes })
     }
   }
+
+  if (ast.type === "AwaitBlock") {
+    let nodes = [ast.pending, ast.then, ast.catch];
+
+    for (let child of nodes) {
+      transformSvelte(child, { env, changes });
+    }
+  }
 }
 
 // https://lihautan.com/manipulating-ast-with-javascript/

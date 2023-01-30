@@ -340,7 +340,10 @@ function transformGlimmer(ast, { env }) {
         return
       }
 
-      node.value = sortClasses(node.value, { env })
+      node.value = sortClasses(node.value, {
+        env,
+        ignoreLast: parent.type === 'SubExpression' && !/[^\S\r\n]/.test(node.value.at(-1)),
+      })
     },
   })
 }

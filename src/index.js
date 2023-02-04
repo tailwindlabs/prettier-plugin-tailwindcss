@@ -483,6 +483,29 @@ function transformJavaScript(ast, { env }) {
         }
       }
     },
+    TaggedTemplateExpression(node) {
+      if (node.tag.type === 'Identifier' && ['tw', 'twrnc'].includes(node.tag.name)) {
+        sortTemplateLiteral(node.quasi, { env })
+      }
+    },
+    CallExpression(node) {
+      if (node.callee.type === 'MemberExpression') {
+        if (
+          node.callee.object.type === 'Identifier' &&
+          ['tw', 'twrnc'].includes(node.callee.object.name) &&
+          node.callee.property.type === 'Identifier' &&
+          node.callee.property.name === 'style'
+        ) {
+          for (let i = 0; i < node.arguments.length; i++) {
+            if (isStringLiteral(node.arguments[i])) {
+              sortStringLiteral(node.arguments[i], { env })
+            } else if (node.arguments[i].type === 'TemplateLiteral') {
+              sortTemplateLiteral(node.arguments[i], { env })
+            }
+          }
+        }
+      }
+    },
   })
 }
 

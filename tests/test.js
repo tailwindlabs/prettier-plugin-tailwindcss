@@ -104,6 +104,14 @@ let javascript = [
     `;<div class={\`sm:p-0 p-0 \${someVar}sm:block md:inline flex\`} />`,
     `;<div class={\`p-0 sm:p-0 \${someVar}sm:block flex md:inline\`} />`,
   ],
+  [
+    `;tw\`sm:p-0 p-0 \${someVar}sm:block md:inline flex\``,
+    `;tw\`p-0 sm:p-0 \${someVar}sm:block flex md:inline\``,
+  ],
+  [
+    `;tw.style("sm:p-0 p-0", { otherObject: 'true' }, \`\${someVar}sm:block md:inline flex\`)`,
+    `;tw.style("p-0 sm:p-0", { otherObject: 'true' }, \`\${someVar}sm:block flex md:inline\`)`,
+  ]
 ]
 javascript = javascript.concat(
   javascript.map((test) => test.map((t) => t.replace(/class/g, 'className')))

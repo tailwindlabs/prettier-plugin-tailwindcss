@@ -340,9 +340,11 @@ function transformGlimmer(ast, { env }) {
         return
       }
 
+      const isConcat = parent.type === 'SubExpression' && parent.path.original === 'concat';
+
       node.value = sortClasses(node.value, {
         env,
-        ignoreLast: parent.type === 'SubExpression' && !/[^\S\r\n]/.test(node.value.at(-1)),
+        ignoreLast: isConcat && !/[^\S\r\n]/.test(node.value.at(-1)),
       })
     },
   })

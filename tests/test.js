@@ -168,6 +168,10 @@ let glimmer = [
     `<div class='{{if @isTrue (concat "border-l-4 border " @borderColor)}}'></div>`,
     `<div class='{{if @isTrue (concat "border border-l-4 " @borderColor)}}'></div>`,
   ],
+  [
+    `<div class='{{if @isTrue (nope "border-l-4 border-" @borderColor)}}'></div>`,
+    `<div class='{{if @isTrue (nope "border- border-l-4" @borderColor)}}'></div>`,
+  ],
 ]
 
 let tests = {

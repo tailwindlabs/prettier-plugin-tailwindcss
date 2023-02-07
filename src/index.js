@@ -344,7 +344,7 @@ function transformGlimmer(ast, { env }) {
 
       node.value = sortClasses(node.value, {
         env,
-        ignoreLast: isConcat && !/[^\S\r\n]/.test(node.value.at(-1)),
+        ignoreLast: isConcat && !/[^\S\r\n]$/.test(node.value),
       })
     },
   })

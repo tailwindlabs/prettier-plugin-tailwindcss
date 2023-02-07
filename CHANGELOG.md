@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Fixed
+
+- Don't sort classes in Glimmer `concat` helper.
 
 ## [0.2.2] - 2023-01-24
+
+### Fixed
 
 - Add prettier plugins to peer dependencies ([#114](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/114))
 - Traverse await expression blocks in Svelte ([#118](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/118))

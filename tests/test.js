@@ -159,6 +159,19 @@ let glimmer = [
   t`<div class></div>`,
   t`<div class=''></div>`,
   t`{{link 'Some page' href=person.url class='${no}'}}`,
+  t`<div class='{{if @isTrue (concat "border-l-4 border-" @borderColor)}}'></div>`,
+  [
+    `<div class='{{if @isTrue (concat "border-opacity-30 border-l-4 border-" @borderColor)}}'></div>`,
+    `<div class='{{if @isTrue (concat "border-l-4 border-opacity-30 border-" @borderColor)}}'></div>`,
+  ],
+  [
+    `<div class='{{if @isTrue (concat "border-l-4 border " @borderColor)}}'></div>`,
+    `<div class='{{if @isTrue (concat "border border-l-4 " @borderColor)}}'></div>`,
+  ],
+  [
+    `<div class='{{if @isTrue (nope "border-l-4 border-" @borderColor)}}'></div>`,
+    `<div class='{{if @isTrue (nope "border- border-l-4" @borderColor)}}'></div>`,
+  ],
 ]
 
 let tests = {

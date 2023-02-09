@@ -857,6 +857,7 @@ function getCompatibleParser(parserFormat, options) {
 
   // Now load parsers from plugins
   let compatiblePlugins = [
+    '@ianvs/prettier-plugin-sort-imports',
     '@trivago/prettier-plugin-sort-imports',
     'prettier-plugin-organize-imports',
     '@prettier/plugin-php',

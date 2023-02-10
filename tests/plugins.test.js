@@ -55,20 +55,20 @@ let tests = [
       '@ianvs/prettier-plugin-sort-imports',
     ],
     options: {
-      importOrder: ["^@one/(.*)$", "^@two/(.*)$", "^[./]"],
+      importOrder: ["^@tailwindcss/(.*)$", "^@babel/(.*)$", "^[./]"],
       importOrderSortSpecifiers: true,
     },
     tests: {
       babel: [
         [
-          `import './three'\nimport '@two/file'\nimport '@one/file'`,
-          `import '@one/file'\nimport '@two/file'\nimport './three'`,
+          `import './i-haz-side-effects'\nimport i3 from './three'\nimport i2 from '@two/file'\nimport i1 from '@one/file'`,
+          `import './i-haz-side-effects'\nimport i1 from '@one/file'\nimport i2 from '@two/file'\nimport i3 from './three'`,
         ],
       ],
       typescript: [
         [
-          `import './three'\nimport '@two/file'\nimport '@one/file'`,
-          `import '@one/file'\nimport '@two/file'\nimport './three'`,
+          `import './i-haz-side-effects'\nimport i3 from './three'\nimport i2 from '@two/file'\nimport i1 from '@one/file'`,
+          `import './i-haz-side-effects'\nimport i1 from '@one/file'\nimport i2 from '@two/file'\nimport i3 from './three'`,
         ],
       ],
 

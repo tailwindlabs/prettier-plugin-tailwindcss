@@ -52,6 +52,37 @@ let tests = [
   },
   {
     plugins: [
+      '@ianvs/prettier-plugin-sort-imports',
+    ],
+    options: {
+      importOrder: ["^@one/(.*)$", "^@two/(.*)$", "^[./]"],
+      importOrderSortSpecifiers: true,
+    },
+    tests: {
+      babel: [
+        [
+          `import './three'\nimport '@two/file'\nimport '@one/file'`,
+          `import '@one/file'\nimport '@two/file'\nimport './three'`,
+        ],
+      ],
+      typescript: [
+        [
+          `import './three'\nimport '@two/file'\nimport '@one/file'`,
+          `import '@one/file'\nimport '@two/file'\nimport './three'`,
+        ],
+      ],
+
+      // This plugin does not support babel-ts
+      'babel-ts': [
+        [
+          `import './three'\nimport '@two/file'\nimport '@one/file'`,
+          `import './three'\nimport '@two/file'\nimport '@one/file'`,
+        ],
+      ],
+    }
+  },
+  {
+    plugins: [
       'prettier-plugin-organize-imports',
     ],
     options: {},

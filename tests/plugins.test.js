@@ -52,6 +52,37 @@ let tests = [
   },
   {
     plugins: [
+      '@ianvs/prettier-plugin-sort-imports',
+    ],
+    options: {
+      importOrder: ["^@tailwindcss/(.*)$", "^@babel/(.*)$", "^[./]"],
+      importOrderSortSpecifiers: true,
+    },
+    tests: {
+      babel: [
+        [
+          `import './i-haz-side-effects'\nimport i3 from './three'\nimport i2 from '@two/file'\nimport i1 from '@one/file'`,
+          `import './i-haz-side-effects'\nimport i1 from '@one/file'\nimport i2 from '@two/file'\nimport i3 from './three'`,
+        ],
+      ],
+      typescript: [
+        [
+          `import './i-haz-side-effects'\nimport i3 from './three'\nimport i2 from '@two/file'\nimport i1 from '@one/file'`,
+          `import './i-haz-side-effects'\nimport i1 from '@one/file'\nimport i2 from '@two/file'\nimport i3 from './three'`,
+        ],
+      ],
+
+      // This plugin does not support babel-ts
+      'babel-ts': [
+        [
+          `import './three'\nimport '@two/file'\nimport '@one/file'`,
+          `import './three'\nimport '@two/file'\nimport '@one/file'`,
+        ],
+      ],
+    }
+  },
+  {
+    plugins: [
       'prettier-plugin-organize-imports',
     ],
     options: {},

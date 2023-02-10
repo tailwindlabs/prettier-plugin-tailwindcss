@@ -45,6 +45,7 @@ This plugin uses Prettier APIs that can only be used by one plugin at a time, ma
 - `@prettier/plugin-php`
 - `@prettier/plugin-pug`
 - `@shopify/prettier-plugin-liquid`
+- `@ianvs/prettier-plugin-sort-imports`
 - `@trivago/prettier-plugin-sort-imports`
 - `prettier-plugin-astro`
 - `prettier-plugin-css-order`

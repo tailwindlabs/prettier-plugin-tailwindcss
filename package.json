@@ -26,6 +26,7 @@
     "format": "prettier \"src/**/*.js\" \"scripts/**/*.js\" \"tests/test.js\" --write --print-width 100 --single-quote --no-semi --plugin-search-dir ./tests"
   },
   "devDependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "^3.7.0",
     "@prettier/plugin-php": "^0.19.2",
     "@prettier/plugin-pug": "^2.3.0",
     "@shopify/prettier-plugin-liquid": "^1.0.3",
@@ -59,6 +60,7 @@
     "tailwindcss": "^3.0.23"
   },
   "peerDependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "*",
     "@prettier/plugin-php": "*",
     "@prettier/plugin-pug": "*",
     "@shopify/prettier-plugin-liquid": "*",
@@ -76,6 +78,9 @@
     "prettier-plugin-twig-melody": "*"
   },
   "peerDependenciesMeta": {
+    "@ianvs/prettier-plugin-sort-imports": {
+      "optional": true
+    },
     "@prettier/plugin-php": {
       "optional": true
     },

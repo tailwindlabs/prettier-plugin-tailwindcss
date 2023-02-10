@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Don't sort classes in Glimmer `concat` helper.
+- Don't sort classes in Glimmer `concat` helper ([#119](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/119))
+- Add support for `@ianvs/prettier-plugin-sort-imports` ([#122](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/122))
 
 ## [0.2.2] - 2023-01-24
 

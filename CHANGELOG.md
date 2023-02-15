@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Nothing yet!
+
+## [0.2.3] - 2023-02-15
+
 ### Fixed
 
 - Don't sort classes in Glimmer `concat` helper ([#119](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/119))
@@ -121,7 +125,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.2...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.1.13...v0.2.0

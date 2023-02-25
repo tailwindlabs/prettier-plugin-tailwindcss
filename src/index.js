@@ -22,6 +22,26 @@ import * as recast from 'recast'
 
 let base = getBasePlugins()
 
+function createNameChecker(values) {
+  if (!values?.length) {
+    return false
+  }
+  const processedValues = values.map((v) =>
+    v.startsWith('^') ? new RegExp(v) : v,
+  )
+  const hasRegex = processedValues.some((v) => v instanceof RegExp)
+  if (!hasRegex) {
+    return (value) => processedValues.includes(value)
+  }
+  return (value) =>
+    processedValues.some((v) => {
+      if (v instanceof RegExp) {
+        return v.test(value)
+      }
+      return v === value
+    })
+}
+
 function createParser(parserFormat, transform) {
   return {
     ...base.parsers[parserFormat],
@@ -32,6 +52,22 @@ function createParser(parserFormat, transform) {
     },
 
     parse(text, parsers, options = {}) {
+      let customizations = {
+        checkJSXPropName: createNameChecker(
+          options.tailwindJSXProps ?? ['class', 'className'],
+        ),
+        checkFunctionCallName: createNameChecker(options.tailwindFunctionCalls),
+        checkTaggedTemplateName: createNameChecker(
+          options.tailwindTaggedTemplates,
+        ),
+      }
+
+      if (!customizations.checkJSXPropName) {
+        console.warn(
+          "prettier-plugin-tailwindcss: Prettier 'tailwindJSXProps' option is empty. JSX props will not be sorted.",
+        )
+      }
+
       let { context, generateRules } = getTailwindConfig(options)
 
       let original = getCompatibleParser(base, parserFormat, options)
@@ -41,7 +77,11 @@ function createParser(parserFormat, transform) {
       }
 
       let ast = original.parse(text, parsers, options)
-      transform(ast, { env: { context, generateRules, parsers, options } })
+
+      transform(ast, {
+        env: { context, customizations, generateRules, parsers, options },
+      })
+
       return ast
     },
   }
@@ -350,25 +390,57 @@ function sortTemplateLiteral(node, { env }) {
 }
 
 function transformJavaScript(ast, { env }) {
+  const { checkJSXPropName, checkFunctionCallName, checkTaggedTemplateName } =
+    env.customizations
+
   visit(ast, {
-    JSXAttribute(node) {
-      if (!node.value) {
-        return
-      }
-      if (['class', 'className'].includes(node.name.name)) {
-        if (isStringLiteral(node.value)) {
-          sortStringLiteral(node.value, { env })
-        } else if (node.value.type === 'JSXExpressionContainer') {
-          visit(node.value, (node, parent, key) => {
+    ...(checkJSXPropName && {
+      JSXAttribute(node) {
+        if (!node.value) {
+          return
+        }
+        if (checkJSXPropName(node.name.name)) {
+          if (isStringLiteral(node.value)) {
+            sortStringLiteral(node.value, { env })
+          } else if (node.value.type === 'JSXExpressionContainer') {
+            visit(node.value, (node, parent, key) => {
+              if (isStringLiteral(node)) {
+                sortStringLiteral(node, { env })
+              } else if (node.type === 'TemplateLiteral') {
+                sortTemplateLiteral(node, { env })
+              }
+            })
+          }
+        }
+      },
+    }),
+    ...(checkFunctionCallName && {
+      CallExpression(node) {
+        const calleeName = node.callee?.name ?? ''
+        if (!node.arguments?.length || !checkFunctionCallName(calleeName)) {
+          return
+        }
+        node.arguments.forEach((arg) => {
+          visit(arg, (node) => {
             if (isStringLiteral(node)) {
               sortStringLiteral(node, { env })
             } else if (node.type === 'TemplateLiteral') {
               sortTemplateLiteral(node, { env })
             }
           })
+        })
+      },
+    }),
+    ...(checkTaggedTemplateName && {
+      TaggedTemplateExpression(node) {
+        if (
+          node.tag.type === 'Identifier' &&
+          checkTaggedTemplateName(node.tag.name)
+        ) {
+          sortTemplateLiteral(node.quasi, { env })
         }
-      }
-    },
+      },
+    }),
   })
 }
 
@@ -387,7 +459,29 @@ export const options = {
   tailwindConfig: {
     type: 'string',
     category: 'Tailwind CSS',
-    description: 'TODO',
+    description: 'Path to Tailwind configuration file',
+  },
+  tailwindJSXProps: {
+    default: [{ since: '0.3.0', value: ['class', 'className'] }],
+    type: 'string',
+    array: true,
+    category: 'Tailwind CSS',
+    description: 'List of JSX props to sort Tailwind classes in',
+  },
+  tailwindFunctionCalls: {
+    default: [{ since: '0.3.0', value: [] }],
+    type: 'string',
+    array: true,
+    category: 'Tailwind CSS',
+    description: 'List of function names to sort Tailwind classes in',
+  },
+  tailwindTaggedTemplates: {
+    default: [{ since: '0.3.0', value: [] }],
+    type: 'string',
+    array: true,
+    category: 'Tailwind CSS',
+    description:
+      'List of tagged template function names to sort Tailwind classes in',
   },
 }
 

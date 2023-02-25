@@ -25,9 +25,10 @@ function format(str, options = {}) {
     .trim()
 }
 
-function formatFixture(name) {
+function formatFixture(name, extension) {
   let binPath = path.resolve(__dirname, '../node_modules/.bin/prettier')
-  let filePath = path.resolve(__dirname, `fixtures/${name}/index.html`)
+  let filePath = path.resolve(__dirname, `fixtures/${name}/index.${extension}`)
+
   let cmd = `${binPath} ${filePath} --plugin-search-dir ${__dirname} --plugin ${path.resolve(
     __dirname,
     '..',
@@ -329,6 +330,41 @@ let fixtures = [
     dir: 'plugins',
     output: '<div class="uppercase foo sm:bar"></div>',
   },
+  {
+    name: 'customizations: jsx',
+    dir: 'custom-jsx',
+    ext: 'jsx',
+    output: `const A = (props) => {
+  return <div className={props.sortMe} />;
+};
+
+const B = () => {
+  return (
+    <A
+      sortMe="p-2 sm:p-1"
+      sortedPatternClassName="p-2 sm:p-1"
+      dontSort="sm:p-1 p-2"
+    />
+  );
+};`,
+  },
+  {
+    name: 'customizations: js',
+    dir: 'custom-js',
+    ext: 'js',
+    output: `const sortMeFn = () => {};
+const dontSortFn = () => {};
+const a = sortMeFn("p-2 sm:p-1");
+const b = sortMeFn({
+  foo: "p-2 sm:p-1",
+});
+
+const c = dontSortFn("sm:p-1 p-2");
+const sortMeTemplate = () => {};
+const dontSortMeTemplate = () => {};
+const d = sortMeTemplate\`p-2 sm:p-1\`;
+const e = dontSortMeTemplate\`sm:p-1 p-2\`;`,
+  },
 ]
 
 describe('parsers', () => {
@@ -384,7 +420,8 @@ describe('fixtures', () => {
 
   for (const fixture of fixtures) {
     test(fixture.name, () => {
-      expect(formatFixture(fixture.dir)).toEqual(fixture.output)
+      let formatted = formatFixture(fixture.dir, fixture.ext ?? 'html')
+      expect(formatted).toEqual(fixture.output)
     })
   }
 })

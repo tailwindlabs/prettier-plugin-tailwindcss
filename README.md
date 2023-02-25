@@ -70,3 +70,47 @@ One limitation with this approach is that `prettier-plugin-tailwindcss` *must* b
   "pluginSearchDirs": false
 }
 ```
+
+## Customizing where classes are sorted
+
+Customization options are provided in order to enable you to expand where this plugin searches for classes to sort. These are entirely optional and are not necessary unless you're doing something special or if you're using certain Tailwind-related or Tailwind-adjacent libraries.
+
+Each of these customization options is a prettier setting which consumes a list of strings. You may also use regular expressions by starting any string with a `^`.
+
+### JSX props
+
+By default the plugin will only try to sort JSX props named `class` or `className`.
+
+This can be customized by specifying a `tailwindJSXProps` option in your Prettier configuration file.
+
+```js
+// prettier.config.js
+module.exports = {
+  // Additionally sort classes found inside JSX props named tw=""
+  tailwindJSXProps: ['class', 'className', 'tw']
+};
+```
+
+### Javascript function calls
+
+By default this plugin does not look at strings inside function calls. This can be enabled by specifying a list of function names in the `tailwindFunctionCalls` option in your Prettier configuration file.
+
+```js
+// prettier.config.js
+module.exports = {
+  // Sort strings found inside calls to functions named cva()
+  tailwindFunctionCalls: ['cva']
+};
+```
+
+### Tagged template literals
+
+By default this plugin does not look inside tagged template literals. This can be enabled by specifying a list of function names in the `tailwindTaggedTemplates` option in your Prettier configuration file.
+
+```js
+// prettier.config.js
+module.exports = {
+  // Sort template strings found in tagged template literal calls named tw``
+  tailwindTaggedTemplates: ['tw']
+};
+```

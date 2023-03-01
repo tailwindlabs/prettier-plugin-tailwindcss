@@ -265,6 +265,26 @@ let tests = {
   }
 </style>`,
     ],
+    [
+      `---
+import Layout from '../layouts/Layout.astro'
+import Custom from '../components/Custom.astro'
+---
+
+<Layout>
+  <main class="hover:bg-white bg-black"></main>
+  <Custom class="hover:bg-white bg-black" />
+</Layout>`,
+      `---
+import Layout from '../layouts/Layout.astro'
+import Custom from '../components/Custom.astro'
+---
+
+<Layout>
+  <main class="bg-black hover:bg-white"></main>
+  <Custom class="bg-black hover:bg-white" />
+</Layout>`,
+    ],
   ],
 };
 

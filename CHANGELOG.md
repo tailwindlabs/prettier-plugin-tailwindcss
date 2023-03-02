@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Add support for sorting `class` attribute on custom elements and Astro components ([#129](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/129))
+- Sort `class` attribute on components and custom elements in Astro ([#129](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/129))
 
 ## [0.2.3] - 2023-02-15
 

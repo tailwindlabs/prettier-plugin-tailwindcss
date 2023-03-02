@@ -265,6 +265,16 @@ let tests = {
   }
 </style>`,
     ],
+    t`---
+import Layout from '../layouts/Layout.astro'
+import Custom from '../components/Custom.astro'
+---
+
+<Layout>
+  <main class="${yes}"></main>
+  <my-element class="${yes}"></my-element>
+  <Custom class="${yes}" />
+</Layout>`,
   ],
 };
 

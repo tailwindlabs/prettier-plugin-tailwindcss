@@ -573,7 +573,7 @@ export const parsers = {
 }
 
 function transformAstro(ast, { env, changes }) {
-  if (ast.type === "element") {
+  if (ast.type === "element" || ast.type === "custom-element" || ast.type === "component") {
     for (let attr of ast.attributes ?? []) {
       if (attr.name === "class" && attr.type === "attribute" && attr.kind === "quoted") {
         attr.value = sortClasses(attr.value, {

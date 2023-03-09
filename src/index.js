@@ -379,6 +379,14 @@ function transformLiquid(ast, { env }) {
   }
 
   visit(ast, {
+    LiquidTag(node, _parent, _key, _index, meta) {
+      meta.path = [...meta.path ?? [], node];
+    },
+
+    HtmlElement(node, _parent, _key, _index, meta) {
+      meta.path = [...meta.path ?? [], node];
+    },
+
     AttrSingleQuoted(node, _parent, _key, _index, meta) {
       if (!isClassAttr(node)) {
         return;

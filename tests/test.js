@@ -195,7 +195,7 @@ let tests = {
     t`<div [ngClass]="{ '${yes}': foo && bar?.['baz'] }" class="${yes}"></div>`,
 
     // TODO: Enable this test — it causes console noise but not a failure
-    // t`<div [ngClass]="{ '${no}': foo && definitely&a:syntax*error }" class="${yes}"></div>`,
+    t`<div [ngClass]="{ '${no}': foo && definitely&a:syntax*error }" class="${yes}"></div>`,
   ],
   css: [...css, t`@apply ${yes} !important;`],
   scss: [...css, t`@apply ${yes} #{!important};`],

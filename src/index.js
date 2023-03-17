@@ -353,21 +353,48 @@ function transformGlimmer(ast, { env }) {
 function transformLiquid(ast, { env }) {
   /** @param {{name: string | {type: string, value: string}[]}} node */
   function isClassAttr(node) {
-    if (Array.isArray(node.name)) {
-      return node.name.every((n) => n.type === 'TextNode' && n.value === 'class');
-    }
+    return Array.isArray(node.name)
+      ? node.name.every((n) => n.type === 'TextNode' && n.value === 'class')
+      : node.name === 'class'
+  }
 
-    return node.name === 'class'
+  function sortAttribute(attr, path) {
+    visit(attr.value, {
+      TextNode(node) {
+        node.value = sortClasses(node.value, { env });
+
+        let source = node.source.slice(0, node.position.start) + node.value + node.source.slice(node.position.end)
+        path.forEach(node => (node.source = source))
+      },
+
+      String(node) {
+        node.value = sortClasses(node.value, { env });
+
+        // String position includes the quotes even if the value doesn't
+        // Hence the +1 and -1 when slicing
+        let source = node.source.slice(0, node.position.start+1) + node.value + node.source.slice(node.position.end-1)
+        path.forEach(node => (node.source = source))
+      },
+    })
   }
 
   visit(ast, {
+    LiquidTag(node, _parent, _key, _index, meta) {
+      meta.path = [...meta.path ?? [], node];
+    },
+
+    HtmlElement(node, _parent, _key, _index, meta) {
+      meta.path = [...meta.path ?? [], node];
+    },
+
     AttrSingleQuoted(node, _parent, _key, _index, meta) {
       if (!isClassAttr(node)) {
         return;
       }
 
-      meta.sortTextNodes = true;
-      meta.sourceNode = node;
+      meta.path = [...meta.path ?? [], node];
+
+      sortAttribute(node, meta.path)
     },
 
     AttrDoubleQuoted(node, _parent, _key, _index, meta) {
@@ -375,38 +402,9 @@ function transformLiquid(ast, { env }) {
         return;
       }
 
-      meta.sortTextNodes = true;
+      meta.path = [...meta.path ?? [], node];
 
-      // With Liquid Script it uses the "source" of certain nodes as the "source of truth"
-      // We must modify that node's source to get the desired output
-      // Even if we modify the AST it will be ignored
-      meta.sourceNode = node;
-    },
-
-    TextNode(node, _parent, _key, _index, meta) {
-      if (!meta.sortTextNodes) {
-        return;
-      }
-
-      node.value = sortClasses(node.value, { env });
-
-      // This feels hacky but it's necessary
-      node.source = node.source.slice(0, node.position.start) + node.value + node.source.slice(node.position.end);
-      meta.sourceNode.source = node.source;
-    },
-
-    String(node, _parent, _key, _index, meta) {
-      if (!meta.sortTextNodes) {
-        return;
-      }
-
-      node.value = sortClasses(node.value, { env });
-
-      // This feels hacky but it's necessary
-      // String position includes the quotes even if the value doesn't
-      // Hence the +1 and -1 when slicing
-      node.source = node.source.slice(0, node.position.start+1) + node.value + node.source.slice(node.position.end-1);
-      meta.sourceNode.source = node.source;
+      sortAttribute(node, meta.path)
     },
   });
 }

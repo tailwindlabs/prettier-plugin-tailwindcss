@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Fixed
+
+- Fix class sorting in `capture` liquid tag ([#131](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/131))
 
 ## [0.2.4] - 2023-03-02
 

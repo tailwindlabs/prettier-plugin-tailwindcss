@@ -358,55 +358,75 @@ function transformLiquid(ast, { env }) {
       : node.name === 'class'
   }
 
-  function sortAttribute(attr, path) {
+  /** @type {{type: string, source: string}[]} */
+  let sources = []
+
+  /** @type {{pos: {start: number, end: number}, value: string}[]} */
+  let changes = []
+
+  function sortAttribute(attr) {
     visit(attr.value, {
       TextNode(node) {
         node.value = sortClasses(node.value, { env });
-
-        let source = node.source.slice(0, node.position.start) + node.value + node.source.slice(node.position.end)
-        path.forEach(node => (node.source = source))
+        changes.push({
+          pos: node.position,
+          value: node.value,
+        })
       },
 
       String(node) {
         node.value = sortClasses(node.value, { env });
-
-        // String position includes the quotes even if the value doesn't
-        // Hence the +1 and -1 when slicing
-        let source = node.source.slice(0, node.position.start+1) + node.value + node.source.slice(node.position.end-1)
-        path.forEach(node => (node.source = source))
+        changes.push({
+          pos: {
+            // String position includes the quotes even if the value doesn't
+            // Hence the +1 and -1 when slicing
+            start: node.position.start+1,
+            end: node.position.end-1,
+          },
+          value: node.value,
+        })
       },
     })
   }
 
   visit(ast, {
-    LiquidTag(node, _parent, _key, _index, meta) {
-      meta.path = [...meta.path ?? [], node];
+    LiquidTag(node) {
+      sources.push(node)
     },
 
-    HtmlElement(node, _parent, _key, _index, meta) {
-      meta.path = [...meta.path ?? [], node];
+    HtmlElement(node) {
+      sources.push(node)
     },
 
-    AttrSingleQuoted(node, _parent, _key, _index, meta) {
-      if (!isClassAttr(node)) {
-        return;
+    AttrSingleQuoted(node) {
+      if (isClassAttr(node)) {
+        sources.push(node)
+        sortAttribute(node)
       }
-
-      meta.path = [...meta.path ?? [], node];
-
-      sortAttribute(node, meta.path)
     },
 
-    AttrDoubleQuoted(node, _parent, _key, _index, meta) {
-      if (!isClassAttr(node)) {
-        return;
+    AttrDoubleQuoted(node) {
+      if (isClassAttr(node)) {
+        sources.push(node)
+        sortAttribute(node)
       }
-
-      meta.path = [...meta.path ?? [], node];
-
-      sortAttribute(node, meta.path)
     },
   });
+
+  // Sort so all changes occur in order
+  changes = changes.sort((a, b) => {
+    return a.start - b.start
+        || a.end - b.end
+  })
+
+  for (let change of changes) {
+    for (let node of sources) {
+      node.source =
+        node.source.slice(0, change.pos.start) +
+        change.value +
+        node.source.slice(change.pos.end)
+    }
+  }
 }
 
 function sortStringLiteral(node, { env }) {

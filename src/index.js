@@ -11,11 +11,11 @@ import prettierParserTypescript from 'prettier/parser-typescript'
 import { createContext as createContextFallback } from 'tailwindcss/lib/lib/setupContextUtils'
 import { generateRules as generateRulesFallback } from 'tailwindcss/lib/lib/generateRules'
 import resolveConfigFallback from 'tailwindcss/resolveConfig'
+import loadConfig from 'tailwindcss/loadConfig'
 import * as recast from 'recast'
 import * as astTypes from 'ast-types'
 import * as path from 'path'
 import requireFrom from 'import-from'
-import requireFresh from 'import-fresh'
 import objectHash from 'object-hash'
 import lineColumn from 'line-column'
 import jsesc from 'jsesc'
@@ -155,7 +155,8 @@ function createParser(parserFormat, transform) {
       if (options.tailwindConfig) {
         baseDir = prettierConfigPath ? path.dirname(prettierConfigPath) : process.cwd()
         tailwindConfigPath = path.resolve(baseDir, options.tailwindConfig)
-        tailwindConfig = requireFresh(tailwindConfigPath)
+        const loadedConfig = loadConfig(tailwindConfigPath)
+        tailwindConfig = loadedConfig.default ?? loadedConfig
       } else {
         baseDir = prettierConfigPath
           ? path.dirname(prettierConfigPath)
@@ -175,7 +176,8 @@ function createParser(parserFormat, transform) {
         } catch {}
         if (configPath) {
           tailwindConfigPath = configPath
-          tailwindConfig = requireFresh(configPath)
+          const loadedConfig = loadConfig(tailwindConfigPath)
+          tailwindConfig = loadedConfig.default ?? loadedConfig
         }
       }
 

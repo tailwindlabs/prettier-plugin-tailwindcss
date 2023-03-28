@@ -312,6 +312,13 @@ test('inferred config path (.cjs)', () => {
   expect(formatFixture('cjs')).toEqual('<div class="bg-red-500 sm:bg-hotpink"></div>')
 })
 
+test("using esm config", () => {
+  expect(formatFixture("esm")).toEqual('<div class="bg-red-500 sm:bg-hotpink"></div>');
+});
+test("using ts config", () => {
+  expect(formatFixture("ts")).toEqual('<div class="bg-red-500 sm:bg-hotpink"></div>');
+});
+
 test('explicit config path', () => {
   expect(
     format('<div class="sm:bg-tomato bg-red-500"></div>', {

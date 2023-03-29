@@ -8,10 +8,7 @@ function format(str, options = {}) {
     require.resolve('prettier-plugin-svelte'),
   ]
 
-  options.plugins = [
-    ...options.plugins,
-    path.resolve(__dirname, '..'),
-  ]
+  options.plugins = [...options.plugins, path.resolve(__dirname, '..')]
 
   return prettier
     .format(str, {
@@ -249,10 +246,7 @@ let tests = {
   ],
   astro: [
     ...html,
-    [
-      `{<div class="p-20 bg-red-100 w-full"></div>}`,
-      `{(<div class="w-full bg-red-100 p-20" />)}`,
-    ],
+    [`{<div class="p-20 bg-red-100 w-full"></div>}`, `{(<div class="w-full bg-red-100 p-20" />)}`],
     [
       `<style>
   h1 {
@@ -276,7 +270,7 @@ import Custom from '../components/Custom.astro'
   <Custom class="${yes}" />
 </Layout>`,
   ],
-};
+}
 
 describe('parsers', () => {
   for (let parser in tests) {
@@ -341,7 +335,5 @@ test('explicit config path', () => {
 })
 
 test('plugins', () => {
-  expect(formatFixture('plugins')).toEqual(
-    '<div class="uppercase foo sm:bar"></div>'
-  )
+  expect(formatFixture('plugins')).toEqual('<div class="uppercase foo sm:bar"></div>')
 })

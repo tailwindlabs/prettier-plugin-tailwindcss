@@ -4,7 +4,6 @@ const fs = require('fs')
 const path = require('path')
 
 let exclude = [
-  '@tailwindcss/line-clamp',
   'cpy-cli',
   'esbuild',
   'jest',

@@ -1,3 +1,12 @@
+const plugin = require("tailwindcss/plugin");
+
 module.exports = {
-  plugins: [require('@tailwindcss/line-clamp')],
-}
+  plugins: [
+    plugin(function ({ addUtilities }) {
+      addUtilities({
+        ".foo": { color: "red" },
+        ".bar": { color: "blue" },
+      });
+    }),
+  ],
+};

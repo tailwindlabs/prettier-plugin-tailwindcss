@@ -342,6 +342,6 @@ test('explicit config path', () => {
 
 test('plugins', () => {
   expect(formatFixture('plugins')).toEqual(
-    '<div class="uppercase line-clamp-1 sm:line-clamp-2"></div>'
+    '<div class="uppercase foo sm:bar"></div>'
   )
 })

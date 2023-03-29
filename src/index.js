@@ -21,6 +21,7 @@ import lineColumn from 'line-column'
 import jsesc from 'jsesc'
 import escalade from 'escalade/sync'
 import clearModule from 'clear-module'
+import resolveFrom from 'resolve-from'
 
 let base = getBasePlugins()
 
@@ -165,12 +166,14 @@ function createParser(parserFormat, transform) {
       }
 
       try {
-        resolveConfig = requireFrom(baseDir, 'tailwindcss/resolveConfig')
-        createContext = requireFrom(baseDir, 'tailwindcss/lib/lib/setupContextUtils').createContext
-        generateRules = requireFrom(baseDir, 'tailwindcss/lib/lib/generateRules').generateRules
+        let pkgDir = path.dirname(resolveFrom(baseDir, 'tailwindcss/package.json'))
+
+        resolveConfig = require(path.join(pkgDir, 'resolveConfig'))
+        createContext = require(path.join(pkgDir, 'lib/lib/setupContextUtils')).createContext
+        generateRules = require(path.join(pkgDir, 'lib/lib/generateRules')).generateRules
 
         // Prior to `tailwindcss@3.3.0` this won't exist so we load it last
-        loadConfig = requireFrom(baseDir, 'tailwindcss/loadConfig')
+        loadConfig = require(path.join(pkgDir, 'loadConfig'))
       } catch {}
 
       if (options.tailwindConfig) {

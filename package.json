@@ -37,7 +37,6 @@
     "cpy-cli": "^3.1.1",
     "esbuild": "^0.14.11",
     "escalade": "^3.1.1",
-    "import-from": "^4.0.0",
     "import-sort-style-module": "^6.0.0",
     "jest": "^27.4.7",
     "jsesc": "^2.5.2",

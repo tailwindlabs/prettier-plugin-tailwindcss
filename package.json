@@ -21,6 +21,7 @@
     "build": "npm run _esbuild -- --minify",
     "predev": "npm run _pre",
     "dev": "npm run _esbuild -- --watch",
+    "pretest": "node scripts/install-fixture-deps.js",
     "test": "jest",
     "prepublishOnly": "npm run build && npm test && node scripts/copy-licenses.js",
     "format": "prettier \"src/**/*.js\" \"scripts/**/*.js\" \"tests/test.js\" --write --print-width 100 --single-quote --no-semi --plugin-search-dir ./tests"
@@ -33,10 +34,10 @@
     "@shufo/prettier-plugin-blade": "^1.8.4",
     "@tailwindcss/line-clamp": "^0.3.0",
     "@trivago/prettier-plugin-sort-imports": "^3.4.0",
+    "clear-module": "^4.1.2",
     "cpy-cli": "^3.1.1",
     "esbuild": "^0.14.11",
     "escalade": "^3.1.1",
-    "import-fresh": "^3.3.0",
     "import-from": "^4.0.0",
     "import-sort-style-module": "^6.0.0",
     "jest": "^27.4.7",
@@ -57,7 +58,7 @@
     "recast": "^0.20.5",
     "rimraf": "^3.0.2",
     "svelte": "^3.55.0",
-    "tailwindcss": "^3.0.23"
+    "tailwindcss": "^3.3.0"
   },
   "peerDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "*",

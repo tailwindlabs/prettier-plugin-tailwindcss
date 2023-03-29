@@ -11,15 +11,16 @@ import prettierParserTypescript from 'prettier/parser-typescript'
 import { createContext as createContextFallback } from 'tailwindcss/lib/lib/setupContextUtils'
 import { generateRules as generateRulesFallback } from 'tailwindcss/lib/lib/generateRules'
 import resolveConfigFallback from 'tailwindcss/resolveConfig'
+import loadConfigFallback from 'tailwindcss/loadConfig'
 import * as recast from 'recast'
 import * as astTypes from 'ast-types'
 import * as path from 'path'
 import requireFrom from 'import-from'
-import requireFresh from 'import-fresh'
 import objectHash from 'object-hash'
 import lineColumn from 'line-column'
 import jsesc from 'jsesc'
 import escalade from 'escalade/sync'
+import clearModule from 'clear-module'
 
 let base = getBasePlugins()
 
@@ -148,20 +149,36 @@ function createParser(parserFormat, transform) {
       let resolveConfig = resolveConfigFallback
       let createContext = createContextFallback
       let generateRules = generateRulesFallback
+      let loadConfig = loadConfigFallback
 
       let baseDir
       let prettierConfigPath = prettier.resolveConfigFile.sync(options.filepath)
 
       if (options.tailwindConfig) {
         baseDir = prettierConfigPath ? path.dirname(prettierConfigPath) : process.cwd()
-        tailwindConfigPath = path.resolve(baseDir, options.tailwindConfig)
-        tailwindConfig = requireFresh(tailwindConfigPath)
       } else {
         baseDir = prettierConfigPath
           ? path.dirname(prettierConfigPath)
           : options.filepath
           ? path.dirname(options.filepath)
           : process.cwd()
+      }
+
+      try {
+        resolveConfig = requireFrom(baseDir, 'tailwindcss/resolveConfig')
+        createContext = requireFrom(baseDir, 'tailwindcss/lib/lib/setupContextUtils').createContext
+        generateRules = requireFrom(baseDir, 'tailwindcss/lib/lib/generateRules').generateRules
+
+        // Prior to `tailwindcss@3.3.0` this won't exist so we load it last
+        loadConfig = requireFrom(baseDir, 'tailwindcss/loadConfig')
+      } catch {}
+
+      if (options.tailwindConfig) {
+        tailwindConfigPath = path.resolve(baseDir, options.tailwindConfig)
+        clearModule(tailwindConfigPath)
+        const loadedConfig = loadConfig(tailwindConfigPath)
+        tailwindConfig = loadedConfig.default ?? loadedConfig
+      } else {
         let configPath
         try {
           configPath = escalade(baseDir, (_dir, names) => {
@@ -171,19 +188,21 @@ function createParser(parserFormat, transform) {
             if (names.includes('tailwind.config.cjs')) {
               return 'tailwind.config.cjs'
             }
+            if (names.includes('tailwind.config.mjs')) {
+              return 'tailwind.config.mjs'
+            }
+            if (names.includes('tailwind.config.ts')) {
+              return 'tailwind.config.ts'
+            }
           })
         } catch {}
         if (configPath) {
           tailwindConfigPath = configPath
-          tailwindConfig = requireFresh(configPath)
+          clearModule(tailwindConfigPath)
+          const loadedConfig = loadConfig(tailwindConfigPath)
+          tailwindConfig = loadedConfig.default ?? loadedConfig
         }
       }
-
-      try {
-        resolveConfig = requireFrom(baseDir, 'tailwindcss/resolveConfig')
-        createContext = requireFrom(baseDir, 'tailwindcss/lib/lib/setupContextUtils').createContext
-        generateRules = requireFrom(baseDir, 'tailwindcss/lib/lib/generateRules').generateRules
-      } catch {}
 
       // suppress "empty content" warning
       tailwindConfig.content = ['no-op']

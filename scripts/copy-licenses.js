@@ -3,7 +3,15 @@ const { devDependencies } = require('../package.json')
 const fs = require('fs')
 const path = require('path')
 
-let exclude = ['cpy-cli', 'esbuild', 'jest', 'license-checker', 'prettier', 'rimraf', 'svelte']
+let exclude = [
+  'cpy-cli',
+  'esbuild',
+  'jest',
+  'license-checker',
+  'prettier',
+  'rimraf',
+  'svelte',
+]
 
 checker.init({ start: path.resolve(__dirname, '..') }, (_err, packages) => {
   for (let key in packages) {

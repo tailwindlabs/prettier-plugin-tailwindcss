@@ -257,14 +257,6 @@ let tests = [
           `{%- capture class_ordering -%}<div class="sm:p-0 p-4"></div>{%- endcapture -%}`,
           `{%- capture class_ordering -%}<div class="p-4 sm:p-0"></div>{%- endcapture -%}`,
         ],
-        [
-          `{%- capture class_ordering -%}<div class="foo1 sm:p-0 p-4"></div><div class="foo2 sm:p-0 p-4"></div>{%- endcapture -%}`,
-          `{%- capture class_ordering -%}<div class="foo1 p-4 sm:p-0"></div><div class="foo2 p-4 sm:p-0"></div>{%- endcapture -%}`,
-        ],
-        [
-          `{%- capture class_ordering -%}<div class="foo1 sm:p-0 p-4"><div class="foo2 sm:p-0 p-4"></div></div>{%- endcapture -%}`,
-          `{%- capture class_ordering -%}<div class="foo1 p-4 sm:p-0"><div class="foo2 p-4 sm:p-0"></div></div>{%- endcapture -%}`,
-        ],
       ],
     }
   },

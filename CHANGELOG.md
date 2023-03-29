@@ -11,7 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.6] - 2023-03-29
 
+### Added
+
 - Support ESM and TS config files ([#137](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/137))
+
+### Fixed
+
 - Load `tailwindcss` modules from nearest instance only ([#139](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/139))
 
 ## [0.2.5] - 2023-03-17

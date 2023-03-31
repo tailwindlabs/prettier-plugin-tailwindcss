@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Fixed
+
+- Don't break liquid tags inside attributes when sorting classes ([#143](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/143))
 
 ## [0.2.6] - 2023-03-29
 

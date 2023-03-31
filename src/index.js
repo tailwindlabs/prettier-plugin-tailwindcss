@@ -379,6 +379,16 @@ function transformLiquid(ast, { env }) {
       : node.name === 'class'
   }
 
+  /**
+   * @param {string} str
+   */
+  function hasSurroundingQuotes(str) {
+    let start = str[0]
+    let end = str[str.length - 1]
+
+    return start === end && (start === '"' || start === "'" || start === "`")
+  }
+
   /** @type {{type: string, source: string}[]} */
   let sources = []
 
@@ -396,14 +406,18 @@ function transformLiquid(ast, { env }) {
       },
 
       String(node) {
-        node.value = sortClasses(node.value, { env });
+        let pos = { ...node.position }
+
+        // We have to offset the position ONLY when quotes are part of the String node
+        // This is because `value` does NOT include quotes
+        if (hasSurroundingQuotes(node.source.slice(pos.start, pos.end))) {
+          pos.start += 1;
+          pos.end -= 1;
+        }
+
+        node.value = sortClasses(node.value, { env })
         changes.push({
-          pos: {
-            // String position includes the quotes even if the value doesn't
-            // Hence the +1 and -1 when slicing
-            start: node.position.start+1,
-            end: node.position.end-1,
-          },
+          pos,
           value: node.value,
         })
       },

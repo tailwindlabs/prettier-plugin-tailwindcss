@@ -1,5 +1,6 @@
 const prettier = require('prettier')
 const path = require('path')
+const { t, yes } = require('./utils')
 
 function format(str, options = {}) {
   return prettier
@@ -265,6 +266,13 @@ let tests = [
           `{%- capture class_ordering -%}<div class="foo1 sm:p-0 p-4"><div class="foo2 sm:p-0 p-4"></div></div>{%- endcapture -%}`,
           `{%- capture class_ordering -%}<div class="foo1 p-4 sm:p-0"><div class="foo2 p-4 sm:p-0"></div></div>{%- endcapture -%}`,
         ],
+        t`<p class='${yes} {{ some.prop | prepend: 'is-' }} '></p>`,
+        t`<div class='${yes} {% render 'some-snippet', settings: section.settings %}'></div>`,
+        t`<div class='${yes} {{ foo }}'></div>`,
+        t`<div class='${yes} {% render 'foo' %}'></div>`,
+        t`<div class='${yes} {% render 'foo', bar: true %}'></div>`,
+        t`<div class='${yes} {% include 'foo' %}'></div>`,
+        t`<div class='${yes} {% include 'foo', bar: true %}'></div>`,
       ],
     }
   },

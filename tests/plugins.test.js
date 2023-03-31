@@ -1,5 +1,6 @@
 const prettier = require('prettier')
 const path = require('path')
+const { t, yes } = require('./utils')
 
 function format(str, options = {}) {
   return prettier
@@ -245,18 +246,18 @@ let tests = [
     ],
     tests: {
       'liquid-html': [
-        [
-          `<a class="sm:p-0 p-4" href="https://www.example.com">Example</a>`,
-          `<a class='p-4 sm:p-0' href='https://www.example.com'>Example</a>`,
-        ],
-        [
-          `{% if state == true %}\n  <a class="{{ "sm:p-0 p-4" | escape }}" href="https://www.example.com">Example</a>\n{% endif %}`,
-          `{% if state == true %}\n  <a class='{{ "p-4 sm:p-0" | escape }}' href='https://www.example.com'>Example</a>\n{% endif %}`,
-        ],
-        [
-          `{%- capture class_ordering -%}<div class="sm:p-0 p-4"></div>{%- endcapture -%}`,
-          `{%- capture class_ordering -%}<div class="p-4 sm:p-0"></div>{%- endcapture -%}`,
-        ],
+        t`<a class='${yes}' href='https://www.example.com'>Example</a>`,
+        t`{% if state == true %}\n  <a class='{{ "${yes}" | escape }}' href='https://www.example.com'>Example</a>\n{% endif %}`,
+        t`{%- capture class_ordering -%}<div class="${yes}"></div>{%- endcapture -%}`,
+        t`{%- capture class_ordering -%}<div class="foo1 ${yes}"></div><div class="foo2 ${yes}"></div>{%- endcapture -%}`,
+        t`{%- capture class_ordering -%}<div class="foo1 ${yes}"><div class="foo2 ${yes}"></div></div>{%- endcapture -%}`,
+        t`<p class='${yes} {{ some.prop | prepend: 'is-' }} '></p>`,
+        t`<div class='${yes} {% render 'some-snippet', settings: section.settings %}'></div>`,
+        t`<div class='${yes} {{ foo }}'></div>`,
+        t`<div class='${yes} {% render 'foo' %}'></div>`,
+        t`<div class='${yes} {% render 'foo', bar: true %}'></div>`,
+        t`<div class='${yes} {% include 'foo' %}'></div>`,
+        t`<div class='${yes} {% include 'foo', bar: true %}'></div>`,
       ],
     }
   },

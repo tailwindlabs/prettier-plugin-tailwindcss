@@ -246,26 +246,11 @@ let tests = [
     ],
     tests: {
       'liquid-html': [
-        [
-          `<a class="sm:p-0 p-4" href="https://www.example.com">Example</a>`,
-          `<a class='p-4 sm:p-0' href='https://www.example.com'>Example</a>`,
-        ],
-        [
-          `{% if state == true %}\n  <a class="{{ "sm:p-0 p-4" | escape }}" href="https://www.example.com">Example</a>\n{% endif %}`,
-          `{% if state == true %}\n  <a class='{{ "p-4 sm:p-0" | escape }}' href='https://www.example.com'>Example</a>\n{% endif %}`,
-        ],
-        [
-          `{%- capture class_ordering -%}<div class="sm:p-0 p-4"></div>{%- endcapture -%}`,
-          `{%- capture class_ordering -%}<div class="p-4 sm:p-0"></div>{%- endcapture -%}`,
-        ],
-        [
-          `{%- capture class_ordering -%}<div class="foo1 sm:p-0 p-4"></div><div class="foo2 sm:p-0 p-4"></div>{%- endcapture -%}`,
-          `{%- capture class_ordering -%}<div class="foo1 p-4 sm:p-0"></div><div class="foo2 p-4 sm:p-0"></div>{%- endcapture -%}`,
-        ],
-        [
-          `{%- capture class_ordering -%}<div class="foo1 sm:p-0 p-4"><div class="foo2 sm:p-0 p-4"></div></div>{%- endcapture -%}`,
-          `{%- capture class_ordering -%}<div class="foo1 p-4 sm:p-0"><div class="foo2 p-4 sm:p-0"></div></div>{%- endcapture -%}`,
-        ],
+        t`<a class='${yes}' href='https://www.example.com'>Example</a>`,
+        t`{% if state == true %}\n  <a class='{{ "${yes}" | escape }}' href='https://www.example.com'>Example</a>\n{% endif %}`,
+        t`{%- capture class_ordering -%}<div class="${yes}"></div>{%- endcapture -%}`,
+        t`{%- capture class_ordering -%}<div class="foo1 ${yes}"></div><div class="foo2 ${yes}"></div>{%- endcapture -%}`,
+        t`{%- capture class_ordering -%}<div class="foo1 ${yes}"><div class="foo2 ${yes}"></div></div>{%- endcapture -%}`,
         t`<p class='${yes} {{ some.prop | prepend: 'is-' }} '></p>`,
         t`<div class='${yes} {% render 'some-snippet', settings: section.settings %}'></div>`,
         t`<div class='${yes} {{ foo }}'></div>`,

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Nothing yet!
+
+## [0.2.7] - 2023-04-05
+
 ### Fixed
 
 - Don't break liquid tags inside attributes when sorting classes ([#143](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/143))
@@ -149,7 +153,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.5...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.7...HEAD
+[0.2.7]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.5...v0.2.7
 [0.2.5]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.2...v0.2.3

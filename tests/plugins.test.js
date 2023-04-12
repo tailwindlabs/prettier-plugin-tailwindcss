@@ -6,9 +6,7 @@ function format(str, options = {}) {
   return prettier
     .format(str, {
       pluginSearchDirs: [__dirname], // disable plugin autoload
-      plugins: [
-        path.resolve(__dirname, '..'),
-      ],
+      plugins: [path.resolve(__dirname, '..')],
       semi: false,
       singleQuote: true,
       printWidth: 9999,
@@ -18,14 +16,11 @@ function format(str, options = {}) {
     .trim()
 }
 
-
 let tests = [
   {
-    plugins: [
-      '@trivago/prettier-plugin-sort-imports',
-    ],
+    plugins: ['@trivago/prettier-plugin-sort-imports'],
     options: {
-      importOrder: ["^@one/(.*)$", "^@two/(.*)$", "^[./]"],
+      importOrder: ['^@one/(.*)$', '^@two/(.*)$', '^[./]'],
       importOrderSortSpecifiers: true,
     },
     tests: {
@@ -49,14 +44,12 @@ let tests = [
           `import './three'\nimport '@two/file'\nimport '@one/file'`,
         ],
       ],
-    }
+    },
   },
   {
-    plugins: [
-      '@ianvs/prettier-plugin-sort-imports',
-    ],
+    plugins: ['@ianvs/prettier-plugin-sort-imports'],
     options: {
-      importOrder: ["^@tailwindcss/(.*)$", "^@babel/(.*)$", "^[./]"],
+      importOrder: ['^@tailwindcss/(.*)$', '^@babel/(.*)$', '^[./]'],
       importOrderSortSpecifiers: true,
     },
     tests: {
@@ -80,12 +73,10 @@ let tests = [
           `import './three'\nimport '@two/file'\nimport '@one/file'`,
         ],
       ],
-    }
+    },
   },
   {
-    plugins: [
-      'prettier-plugin-organize-imports',
-    ],
+    plugins: ['prettier-plugin-organize-imports'],
     options: {},
     tests: {
       babel: [
@@ -106,12 +97,10 @@ let tests = [
           `import '@one/file'\nimport '@two/file'\nimport './three'`,
         ],
       ],
-    }
+    },
   },
   {
-    plugins: [
-      'prettier-plugin-twig-melody',
-    ],
+    plugins: ['prettier-plugin-twig-melody'],
     options: {
       twigAlwaysBreakObjects: false,
     },
@@ -126,12 +115,10 @@ let tests = [
           `<section class="p-4 sm:p-0"></section>`,
         ],
       ],
-    }
+    },
   },
   {
-    plugins: [
-      '@prettier/plugin-pug',
-    ],
+    plugins: ['@prettier/plugin-pug'],
     tests: {
       pug: [
         [
@@ -155,25 +142,21 @@ let tests = [
           `a.bg-blue-600.p-4(class='sm:p-0 md:p-4', href='//example.com') Example`,
         ],
       ],
-    }
+    },
   },
   {
-    plugins: [
-      '@prettier/plugin-php',
-    ],
+    plugins: ['@prettier/plugin-php'],
     tests: {
       php: [
         [
           `<?php $test = function($a,$b){}\n          ?>\n          <div class="sm:p-0 p-4">Example</div>\n          <?php $test = function($c,$d)use($e) {}`,
-          `<?php $test = function ($a, $b) {}; ?>\n          <div class="p-4 sm:p-0">Example</div>\n          <?php $test = function ($c, $d) use ($e) {};`
+          `<?php $test = function ($a, $b) {}; ?>\n          <div class="p-4 sm:p-0">Example</div>\n          <?php $test = function ($c, $d) use ($e) {};`,
         ],
       ],
-    }
+    },
   },
   {
-    plugins: [
-      'prettier-plugin-import-sort',
-    ],
+    plugins: ['prettier-plugin-import-sort'],
     tests: {
       babel: [
         [
@@ -186,12 +169,10 @@ let tests = [
           `import '@one/file'\nimport '@two/file'\n\nimport './three'\n\nexport default function Foo() {\n  return <div className="p-4 sm:p-0"></div>\n}`,
         ],
       ],
-    }
+    },
   },
   {
-    plugins: [
-      'prettier-plugin-jsdoc',
-    ],
+    plugins: ['prettier-plugin-jsdoc'],
     tests: {
       babel: [
         [
@@ -199,12 +180,10 @@ let tests = [
           `/** @param {string} param0 Description */\nexport default function Foo(param0) {\n  return <div className="p-4 sm:p-0"></div>\n}`,
         ],
       ],
-    }
+    },
   },
   {
-    plugins: [
-      'prettier-plugin-css-order',
-    ],
+    plugins: ['prettier-plugin-css-order'],
     tests: {
       css: [
         [
@@ -212,12 +191,10 @@ let tests = [
           `.foo {\n  background-color: blue;\n  color: red;\n  @apply bg-blue-600 p-4 sm:p-0;\n}`,
         ],
       ],
-    }
+    },
   },
   {
-    plugins: [
-      'prettier-plugin-style-order',
-    ],
+    plugins: ['prettier-plugin-style-order'],
     tests: {
       css: [
         [
@@ -225,12 +202,10 @@ let tests = [
           `.foo {\n  margin-right: 1px;\n  margin-left: 1px;\n  color: red;\n  background-color: blue;\n  @apply bg-blue-600 p-4 sm:p-0;\n}`,
         ],
       ],
-    }
+    },
   },
   {
-    plugins: [
-      'prettier-plugin-organize-attributes',
-    ],
+    plugins: ['prettier-plugin-organize-attributes'],
     tests: {
       html: [
         [
@@ -238,12 +213,10 @@ let tests = [
           `<a class="p-4 sm:p-0" href="https://www.example.com">Example</a>`,
         ],
       ],
-    }
+    },
   },
   {
-    plugins: [
-      '@shopify/prettier-plugin-liquid',
-    ],
+    plugins: ['@shopify/prettier-plugin-liquid'],
     tests: {
       'liquid-html': [
         t`<a class='${yes}' href='https://www.example.com'>Example</a>`,
@@ -259,7 +232,7 @@ let tests = [
         t`<div class='${yes} {% include 'foo' %}'></div>`,
         t`<div class='${yes} {% include 'foo', bar: true %}'></div>`,
       ],
-    }
+    },
   },
 ]
 
@@ -269,12 +242,14 @@ for (const group of tests) {
   for (let parser in group.tests) {
     test(`parsing ${parser} works with: ${name}`, () => {
       let plugins = [
-        ...group.plugins.map(name => require.resolve(name)),
+        ...group.plugins.map((name) => require.resolve(name)),
         path.resolve(__dirname, '..'),
       ]
 
       for (const [input, expected] of group.tests[parser]) {
-        expect(format(input, { parser, plugins, ...group.options })).toEqual(expected)
+        expect(format(input, { parser, plugins, ...group.options })).toEqual(
+          expected,
+        )
       }
     })
   }

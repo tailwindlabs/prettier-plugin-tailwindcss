@@ -9,10 +9,7 @@ function format(str, options = {}) {
     require.resolve('prettier-plugin-svelte'),
   ]
 
-  options.plugins = [
-    ...options.plugins,
-    path.resolve(__dirname, '..'),
-  ]
+  options.plugins = [...options.plugins, path.resolve(__dirname, '..')]
 
   return prettier
     .format(str, {
@@ -32,8 +29,8 @@ function formatFixture(name) {
   return execSync(
     `${binPath} ${filePath} --plugin-search-dir ${__dirname} --plugin ${path.resolve(
       __dirname,
-      '..'
-    )}`
+      '..',
+    )}`,
   )
     .toString()
     .trim()
@@ -85,7 +82,7 @@ let javascript = [
   ],
 ]
 javascript = javascript.concat(
-  javascript.map((test) => test.map((t) => t.replace(/class/g, 'className')))
+  javascript.map((test) => test.map((t) => t.replace(/class/g, 'className'))),
 )
 
 let vue = [
@@ -157,7 +154,10 @@ let tests = {
   html,
   glimmer,
   lwc: html,
-  vue: [...vue, t`<div :class="\`${yes} \${someVar} ${yes} \${'${yes}'}\`"></div>`],
+  vue: [
+    ...vue,
+    t`<div :class="\`${yes} \${someVar} ${yes} \${'${yes}'}\`"></div>`,
+  ],
   angular: [
     ...html,
     t`<div [ngClass]="'${yes}'"></div>`,
@@ -255,7 +255,7 @@ import Custom from '../components/Custom.astro'
   <Custom class="${yes}" />
 </Layout>`,
   ],
-};
+}
 
 describe('parsers', () => {
   for (let parser in tests) {
@@ -268,59 +268,78 @@ describe('parsers', () => {
 })
 
 test('non-tailwind classes', () => {
-  expect(format('<div class="sm:lowercase uppercase potato text-sm"></div>')).toEqual(
-    '<div class="potato text-sm uppercase sm:lowercase"></div>'
-  )
+  expect(
+    format('<div class="sm:lowercase uppercase potato text-sm"></div>'),
+  ).toEqual('<div class="potato text-sm uppercase sm:lowercase"></div>')
 })
 
 test('no prettier config', () => {
-  expect(formatFixture('no-prettier-config')).toEqual('<div class="bg-red-500 sm:bg-tomato"></div>')
-})
-
-test('parasite utilities', () => {
-  expect(format('<div class="group peer unknown-class p-0 container"></div>')).toEqual(
-    '<div class="unknown-class group peer container p-0"></div>'
+  expect(formatFixture('no-prettier-config')).toEqual(
+    '<div class="bg-red-500 sm:bg-tomato"></div>',
   )
 })
 
+test('parasite utilities', () => {
+  expect(
+    format('<div class="group peer unknown-class p-0 container"></div>'),
+  ).toEqual('<div class="unknown-class group peer container p-0"></div>')
+})
+
 test('inferred config path', () => {
-  expect(formatFixture('basic')).toEqual('<div class="bg-red-500 sm:bg-tomato"></div>')
+  expect(formatFixture('basic')).toEqual(
+    '<div class="bg-red-500 sm:bg-tomato"></div>',
+  )
 })
 
 test('inferred config path (.cjs)', () => {
-  expect(formatFixture('cjs')).toEqual('<div class="bg-red-500 sm:bg-hotpink"></div>')
+  expect(formatFixture('cjs')).toEqual(
+    '<div class="bg-red-500 sm:bg-hotpink"></div>',
+  )
 })
 
 test('using esm config', () => {
-  expect(formatFixture('esm')).toEqual('<div class="bg-red-500 sm:bg-hotpink"></div>')
+  expect(formatFixture('esm')).toEqual(
+    '<div class="bg-red-500 sm:bg-hotpink"></div>',
+  )
 })
 
 test('using esm config (explicit path)', () => {
-  expect(formatFixture('esm-explicit')).toEqual('<div class="bg-red-500 sm:bg-hotpink"></div>')
+  expect(formatFixture('esm-explicit')).toEqual(
+    '<div class="bg-red-500 sm:bg-hotpink"></div>',
+  )
 })
 
 test('using ts config', () => {
-  expect(formatFixture('ts')).toEqual('<div class="bg-red-500 sm:bg-hotpink"></div>')
+  expect(formatFixture('ts')).toEqual(
+    '<div class="bg-red-500 sm:bg-hotpink"></div>',
+  )
 })
 
 test('using ts config (explicit path)', () => {
-  expect(formatFixture('ts-explicit')).toEqual('<div class="bg-red-500 sm:bg-hotpink"></div>')
+  expect(formatFixture('ts-explicit')).toEqual(
+    '<div class="bg-red-500 sm:bg-hotpink"></div>',
+  )
 })
 
 test('using v3.2.7', () => {
-  expect(formatFixture('v3-2')).toEqual('<div class="bg-red-500 sm:bg-tomato"></div>')
+  expect(formatFixture('v3-2')).toEqual(
+    '<div class="bg-red-500 sm:bg-tomato"></div>',
+  )
 })
 
 test('explicit config path', () => {
   expect(
     format('<div class="sm:bg-tomato bg-red-500"></div>', {
-      tailwindConfig: path.resolve(__dirname, 'fixtures/basic/tailwind.config.js'),
-    })
+      tailwindConfig: path.resolve(
+        __dirname,
+        'fixtures/basic/tailwind.config.js',
+      ),
+    }),
   ).toEqual('<div class="bg-red-500 sm:bg-tomato"></div>')
 })
 
 test('plugins', () => {
   expect(formatFixture('plugins')).toEqual(
-    '<div class="uppercase foo sm:bar"></div>'
+    '<div class="uppercase foo sm:bar"></div>',
   )
 })

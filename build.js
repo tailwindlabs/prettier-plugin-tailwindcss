@@ -23,11 +23,11 @@ esbuild.build({
             contents: original
               .replace(
                 'var nls = needsLeadingSpace(lines, oldNode.loc, newLines);',
-                'var nls = oldNode.type !== "TemplateElement" && needsLeadingSpace(lines, oldNode.loc, newLines);'
+                'var nls = oldNode.type !== "TemplateElement" && needsLeadingSpace(lines, oldNode.loc, newLines);',
               )
               .replace(
                 'var nts = needsTrailingSpace(lines, oldNode.loc, newLines)',
-                'var nts = oldNode.type !== "TemplateElement" && needsTrailingSpace(lines, oldNode.loc, newLines)'
+                'var nts = oldNode.type !== "TemplateElement" && needsTrailingSpace(lines, oldNode.loc, newLines)',
               ),
           }
         })

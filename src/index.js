@@ -1,26 +1,26 @@
+import * as astTypes from 'ast-types'
+import clearModule from 'clear-module'
+import escalade from 'escalade/sync'
+import jsesc from 'jsesc'
+import lineColumn from 'line-column'
+import objectHash from 'object-hash'
+import * as path from 'path'
 import prettier from 'prettier'
-import prettierParserHTML from 'prettier/parser-html'
 import prettierParserAngular from 'prettier/parser-angular'
-import prettierParserPostCSS from 'prettier/parser-postcss'
 import prettierParserBabel from 'prettier/parser-babel'
 import prettierParserEspree from 'prettier/parser-espree'
-import prettierParserGlimmer from 'prettier/parser-glimmer'
-import prettierParserMeriyah from 'prettier/parser-meriyah'
 import prettierParserFlow from 'prettier/parser-flow'
+import prettierParserGlimmer from 'prettier/parser-glimmer'
+import prettierParserHTML from 'prettier/parser-html'
+import prettierParserMeriyah from 'prettier/parser-meriyah'
+import prettierParserPostCSS from 'prettier/parser-postcss'
 import prettierParserTypescript from 'prettier/parser-typescript'
-import { createContext as createContextFallback } from 'tailwindcss/lib/lib/setupContextUtils'
-import { generateRules as generateRulesFallback } from 'tailwindcss/lib/lib/generateRules'
-import resolveConfigFallback from 'tailwindcss/resolveConfig'
-import loadConfigFallback from 'tailwindcss/loadConfig'
 import * as recast from 'recast'
-import * as astTypes from 'ast-types'
-import * as path from 'path'
-import objectHash from 'object-hash'
-import lineColumn from 'line-column'
-import jsesc from 'jsesc'
-import escalade from 'escalade/sync'
-import clearModule from 'clear-module'
 import resolveFrom from 'resolve-from'
+import { generateRules as generateRulesFallback } from 'tailwindcss/lib/lib/generateRules'
+import { createContext as createContextFallback } from 'tailwindcss/lib/lib/setupContextUtils'
+import loadConfigFallback from 'tailwindcss/loadConfig'
+import resolveConfigFallback from 'tailwindcss/resolveConfig'
 
 let base = getBasePlugins()
 
@@ -67,7 +67,10 @@ function getClassOrderPolyfill(classes, { env }) {
   return classNamesWithOrder
 }
 
-function sortClasses(classStr, { env, ignoreFirst = false, ignoreLast = false }) {
+function sortClasses(
+  classStr,
+  { env, ignoreFirst = false, ignoreLast = false },
+) {
   if (typeof classStr !== 'string' || classStr === '') {
     return classStr
   }
@@ -155,7 +158,9 @@ function createParser(parserFormat, transform) {
       let prettierConfigPath = prettier.resolveConfigFile.sync(options.filepath)
 
       if (options.tailwindConfig) {
-        baseDir = prettierConfigPath ? path.dirname(prettierConfigPath) : process.cwd()
+        baseDir = prettierConfigPath
+          ? path.dirname(prettierConfigPath)
+          : process.cwd()
       } else {
         baseDir = prettierConfigPath
           ? path.dirname(prettierConfigPath)
@@ -165,11 +170,19 @@ function createParser(parserFormat, transform) {
       }
 
       try {
-        let pkgDir = path.dirname(resolveFrom(baseDir, 'tailwindcss/package.json'))
+        let pkgDir = path.dirname(
+          resolveFrom(baseDir, 'tailwindcss/package.json'),
+        )
 
         resolveConfig = require(path.join(pkgDir, 'resolveConfig'))
-        createContext = require(path.join(pkgDir, 'lib/lib/setupContextUtils')).createContext
-        generateRules = require(path.join(pkgDir, 'lib/lib/generateRules')).generateRules
+        createContext = require(path.join(
+          pkgDir,
+          'lib/lib/setupContextUtils',
+        )).createContext
+        generateRules = require(path.join(
+          pkgDir,
+          'lib/lib/generateRules',
+        )).generateRules
 
         // Prior to `tailwindcss@3.3.0` this won't exist so we load it last
         loadConfig = require(path.join(pkgDir, 'loadConfig'))
@@ -238,21 +251,21 @@ function tryParseAngularAttribute(value, env) {
   let errors = []
   for (const parser of parsers) {
     try {
-      return parser.parse(
-        value,
-        env.parsers,
-        env.options
-      )
+      return parser.parse(value, env.parsers, env.options)
     } catch (err) {
       errors.push(err)
     }
   }
 
-  console.warn("prettier-plugin-tailwindcss: Unable to parse angular directive")
-  errors.forEach(err => console.warn(err))
+  console.warn('prettier-plugin-tailwindcss: Unable to parse angular directive')
+  errors.forEach((err) => console.warn(err))
 }
 
-function transformHtml(attributes, computedAttributes = [], computedType = 'js') {
+function transformHtml(
+  attributes,
+  computedAttributes = [],
+  computedType = 'js',
+) {
   let transform = (ast, { env }) => {
     for (let attr of ast.attrs ?? []) {
       if (attributes.includes(attr.name)) {
@@ -314,7 +327,9 @@ function transformHtml(attributes, computedAttributes = [], computedType = 'js')
         })
 
         if (didChange) {
-          attr.value = recast.print(ast.program.body[0].declarations[0].init).code
+          attr.value = recast.print(
+            ast.program.body[0].declarations[0].init,
+          ).code
         }
       }
     }
@@ -361,7 +376,8 @@ function transformGlimmer(ast, { env }) {
         return
       }
 
-      const isConcat = parent.type === 'SubExpression' && parent.path.original === 'concat';
+      const isConcat =
+        parent.type === 'SubExpression' && parent.path.original === 'concat'
 
       node.value = sortClasses(node.value, {
         env,
@@ -386,7 +402,7 @@ function transformLiquid(ast, { env }) {
     let start = str[0]
     let end = str[str.length - 1]
 
-    return start === end && (start === '"' || start === "'" || start === "`")
+    return start === end && (start === '"' || start === "'" || start === '`')
   }
 
   /** @type {{type: string, source: string}[]} */
@@ -398,7 +414,7 @@ function transformLiquid(ast, { env }) {
   function sortAttribute(attr) {
     visit(attr.value, {
       TextNode(node) {
-        node.value = sortClasses(node.value, { env });
+        node.value = sortClasses(node.value, { env })
         changes.push({
           pos: node.position,
           value: node.value,
@@ -411,8 +427,8 @@ function transformLiquid(ast, { env }) {
         // We have to offset the position ONLY when quotes are part of the String node
         // This is because `value` does NOT include quotes
         if (hasSurroundingQuotes(node.source.slice(pos.start, pos.end))) {
-          pos.start += 1;
-          pos.end -= 1;
+          pos.start += 1
+          pos.end -= 1
         }
 
         node.value = sortClasses(node.value, { env })
@@ -446,12 +462,11 @@ function transformLiquid(ast, { env }) {
         sortAttribute(node)
       }
     },
-  });
+  })
 
   // Sort so all changes occur in order
   changes = changes.sort((a, b) => {
-    return a.start - b.start
-        || a.end - b.end
+    return a.start - b.start || a.end - b.end
   })
 
   for (let change of changes) {
@@ -486,7 +501,8 @@ function sortStringLiteral(node, { env }) {
 
 function isStringLiteral(node) {
   return (
-    node.type === 'StringLiteral' || (node.type === 'Literal' && typeof node.value === 'string')
+    node.type === 'StringLiteral' ||
+    (node.type === 'Literal' && typeof node.value === 'string')
   )
 }
 
@@ -510,10 +526,14 @@ function sortTemplateLiteral(node, { env }) {
       : sortClasses(quasi.value.cooked, {
           env,
           ignoreFirst: i > 0 && !/^\s/.test(quasi.value.cooked),
-          ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
+          ignoreLast:
+            i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
         })
 
-    if (quasi.value.raw !== originalRaw || quasi.value.cooked !== originalCooked) {
+    if (
+      quasi.value.raw !== originalRaw ||
+      quasi.value.cooked !== originalCooked
+    ) {
       didChange = true
     }
   }
@@ -564,30 +584,40 @@ export const options = {
 }
 
 export const printers = {
-  ...base.printers['svelte-ast'] ? {'svelte-ast': {
-    ...base.printers['svelte-ast'],
-    print: (path, options, print) => {
-      if (!options.__mutatedOriginalText) {
-        options.__mutatedOriginalText = true
-        let changes = path.stack[0].changes
-        if (changes?.length) {
-          let finder = lineColumn(options.originalText)
+  ...(base.printers['svelte-ast']
+    ? {
+        'svelte-ast': {
+          ...base.printers['svelte-ast'],
+          print: (path, options, print) => {
+            if (!options.__mutatedOriginalText) {
+              options.__mutatedOriginalText = true
+              let changes = path.stack[0].changes
+              if (changes?.length) {
+                let finder = lineColumn(options.originalText)
 
-          for (let change of changes) {
-            let start = finder.toIndex(change.loc.start.line, change.loc.start.column + 1)
-            let end = finder.toIndex(change.loc.end.line, change.loc.end.column + 1)
+                for (let change of changes) {
+                  let start = finder.toIndex(
+                    change.loc.start.line,
+                    change.loc.start.column + 1,
+                  )
+                  let end = finder.toIndex(
+                    change.loc.end.line,
+                    change.loc.end.column + 1,
+                  )
 
-            options.originalText =
-              options.originalText.substring(0, start) +
-              change.text +
-              options.originalText.substring(end)
-          }
-        }
+                  options.originalText =
+                    options.originalText.substring(0, start) +
+                    change.text +
+                    options.originalText.substring(end)
+                }
+              }
+            }
+
+            return base.printers['svelte-ast'].print(path, options, print)
+          },
+        },
       }
-
-      return base.printers['svelte-ast'].print(path, options, print)
-    },
-  } } : {},
+    : {}),
 }
 
 export const parsers = {
@@ -596,7 +626,7 @@ export const parsers = {
   lwc: createParser('lwc', transformHtml(['class'])),
   angular: createParser(
     'angular',
-    transformHtml(['class'], ['[ngClass]'], 'angular')
+    transformHtml(['class'], ['[ngClass]'], 'angular'),
   ),
   vue: createParser('vue', transformHtml(['class'], [':class'])),
   css: createParser('css', transformCss),
@@ -610,39 +640,55 @@ export const parsers = {
   espree: createParser('espree', transformJavaScript),
   meriyah: createParser('meriyah', transformJavaScript),
   __js_expression: createParser('__js_expression', transformJavaScript),
-  ...base.parsers.svelte ? { svelte: createParser('svelte', (ast, { env }) => {
-    let changes = []
-    transformSvelte(ast.html, { env, changes })
-    ast.changes = changes
-  }) } : {},
-  ...base.parsers.astro ? { astro: createParser('astro', transformAstro) } : {},
-  ...base.parsers.php ? { php: createParser('php', transformPHP) } : {},
-  ...base.parsers.melody ? { melody: createParser('melody', transformMelody) } : {},
-  ...base.parsers.pug ? { pug: createParser('pug', transformPug) } : {},
+  ...(base.parsers.svelte
+    ? {
+        svelte: createParser('svelte', (ast, { env }) => {
+          let changes = []
+          transformSvelte(ast.html, { env, changes })
+          ast.changes = changes
+        }),
+      }
+    : {}),
+  ...(base.parsers.astro
+    ? { astro: createParser('astro', transformAstro) }
+    : {}),
+  ...(base.parsers.php ? { php: createParser('php', transformPHP) } : {}),
+  ...(base.parsers.melody
+    ? { melody: createParser('melody', transformMelody) }
+    : {}),
+  ...(base.parsers.pug ? { pug: createParser('pug', transformPug) } : {}),
   ...(base.parsers['liquid-html']
-    ? { 'liquid-html': createParser("liquid-html", transformLiquid) }
+    ? { 'liquid-html': createParser('liquid-html', transformLiquid) }
     : {}),
   // ...base.parsers.blade ? { blade: createParser('blade', transformBlade) } : {},
 }
 
 function transformAstro(ast, { env, changes }) {
-  if (ast.type === "element" || ast.type === "custom-element" || ast.type === "component") {
+  if (
+    ast.type === 'element' ||
+    ast.type === 'custom-element' ||
+    ast.type === 'component'
+  ) {
     for (let attr of ast.attributes ?? []) {
-      if (attr.name === "class" && attr.type === "attribute" && attr.kind === "quoted") {
+      if (
+        attr.name === 'class' &&
+        attr.type === 'attribute' &&
+        attr.kind === 'quoted'
+      ) {
         attr.value = sortClasses(attr.value, {
-          env
-        });
+          env,
+        })
       }
     }
   }
 
   for (let child of ast.children ?? []) {
-    transformAstro(child, { env, changes });
+    transformAstro(child, { env, changes })
   }
 }
 
 function transformPHP(ast, { env, changes }) {
-  if (ast.kind === "inline") {
+  if (ast.kind === 'inline') {
     let leading = ast.raw.match(/^\s*/)[0]
     let trailing = ast.raw.match(/\s*$/)[0]
 
@@ -654,7 +700,7 @@ function transformPHP(ast, { env, changes }) {
     // We have to parse this as HTML with prettier
     let parsed = prettier.format(ast.raw, {
       ...env.options,
-      parser: "html",
+      parser: 'html',
     })
 
     let formatted = `${leading}${parsed.trimEnd()}${trailing}`
@@ -664,7 +710,7 @@ function transformPHP(ast, { env, changes }) {
   }
 
   for (let child of ast.children ?? []) {
-    transformPHP(child, { env, changes });
+    transformPHP(child, { env, changes })
   }
 }
 
@@ -682,7 +728,7 @@ function transformMelody(ast, { env, changes }) {
 
   visit(ast, {
     Attribute(node, _parent, _key, _index, meta) {
-      if (node.name.name !== "class") {
+      if (node.name.name !== 'class') {
         return
       }
 
@@ -696,13 +742,12 @@ function transformMelody(ast, { env, changes }) {
 
       node.value = sortClasses(node.value, {
         env,
-      });
-    }
+      })
+    },
   })
 }
 
 function transformPug(ast, { env }) {
-
   // This isn't optimal
   // We should merge the classes together across class attributes and class tokens
   // And then we sort them
@@ -714,42 +759,44 @@ function transformPug(ast, { env }) {
       token.val = [
         token.val.slice(0, 1),
         sortClasses(token.val.slice(1, -1), { env }),
-        token.val.slice(-1)
+        token.val.slice(-1),
       ].join('')
     }
   }
 
   // Collect lists of consecutive class tokens
-  let startIdx = -1;
-  let endIdx = -1;
-  let ranges = [];
+  let startIdx = -1
+  let endIdx = -1
+  let ranges = []
 
   for (let i = 0; i < ast.tokens.length; i++) {
-    const token = ast.tokens[i];
+    const token = ast.tokens[i]
 
     if (token.type === 'class') {
-      startIdx = startIdx === -1 ? i : startIdx;
-      endIdx = i;
+      startIdx = startIdx === -1 ? i : startIdx
+      endIdx = i
     } else if (startIdx !== -1) {
-      ranges.push([startIdx, endIdx]);
-      startIdx = -1;
-      endIdx = -1;
+      ranges.push([startIdx, endIdx])
+      startIdx = -1
+      endIdx = -1
     }
   }
 
   if (startIdx !== -1) {
-    ranges.push([startIdx, endIdx]);
-    startIdx = -1;
-    endIdx = -1;
+    ranges.push([startIdx, endIdx])
+    startIdx = -1
+    endIdx = -1
   }
 
   // Sort the lists of class tokens
   for (const [startIdx, endIdx] of ranges) {
-    const classes = ast.tokens.slice(startIdx, endIdx + 1).map(token => token.val);
+    const classes = ast.tokens
+      .slice(startIdx, endIdx + 1)
+      .map((token) => token.val)
     const classList = sortClassList(classes, { env })
 
     for (let i = startIdx; i <= endIdx; i++) {
-      ast.tokens[i].val = classList[i - startIdx];
+      ast.tokens[i].val = classList[i - startIdx]
     }
   }
 }
@@ -771,7 +818,8 @@ function transformSvelte(ast, { env, changes }) {
             : sortClasses(value.data, {
                 env,
                 ignoreFirst: i > 0 && !/^\s/.test(value.data),
-                ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.data),
+                ignoreLast:
+                  i < attr.value.length - 1 && !/\s$/.test(value.data),
               })
         } else if (value.type === 'MustacheTag') {
           visit(value.expression, {
@@ -805,11 +853,11 @@ function transformSvelte(ast, { env, changes }) {
     }
   }
 
-  if (ast.type === "AwaitBlock") {
-    let nodes = [ast.pending, ast.then, ast.catch];
+  if (ast.type === 'AwaitBlock') {
+    let nodes = [ast.pending, ast.then, ast.catch]
 
     for (let child of nodes) {
-      transformSvelte(child, { env, changes });
+      transformSvelte(child, { env, changes })
     }
   }
 }
@@ -896,7 +944,7 @@ function getBasePlugins() {
     printers: {
       ...(svelte ? { 'svelte-ast': svelte.printers['svelte-ast'] } : {}),
     },
-  };
+  }
 }
 
 function getCompatibleParser(parserFormat, options) {
@@ -934,7 +982,9 @@ function getCompatibleParser(parserFormat, options) {
       continue
     }
 
-    let plugin = options.plugins.find(plugin => plugin.name === name || plugin.name === path)
+    let plugin = options.plugins.find(
+      (plugin) => plugin.name === name || plugin.name === path,
+    )
 
     // The plugin is not loaded
     if (!plugin) {

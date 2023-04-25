@@ -80,6 +80,13 @@ let javascript = [
     `;<div class={\`sm:p-0 p-0 \${someVar}sm:block md:inline flex\`} />`,
     `;<div class={\`p-0 sm:p-0 \${someVar}sm:block flex md:inline\`} />`,
   ],
+  t`const obj = { '@apply ${yes}': {} }`,
+  t`/* const obj = { '@apply ${no}': {} } */`,
+  t`const obj = { '@not-apply ${no}': {} }`,
+  [
+    "const obj = { '@apply sm:p-0 p-0': {} }",
+    "const obj = { '@apply p-0 sm:p-0': {} }",
+  ],
 ]
 javascript = javascript.concat(
   javascript.map((test) => test.map((t) => t.replace(/class/g, 'className'))),
@@ -188,7 +195,11 @@ let tests = {
   meriyah: javascript,
   mdx: javascript
     .filter((test) => !test.find((t) => /^\/\*/.test(t)))
-    .map((test) => test.map((t) => t.replace(/^;/, ''))),
+    .map((test) =>
+      test
+        .map((t) => t.replace(/^;/, ''))
+        .map((t) => t.replace(/^const(.*)/, '```js\nconst$1\n```')),
+    ),
   svelte: [
     t`<div class="${yes}" />`,
     t`<div class />`,

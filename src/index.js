@@ -561,6 +561,28 @@ function transformJavaScript(ast, { env }) {
         }
       }
     },
+
+    Literal(node) {
+      if (isStringLiteral(node) && /^\@apply\s+/.test(node.value)) {
+        sortStringLiteral(node, { env })
+      }
+    },
+
+    StringLiteral(node) {
+      if (/^\@apply\s+/.test(node.value)) {
+        sortStringLiteral(node, { env })
+      }
+    },
+
+    TemplateLiteral(node) {
+      if (
+        [node.quasis[0]?.value.raw, node.quasis[0]?.value.cooked].some(
+          (value) => /^\@apply\s+/.test(value),
+        )
+      ) {
+        sortTemplateLiteral(node, { env })
+      }
+    },
   })
 }
 

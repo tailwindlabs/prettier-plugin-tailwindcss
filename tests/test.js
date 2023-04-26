@@ -7,6 +7,7 @@ function format(str, options = {}) {
   options.plugins = options.plugins ?? [
     require.resolve('prettier-plugin-astro'),
     require.resolve('prettier-plugin-svelte'),
+    require.resolve('prettier-plugin-marko'),
   ]
 
   options.plugins = [...options.plugins, path.resolve(__dirname, '..')]
@@ -255,7 +256,42 @@ import Custom from '../components/Custom.astro'
   <Custom class="${yes}" />
 </Layout>`,
   ],
-}
+  marko: [
+    t`<div class='${yes}'/>`,
+    t`<!-- <div class='${no}'/> -->`,
+    t`<div not-class='${no}'/>`,
+    t`<div class/>`,
+    t`<div class=''/>`,
+    t`<div>
+  <h1 class='${yes}'/>
+</div>`,
+    [
+`style {
+  h1 {
+    @apply bg-fuchsia-50 p-20 w-full;
+  }
+}`,
+`style {
+  h1 {
+    @apply w-full bg-fuchsia-50 p-20;
+  }
+}`
+    ],
+    [
+`<div class=['bg-fuchsia-50', 'w-full', someVariable, { a:true }, null, 'w-full']/>`,
+`<div class=[
+  someVariable,
+  {
+    a: true,
+  },
+  null,
+  'w-full',
+  'w-full',
+  'bg-fuchsia-50',
+]/>`,
+    ]
+  ],
+};
 
 describe('parsers', () => {
   for (let parser in tests) {

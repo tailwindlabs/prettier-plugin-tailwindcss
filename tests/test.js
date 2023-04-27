@@ -1,5 +1,6 @@
 const prettier = require('prettier')
 const path = require('path')
+const fs = require('fs')
 const { execSync } = require('child_process')
 const { t, yes, no } = require('./utils')
 
@@ -23,17 +24,40 @@ function format(str, options = {}) {
     .trim()
 }
 
+function allowFixtureFormatting(callback) {
+  let renames = [
+    {
+      from: __dirname + '/../.prettierignore',
+      to: __dirname + '/../.prettierignore.testing',
+    },
+    {
+      from: __dirname + '/../prettier.config.js',
+      to: __dirname + '/../prettier.config.js.testing',
+    },
+  ]
+
+  for (const { from, to } of renames) {
+    fs.renameSync(from, to)
+  }
+
+  try {
+    return callback()
+  } finally {
+    for (const { from, to } of renames) {
+      fs.renameSync(to, from)
+    }
+  }
+}
+
 function formatFixture(name) {
   let binPath = path.resolve(__dirname, '../node_modules/.bin/prettier')
   let filePath = path.resolve(__dirname, `fixtures/${name}/index.html`)
-  return execSync(
-    `${binPath} ${filePath} --plugin-search-dir ${__dirname} --plugin ${path.resolve(
-      __dirname,
-      '..',
-    )}`,
-  )
-    .toString()
-    .trim()
+  let cmd = `${binPath} ${filePath} --plugin-search-dir ${__dirname} --plugin ${path.resolve(
+    __dirname,
+    '..',
+  )}`
+
+  return allowFixtureFormatting(() => execSync(cmd).toString().trim())
 }
 
 let html = [

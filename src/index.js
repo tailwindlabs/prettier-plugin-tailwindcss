@@ -142,10 +142,8 @@ function createParser(parserFormat, transform) {
     parse(text, parsers, options = {}) {
       let original = getCompatibleParser(parserFormat, options)
 
-      if (original.astFormat === 'svelte-ast') {
-        options.printer = printers['svelte-ast']
-      } else if (original.astFormat === 'marko-ast') {
-        options.printer = printers['marko-ast']
+      if (original.astFormat in printers) {
+        options.printer = printers[original.astFormat]
       }
 
       let ast = original.parse(text, parsers, options)

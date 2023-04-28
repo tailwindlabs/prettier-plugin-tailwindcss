@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Nothing yet!
+
+## [0.2.8] - 2023-04-28
+
 ### Fixed
 
 - Remove support for `@prettier/plugin-php` ([#152](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/152))
@@ -155,7 +159,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.7...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.8...HEAD
+[0.2.8]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.7...v0.2.8
 [0.2.7]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.5...v0.2.7
 [0.2.5]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.3...v0.2.4

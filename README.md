@@ -42,7 +42,6 @@ If a local configuration file cannot be found the plugin will fallback to the de
 
 This plugin uses Prettier APIs that can only be used by one plugin at a time, making it incompatible with other Prettier plugins implemented the same way. To solve this we've added explicit per-plugin workarounds that enable compatibility with the following Prettier plugins:
 
-- `@prettier/plugin-php`
 - `@prettier/plugin-pug`
 - `@shopify/prettier-plugin-liquid`
 - `@ianvs/prettier-plugin-sort-imports`

@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.8] - 2023-04-28
 
-### Fixed
+### Changed
 
 - Remove support for `@prettier/plugin-php` ([#152](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/152))
 

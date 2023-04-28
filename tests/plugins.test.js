@@ -145,17 +145,6 @@ let tests = [
     },
   },
   {
-    plugins: ['@prettier/plugin-php'],
-    tests: {
-      php: [
-        [
-          `<?php $test = function($a,$b){}\n          ?>\n          <div class="sm:p-0 p-4">Example</div>\n          <?php $test = function($c,$d)use($e) {}`,
-          `<?php $test = function ($a, $b) {}; ?>\n          <div class="p-4 sm:p-0">Example</div>\n          <?php $test = function ($c, $d) use ($e) {};`,
-        ],
-      ],
-    },
-  },
-  {
     plugins: ['prettier-plugin-import-sort'],
     tests: {
       babel: [

@@ -713,25 +713,13 @@ function transformMarko(ast, { env, changes }) {
         if (currentNode.name === "class") {
           switch (currentNode.value.type) {
             case 'ArrayExpression':
-              const classList = currentNode.value.elements
-              const stringLiteralClasses = []
-              const sortedClasses = []
-              // Collect string literal classes and sort them leaving JS expressions in-order at
-              // the start of the class list.
+              const classList = currentNode.value.elements 
               for (const node of classList) {
                 if (node.type === "StringLiteral") {
-                  stringLiteralClasses.push(node)
-                } else {
-                  sortedClasses.push(node)
+                  node.value = sortClasses(node.value, { env })
                 }
               }
-
-              const sortedClassLiteralList = sortClassList(stringLiteralClasses.map((it) => it.value), { env })
-                .map((value) => stringLiteralClasses.find((it) => it.value === value))
-
-              sortedClasses.push(...sortedClassLiteralList)
-              currentNode.value.elements = sortedClasses
-              break;
+              break
             case 'StringLiteral':
               currentNode.value.value = sortClasses(currentNode.value.value, { env })
               break

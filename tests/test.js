@@ -277,18 +277,19 @@ import Custom from '../components/Custom.astro'
   }
 }`
     ],
-    [
-`<div class=['bg-fuchsia-50', 'w-full', someVariable, { a:true }, null, 'w-full']/>`,
-`<div class=[
+    t`<div class=[
+  '${yes}',
+  'w-full',
   someVariable,
   {
     a: true,
   },
   null,
   'w-full',
-  'w-full',
-  'bg-fuchsia-50',
 ]/>`,
+    [
+`<div class=['bg-fuchsia-50 w-full', 'underline', someVariable]/>`,
+`<div class=['w-full bg-fuchsia-50', 'underline', someVariable]/>`,
     ]
   ],
 };

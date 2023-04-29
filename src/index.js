@@ -655,7 +655,6 @@ export const parsers = {
   ...(base.parsers.astro
     ? { astro: createParser('astro', transformAstro) }
     : {}),
-  ...(base.parsers.php ? { php: createParser('php', transformPHP) } : {}),
   ...(base.parsers.marko ? { marko: createParser('marko', transformMarko)} : {}),
   ...(base.parsers.melody
     ? { melody: createParser('melody', transformMelody) }
@@ -728,33 +727,6 @@ function transformMarko(ast, { env, changes }) {
         break
     }
   } 
-}
-
-function transformPHP(ast, { env, changes }) {
-  if (ast.kind === 'inline') {
-    let leading = ast.raw.match(/^\s*/)[0]
-    let trailing = ast.raw.match(/\s*$/)[0]
-
-    // If the inline block is just whitespace then we don't need to format
-    if (ast.raw === leading) {
-      return
-    }
-
-    // We have to parse this as HTML with prettier
-    let parsed = prettier.format(ast.raw, {
-      ...env.options,
-      parser: 'html',
-    })
-
-    let formatted = `${leading}${parsed.trimEnd()}${trailing}`
-
-    ast.raw = formatted
-    ast.value = formatted
-  }
-
-  for (let child of ast.children ?? []) {
-    transformPHP(child, { env, changes })
-  }
 }
 
 /*
@@ -951,7 +923,6 @@ function getBasePlugins() {
   // And we are not bundling it with the main Prettier plugin
   let astro = loadIfExists('prettier-plugin-astro')
   let svelte = loadIfExists('prettier-plugin-svelte')
-  let php = loadIfExists('@prettier/plugin-php')
   let melody = loadIfExists('prettier-plugin-twig-melody')
   let pug = loadIfExists('@prettier/plugin-pug')
   let liquid = loadIfExists('@shopify/prettier-plugin-liquid')
@@ -979,7 +950,6 @@ function getBasePlugins() {
 
       ...(svelte?.parsers ?? {}),
       ...(astro?.parsers ?? {}),
-      ...(php?.parsers ?? {}),
       ...(melody?.parsers ?? {}),
       ...(pug?.parsers ?? {}),
       ...(liquid?.parsers ?? {}),
@@ -1007,7 +977,6 @@ function getCompatibleParser(parserFormat, options) {
     '@ianvs/prettier-plugin-sort-imports',
     '@trivago/prettier-plugin-sort-imports',
     'prettier-plugin-organize-imports',
-    '@prettier/plugin-php',
     '@prettier/plugin-pug',
     '@shopify/prettier-plugin-liquid',
     '@shufo/prettier-plugin-blade',

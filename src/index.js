@@ -652,7 +652,9 @@ export const parsers = {
   ...(base.parsers.astro
     ? { astro: createParser('astro', transformAstro) }
     : {}),
-  ...(base.parsers.marko ? { marko: createParser('marko', transformMarko)} : {}),
+  ...(base.parsers.marko
+    ? { marko: createParser('marko', transformMarko) }
+    : {}),
   ...(base.parsers.melody
     ? { melody: createParser('melody', transformMelody) }
     : {}),
@@ -706,24 +708,26 @@ function transformMarko(ast, { env, changes }) {
         nodesToVisit.push(...currentNode.body)
         break
       case 'MarkoAttribute':
-        if (currentNode.name === "class") {
+        if (currentNode.name === 'class') {
           switch (currentNode.value.type) {
             case 'ArrayExpression':
-              const classList = currentNode.value.elements 
+              const classList = currentNode.value.elements
               for (const node of classList) {
-                if (node.type === "StringLiteral") {
+                if (node.type === 'StringLiteral') {
                   node.value = sortClasses(node.value, { env })
                 }
               }
               break
             case 'StringLiteral':
-              currentNode.value.value = sortClasses(currentNode.value.value, { env })
+              currentNode.value.value = sortClasses(currentNode.value.value, {
+                env,
+              })
               break
           }
         }
         break
     }
-  } 
+  }
 }
 
 /*

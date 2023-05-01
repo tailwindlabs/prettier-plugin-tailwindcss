@@ -618,7 +618,6 @@ export const printers = {
         },
       }
     : {}),
-    ...(base.printers['marko-ast'] ? { 'marko-ast': {...base.printers['marko-ast']}} : {}),
 }
 
 export const parsers = {
@@ -956,7 +955,6 @@ function getBasePlugins() {
     },
     printers: {
       ...(svelte ? { 'svelte-ast': svelte.printers['svelte-ast'] } : {}),
-      ...(marko ? { 'marko-ast': marko.printers['marko-ast'] } : {}),
     },
   }
 }

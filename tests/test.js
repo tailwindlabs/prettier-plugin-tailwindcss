@@ -289,18 +289,11 @@ import Custom from '../components/Custom.astro'
     t`<div>
   <h1 class='${yes}'/>
 </div>`,
-    [
-`style {
+    t`style {
   h1 {
-    @apply bg-fuchsia-50 p-20 w-full;
+    @apply ${yes};
   }
 }`,
-`style {
-  h1 {
-    @apply w-full bg-fuchsia-50 p-20;
-  }
-}`
-    ],
     t`<div class=[
   '${yes}',
   'w-full',
@@ -309,14 +302,11 @@ import Custom from '../components/Custom.astro'
     a: true,
   },
   null,
-  'w-full',
+  '${yes}',
 ]/>`,
-    [
-`<div class=['bg-fuchsia-50 w-full', 'underline', someVariable]/>`,
-`<div class=['w-full bg-fuchsia-50', 'underline', someVariable]/>`,
-    ]
+    t`<div class=['${yes}', 'underline', someVariable]/>`,
   ],
-};
+}
 
 describe('parsers', () => {
   for (let parser in tests) {

@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^3.7.0",
+    "@marko/translator-default": "^5.25.7",
     "@prettier/plugin-pug": "^2.3.0",
     "@shopify/prettier-plugin-liquid": "^1.0.3",
     "@shufo/prettier-plugin-blade": "^1.8.4",
@@ -47,6 +48,7 @@
     "prettier-plugin-css-order": "^1.3.0",
     "prettier-plugin-import-sort": "^0.0.7",
     "prettier-plugin-jsdoc": "^0.4.2",
+    "prettier-plugin-marko": "^1.4.3",
     "prettier-plugin-organize-attributes": "^0.0.5",
     "prettier-plugin-organize-imports": "^3.2.1",
     "prettier-plugin-style-order": "^0.2.2",
@@ -69,6 +71,7 @@
     "prettier-plugin-css-order": "*",
     "prettier-plugin-import-sort": "*",
     "prettier-plugin-jsdoc": "*",
+    "prettier-plugin-marko": "*",
     "prettier-plugin-organize-attributes": "*",
     "prettier-plugin-organize-imports": "*",
     "prettier-plugin-style-order": "*",
@@ -101,6 +104,9 @@
       "optional": true
     },
     "prettier-plugin-jsdoc": {
+      "optional": true
+    },
+    "prettier-plugin-marko": {
       "optional": true
     },
     "prettier-plugin-organize-attributes": {

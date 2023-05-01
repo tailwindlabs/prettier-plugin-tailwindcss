@@ -8,6 +8,7 @@ function format(str, options = {}) {
   options.plugins = options.plugins ?? [
     require.resolve('prettier-plugin-astro'),
     require.resolve('prettier-plugin-svelte'),
+    require.resolve('prettier-plugin-marko'),
   ]
 
   options.plugins = [...options.plugins, path.resolve(__dirname, '..')]
@@ -278,6 +279,32 @@ import Custom from '../components/Custom.astro'
   <my-element class="${yes}"></my-element>
   <Custom class="${yes}" />
 </Layout>`,
+  ],
+  marko: [
+    t`<div class='${yes}'/>`,
+    t`<!-- <div class='${no}'/> -->`,
+    t`<div not-class='${no}'/>`,
+    t`<div class/>`,
+    t`<div class=''/>`,
+    t`<div>
+  <h1 class='${yes}'/>
+</div>`,
+    t`style {
+  h1 {
+    @apply ${yes};
+  }
+}`,
+    t`<div class=[
+  '${yes}',
+  'w-full',
+  someVariable,
+  {
+    a: true,
+  },
+  null,
+  '${yes}',
+]/>`,
+    t`<div class=['${yes}', 'underline', someVariable]/>`,
   ],
 }
 

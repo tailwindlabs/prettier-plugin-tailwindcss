@@ -142,8 +142,8 @@ function createParser(parserFormat, transform) {
     parse(text, parsers, options = {}) {
       let original = getCompatibleParser(parserFormat, options)
 
-      if (original.astFormat === 'svelte-ast') {
-        options.printer = printers['svelte-ast']
+      if (original.astFormat in printers) {
+        options.printer = printers[original.astFormat]
       }
 
       let ast = original.parse(text, parsers, options)
@@ -652,6 +652,9 @@ export const parsers = {
   ...(base.parsers.astro
     ? { astro: createParser('astro', transformAstro) }
     : {}),
+  ...(base.parsers.marko
+    ? { marko: createParser('marko', transformMarko) }
+    : {}),
   ...(base.parsers.melody
     ? { melody: createParser('melody', transformMelody) }
     : {}),
@@ -683,6 +686,47 @@ function transformAstro(ast, { env, changes }) {
 
   for (let child of ast.children ?? []) {
     transformAstro(child, { env, changes })
+  }
+}
+
+function transformMarko(ast, { env, changes }) {
+  const nodesToVisit = [ast]
+  while (nodesToVisit.length > 0) {
+    const currentNode = nodesToVisit.pop()
+    switch (currentNode.type) {
+      case 'File':
+        nodesToVisit.push(currentNode.program)
+        break
+      case 'Program':
+        nodesToVisit.push(...currentNode.body)
+        break
+      case 'MarkoTag':
+        nodesToVisit.push(...currentNode.attributes)
+        nodesToVisit.push(currentNode.body)
+        break
+      case 'MarkoTagBody':
+        nodesToVisit.push(...currentNode.body)
+        break
+      case 'MarkoAttribute':
+        if (currentNode.name === 'class') {
+          switch (currentNode.value.type) {
+            case 'ArrayExpression':
+              const classList = currentNode.value.elements
+              for (const node of classList) {
+                if (node.type === 'StringLiteral') {
+                  node.value = sortClasses(node.value, { env })
+                }
+              }
+              break
+            case 'StringLiteral':
+              currentNode.value.value = sortClasses(currentNode.value.value, {
+                env,
+              })
+              break
+          }
+        }
+        break
+    }
   }
 }
 
@@ -883,6 +927,7 @@ function getBasePlugins() {
   let melody = loadIfExists('prettier-plugin-twig-melody')
   let pug = loadIfExists('@prettier/plugin-pug')
   let liquid = loadIfExists('@shopify/prettier-plugin-liquid')
+  let marko = loadIfExists('prettier-plugin-marko')
   // let blade = loadIfExists('@shufo/prettier-plugin-blade')
 
   return {
@@ -909,6 +954,7 @@ function getBasePlugins() {
       ...(melody?.parsers ?? {}),
       ...(pug?.parsers ?? {}),
       ...(liquid?.parsers ?? {}),
+      ...(marko?.parsers ?? {}),
       // ...(blade?.parsers ?? {}),
     },
     printers: {

@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Added
+
+- Added support for `prettier-plugin-marko` ([#151](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/151))
 
 ## [0.2.8] - 2023-04-28
 

@@ -3,7 +3,6 @@ import clearModule from 'clear-module'
 import escalade from 'escalade/sync'
 import jsesc from 'jsesc'
 import lineColumn from 'line-column'
-import objectHash from 'object-hash'
 import * as path from 'path'
 import prettier from 'prettier'
 import prettierParserAngular from 'prettier/parser-angular'
@@ -24,6 +23,7 @@ import resolveConfigFallback from 'tailwindcss/resolveConfig'
 
 let base = getBasePlugins()
 
+/** @type {Map<string, {context: any, generateRules: () => any, expiration: number}>} */
 let contextMap = new Map()
 
 /** @type {Map<string, any>} */
@@ -150,95 +150,122 @@ function createParser(parserFormat, transform) {
       }
 
       let ast = original.parse(text, parsers, options)
-      let tailwindConfigPath = '__default__'
-      let tailwindConfig = {}
-      let resolveConfig = resolveConfigFallback
-      let createContext = createContextFallback
-      let generateRules = generateRulesFallback
-      let loadConfig = loadConfigFallback
 
-      let baseDir
-      let prettierConfigPath = prettier.resolveConfigFile.sync(options.filepath)
-
-      if (options.tailwindConfig) {
-        baseDir = prettierConfigPath
-          ? path.dirname(prettierConfigPath)
-          : process.cwd()
-      } else {
-        baseDir = prettierConfigPath
-          ? path.dirname(prettierConfigPath)
-          : options.filepath
-          ? path.dirname(options.filepath)
-          : process.cwd()
-      }
-
-      try {
-        let pkgDir = path.dirname(
-          resolveFrom(baseDir, 'tailwindcss/package.json'),
-        )
-
-        resolveConfig = require(path.join(pkgDir, 'resolveConfig'))
-        createContext = require(path.join(
-          pkgDir,
-          'lib/lib/setupContextUtils',
-        )).createContext
-        generateRules = require(path.join(
-          pkgDir,
-          'lib/lib/generateRules',
-        )).generateRules
-
-        // Prior to `tailwindcss@3.3.0` this won't exist so we load it last
-        loadConfig = require(path.join(pkgDir, 'loadConfig'))
-      } catch {}
-
-      if (options.tailwindConfig) {
-        tailwindConfigPath = path.resolve(baseDir, options.tailwindConfig)
-        clearModule(tailwindConfigPath)
-        const loadedConfig = loadConfig(tailwindConfigPath)
-        tailwindConfig = loadedConfig.default ?? loadedConfig
-      } else {
-        let configPath
-        try {
-          configPath = escalade(baseDir, (_dir, names) => {
-            if (names.includes('tailwind.config.js')) {
-              return 'tailwind.config.js'
-            }
-            if (names.includes('tailwind.config.cjs')) {
-              return 'tailwind.config.cjs'
-            }
-            if (names.includes('tailwind.config.mjs')) {
-              return 'tailwind.config.mjs'
-            }
-            if (names.includes('tailwind.config.ts')) {
-              return 'tailwind.config.ts'
-            }
-          })
-        } catch {}
-        if (configPath) {
-          tailwindConfigPath = configPath
-          clearModule(tailwindConfigPath)
-          const loadedConfig = loadConfig(tailwindConfigPath)
-          tailwindConfig = loadedConfig.default ?? loadedConfig
-        }
-      }
-
-      // suppress "empty content" warning
-      tailwindConfig.content = ['no-op']
-
-      let context
-      let existing = contextMap.get(tailwindConfigPath)
-      let hash = objectHash(tailwindConfig)
-
-      if (existing && existing.hash === hash) {
-        context = existing.context
-      } else {
-        context = createContext(resolveConfig(tailwindConfig))
-        contextMap.set(tailwindConfigPath, { context, hash })
-      }
+      let { context, generateRules } = getTailwindConfig(options)
 
       transform(ast, { env: { context, generateRules, parsers, options } })
       return ast
     },
+  }
+}
+
+function getTailwindConfig(options) {
+  let key = `${options.filepath}:${options.tailwindConfig ?? ''}`
+
+  if (contextMap.has(key)) {
+    let result = contextMap.get(key)
+    if (new Date() <= result.expiration) {
+      return result
+    }
+  }
+
+  let prettierConfigPath = prettier.resolveConfigFile.sync(options.filepath)
+
+  let { resolveConfig, createContext, generateRules, tailwindConfig } =
+    getFreshTailwindConfig(options, prettierConfigPath)
+
+  let expiration = new Date()
+  expiration.setSeconds(expiration.getSeconds() + 10)
+
+  let context = createContext(resolveConfig(tailwindConfig))
+  let result = {
+    context,
+    generateRules,
+    expiration,
+  }
+
+  contextMap.set(key, result)
+
+  return result
+}
+
+function getFreshTailwindConfig(options, prettierConfigPath) {
+  let createContext = createContextFallback
+  let generateRules = generateRulesFallback
+  let resolveConfig = resolveConfigFallback
+  let loadConfig = loadConfigFallback
+  let baseDir
+  let tailwindConfigPath = '__default__'
+  let tailwindConfig = {}
+
+  if (options.tailwindConfig) {
+    baseDir = prettierConfigPath
+      ? path.dirname(prettierConfigPath)
+      : process.cwd()
+  } else {
+    baseDir = prettierConfigPath
+      ? path.dirname(prettierConfigPath)
+      : options.filepath
+      ? path.dirname(options.filepath)
+      : process.cwd()
+  }
+
+  try {
+    let pkgDir = path.dirname(resolveFrom(baseDir, 'tailwindcss/package.json'))
+
+    resolveConfig = require(path.join(pkgDir, 'resolveConfig'))
+    createContext = require(path.join(
+      pkgDir,
+      'lib/lib/setupContextUtils',
+    )).createContext
+    generateRules = require(path.join(
+      pkgDir,
+      'lib/lib/generateRules',
+    )).generateRules
+
+    // Prior to `tailwindcss@3.3.0` this won't exist so we load it last
+    loadConfig = require(path.join(pkgDir, 'loadConfig'))
+  } catch {}
+
+  if (options.tailwindConfig) {
+    tailwindConfigPath = path.resolve(baseDir, options.tailwindConfig)
+    clearModule(tailwindConfigPath)
+    const loadedConfig = loadConfig(tailwindConfigPath)
+    tailwindConfig = loadedConfig.default ?? loadedConfig
+  } else {
+    let configPath
+    try {
+      configPath = escalade(baseDir, (_dir, names) => {
+        if (names.includes('tailwind.config.js')) {
+          return 'tailwind.config.js'
+        }
+        if (names.includes('tailwind.config.cjs')) {
+          return 'tailwind.config.cjs'
+        }
+        if (names.includes('tailwind.config.mjs')) {
+          return 'tailwind.config.mjs'
+        }
+        if (names.includes('tailwind.config.ts')) {
+          return 'tailwind.config.ts'
+        }
+      })
+    } catch {}
+    if (configPath) {
+      tailwindConfigPath = configPath
+      clearModule(tailwindConfigPath)
+      const loadedConfig = loadConfig(tailwindConfigPath)
+      tailwindConfig = loadedConfig.default ?? loadedConfig
+    }
+  }
+
+  // suppress "empty content" warning
+  tailwindConfig.content = ['no-op']
+
+  return {
+    resolveConfig,
+    createContext,
+    generateRules,
+    tailwindConfig,
   }
 }
 

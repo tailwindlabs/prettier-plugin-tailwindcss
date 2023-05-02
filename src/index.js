@@ -26,6 +26,9 @@ let base = getBasePlugins()
 
 let contextMap = new Map()
 
+/** @type {Map<string, any>} */
+let parserMap = new Map()
+
 function bigSign(bigIntValue) {
   return (bigIntValue > 0n) - (bigIntValue < 0n)
 }
@@ -964,6 +967,16 @@ function getBasePlugins() {
 }
 
 function getCompatibleParser(parserFormat, options) {
+  if (parserMap.has(parserFormat)) {
+    return parserMap.get(parserFormat)
+  }
+
+  let parser = getFreshCompatibleParser(parserFormat, options)
+  parserMap.set(parserFormat, parser)
+  return parser
+}
+
+function getFreshCompatibleParser(parserFormat, options) {
   if (!options.plugins) {
     return base.parsers[parserFormat]
   }

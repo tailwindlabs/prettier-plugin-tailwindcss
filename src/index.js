@@ -17,9 +17,6 @@ import * as recast from 'recast'
 
 let base = getBasePlugins()
 
-/** @type {Map<string, any>} */
-let parserMap = new Map()
-
 function createParser(parserFormat, transform) {
   return {
     ...base.parsers[parserFormat],
@@ -473,7 +470,6 @@ export const parsers = {
   ...(base.parsers['liquid-html']
     ? { 'liquid-html': createParser('liquid-html', transformLiquid) }
     : {}),
-  // ...base.parsers.blade ? { blade: createParser('blade', transformBlade) } : {},
 }
 
 function transformAstro(ast, { env, changes }) {
@@ -540,13 +536,6 @@ function transformMarko(ast, { env, changes }) {
     }
   }
 }
-
-/*
-function transformBlade(ast, { env, changes }) {
-  // Blade gets formatted on parse
-  // This means we'd have to parse the blade ourselves and figure out what's HTML and what isn't
-}
-*/
 
 function transformMelody(ast, { env, changes }) {
   for (let child of ast.expressions ?? []) {
@@ -698,7 +687,6 @@ function getBasePlugins() {
   let pug = loadIfExists('@prettier/plugin-pug')
   let liquid = loadIfExists('@shopify/prettier-plugin-liquid')
   let marko = loadIfExists('prettier-plugin-marko')
-  // let blade = loadIfExists('@shufo/prettier-plugin-blade')
 
   return {
     parsers: {
@@ -725,7 +713,6 @@ function getBasePlugins() {
       ...(pug?.parsers ?? {}),
       ...(liquid?.parsers ?? {}),
       ...(marko?.parsers ?? {}),
-      // ...(blade?.parsers ?? {}),
     },
     printers: {
       ...(svelte ? { 'svelte-ast': svelte.printers['svelte-ast'] } : {}),
@@ -733,8 +720,12 @@ function getBasePlugins() {
   }
 }
 
+/** @type {Map<string, any>} */
+let parserMap = new Map()
+let isTesting = process.env.NODE_ENV === 'test'
+
 function getCompatibleParser(parserFormat, options) {
-  if (parserMap.has(parserFormat)) {
+  if (parserMap.has(parserFormat) && !isTesting) {
     return parserMap.get(parserFormat)
   }
 
@@ -759,7 +750,6 @@ function getFreshCompatibleParser(parserFormat, options) {
     'prettier-plugin-organize-imports',
     '@prettier/plugin-pug',
     '@shopify/prettier-plugin-liquid',
-    '@shufo/prettier-plugin-blade',
     'prettier-plugin-css-order',
     'prettier-plugin-import-sort',
     'prettier-plugin-jsdoc',

@@ -1,10 +1,9 @@
+import { getTailwindConfig } from './config.js'
+import { sortClasses, sortClassList } from './sorting.js'
+import { visit, loadIfExists } from './utils.js'
 import * as astTypes from 'ast-types'
-import clearModule from 'clear-module'
-import escalade from 'escalade/sync'
 import jsesc from 'jsesc'
 import lineColumn from 'line-column'
-import * as path from 'path'
-import prettier from 'prettier'
 import prettierParserAngular from 'prettier/parser-angular'
 import prettierParserBabel from 'prettier/parser-babel'
 import prettierParserEspree from 'prettier/parser-espree'
@@ -15,119 +14,11 @@ import prettierParserMeriyah from 'prettier/parser-meriyah'
 import prettierParserPostCSS from 'prettier/parser-postcss'
 import prettierParserTypescript from 'prettier/parser-typescript'
 import * as recast from 'recast'
-import resolveFrom from 'resolve-from'
-import { generateRules as generateRulesFallback } from 'tailwindcss/lib/lib/generateRules'
-import { createContext as createContextFallback } from 'tailwindcss/lib/lib/setupContextUtils'
-import loadConfigFallback from 'tailwindcss/loadConfig'
-import resolveConfigFallback from 'tailwindcss/resolveConfig'
 
 let base = getBasePlugins()
 
-/** @type {Map<string, {context: any, generateRules: () => any, expiration: number}>} */
-let contextMap = new Map()
-
 /** @type {Map<string, any>} */
 let parserMap = new Map()
-
-function bigSign(bigIntValue) {
-  return (bigIntValue > 0n) - (bigIntValue < 0n)
-}
-
-function prefixCandidate(context, selector) {
-  let prefix = context.tailwindConfig.prefix
-  return typeof prefix === 'function' ? prefix(selector) : prefix + selector
-}
-
-// Polyfill for older Tailwind CSS versions
-function getClassOrderPolyfill(classes, { env }) {
-  // A list of utilities that are used by certain Tailwind CSS utilities but
-  // that don't exist on their own. This will result in them "not existing" and
-  // sorting could be weird since you still require them in order to make the
-  // host utitlies work properly. (Thanks Biology)
-  let parasiteUtilities = new Set([
-    prefixCandidate(env.context, 'group'),
-    prefixCandidate(env.context, 'peer'),
-  ])
-
-  let classNamesWithOrder = []
-
-  for (let className of classes) {
-    let order =
-      env
-        .generateRules(new Set([className]), env.context)
-        .sort(([a], [z]) => bigSign(z - a))[0]?.[0] ?? null
-
-    if (order === null && parasiteUtilities.has(className)) {
-      // This will make sure that it is at the very beginning of the
-      // `components` layer which technically means 'before any
-      // components'.
-      order = env.context.layerOrder.components
-    }
-
-    classNamesWithOrder.push([className, order])
-  }
-
-  return classNamesWithOrder
-}
-
-function sortClasses(
-  classStr,
-  { env, ignoreFirst = false, ignoreLast = false },
-) {
-  if (typeof classStr !== 'string' || classStr === '') {
-    return classStr
-  }
-
-  // Ignore class attributes containing `{{`, to match Prettier behaviour:
-  // https://github.com/prettier/prettier/blob/main/src/language-html/embed.js#L83-L88
-  if (classStr.includes('{{')) {
-    return classStr
-  }
-
-  let result = ''
-  let parts = classStr.split(/(\s+)/)
-  let classes = parts.filter((_, i) => i % 2 === 0)
-  let whitespace = parts.filter((_, i) => i % 2 !== 0)
-
-  if (classes[classes.length - 1] === '') {
-    classes.pop()
-  }
-
-  let prefix = ''
-  if (ignoreFirst) {
-    prefix = `${classes.shift() ?? ''}${whitespace.shift() ?? ''}`
-  }
-
-  let suffix = ''
-  if (ignoreLast) {
-    suffix = `${whitespace.pop() ?? ''}${classes.pop() ?? ''}`
-  }
-
-  classes = sortClassList(classes, { env })
-
-  for (let i = 0; i < classes.length; i++) {
-    result += `${classes[i]}${whitespace[i] ?? ''}`
-  }
-
-  return prefix + result + suffix
-}
-
-function sortClassList(classList, { env }) {
-  let classNamesWithOrder = env.context.getClassOrder
-    ? env.context.getClassOrder(classList)
-    : getClassOrderPolyfill(classList, { env })
-
-  return classNamesWithOrder
-    .sort(([, a], [, z]) => {
-      if (a === z) return 0
-      // if (a === null) return options.unknownClassPosition === 'start' ? -1 : 1
-      // if (z === null) return options.unknownClassPosition === 'start' ? 1 : -1
-      if (a === null) return -1
-      if (z === null) return 1
-      return bigSign(a - z)
-    })
-    .map(([className]) => className)
-}
 
 function createParser(parserFormat, transform) {
   return {
@@ -156,116 +47,6 @@ function createParser(parserFormat, transform) {
       transform(ast, { env: { context, generateRules, parsers, options } })
       return ast
     },
-  }
-}
-
-function getTailwindConfig(options) {
-  let key = `${options.filepath}:${options.tailwindConfig ?? ''}`
-
-  if (contextMap.has(key)) {
-    let result = contextMap.get(key)
-    if (new Date() <= result.expiration) {
-      return result
-    }
-  }
-
-  let prettierConfigPath = prettier.resolveConfigFile.sync(options.filepath)
-
-  let { resolveConfig, createContext, generateRules, tailwindConfig } =
-    getFreshTailwindConfig(options, prettierConfigPath)
-
-  let expiration = new Date()
-  expiration.setSeconds(expiration.getSeconds() + 10)
-
-  let context = createContext(resolveConfig(tailwindConfig))
-  let result = {
-    context,
-    generateRules,
-    expiration,
-  }
-
-  contextMap.set(key, result)
-
-  return result
-}
-
-function getFreshTailwindConfig(options, prettierConfigPath) {
-  let createContext = createContextFallback
-  let generateRules = generateRulesFallback
-  let resolveConfig = resolveConfigFallback
-  let loadConfig = loadConfigFallback
-  let baseDir
-  let tailwindConfigPath = '__default__'
-  let tailwindConfig = {}
-
-  if (options.tailwindConfig) {
-    baseDir = prettierConfigPath
-      ? path.dirname(prettierConfigPath)
-      : process.cwd()
-  } else {
-    baseDir = prettierConfigPath
-      ? path.dirname(prettierConfigPath)
-      : options.filepath
-      ? path.dirname(options.filepath)
-      : process.cwd()
-  }
-
-  try {
-    let pkgDir = path.dirname(resolveFrom(baseDir, 'tailwindcss/package.json'))
-
-    resolveConfig = require(path.join(pkgDir, 'resolveConfig'))
-    createContext = require(path.join(
-      pkgDir,
-      'lib/lib/setupContextUtils',
-    )).createContext
-    generateRules = require(path.join(
-      pkgDir,
-      'lib/lib/generateRules',
-    )).generateRules
-
-    // Prior to `tailwindcss@3.3.0` this won't exist so we load it last
-    loadConfig = require(path.join(pkgDir, 'loadConfig'))
-  } catch {}
-
-  if (options.tailwindConfig) {
-    tailwindConfigPath = path.resolve(baseDir, options.tailwindConfig)
-    clearModule(tailwindConfigPath)
-    const loadedConfig = loadConfig(tailwindConfigPath)
-    tailwindConfig = loadedConfig.default ?? loadedConfig
-  } else {
-    let configPath
-    try {
-      configPath = escalade(baseDir, (_dir, names) => {
-        if (names.includes('tailwind.config.js')) {
-          return 'tailwind.config.js'
-        }
-        if (names.includes('tailwind.config.cjs')) {
-          return 'tailwind.config.cjs'
-        }
-        if (names.includes('tailwind.config.mjs')) {
-          return 'tailwind.config.mjs'
-        }
-        if (names.includes('tailwind.config.ts')) {
-          return 'tailwind.config.ts'
-        }
-      })
-    } catch {}
-    if (configPath) {
-      tailwindConfigPath = configPath
-      clearModule(tailwindConfigPath)
-      const loadedConfig = loadConfig(tailwindConfigPath)
-      tailwindConfig = loadedConfig.default ?? loadedConfig
-    }
-  }
-
-  // suppress "empty content" warning
-  tailwindConfig.content = ['no-op']
-
-  return {
-    resolveConfig,
-    createContext,
-    generateRules,
-    tailwindConfig,
   }
 }
 
@@ -905,47 +686,6 @@ function transformSvelte(ast, { env, changes }) {
     for (let child of nodes) {
       transformSvelte(child, { env, changes })
     }
-  }
-}
-
-// https://lihautan.com/manipulating-ast-with-javascript/
-function visit(ast, callbackMap) {
-  function _visit(node, parent, key, index, meta = {}) {
-    if (typeof callbackMap === 'function') {
-      if (callbackMap(node, parent, key, index, meta) === false) {
-        return
-      }
-    } else if (node.type in callbackMap) {
-      if (callbackMap[node.type](node, parent, key, index, meta) === false) {
-        return
-      }
-    }
-
-    const keys = Object.keys(node)
-    for (let i = 0; i < keys.length; i++) {
-      const child = node[keys[i]]
-      if (Array.isArray(child)) {
-        for (let j = 0; j < child.length; j++) {
-          if (child[j] !== null) {
-            _visit(child[j], node, keys[i], j, { ...meta })
-          }
-        }
-      } else if (typeof child?.type === 'string') {
-        _visit(child, node, keys[i], i, { ...meta })
-      }
-    }
-  }
-  _visit(ast)
-}
-
-// For loading prettier plugins only if they exist
-function loadIfExists(name) {
-  try {
-    if (require.resolve(name)) {
-      return require(name)
-    }
-  } catch (e) {
-    return null
   }
 }
 

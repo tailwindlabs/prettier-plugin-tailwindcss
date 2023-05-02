@@ -21,10 +21,8 @@ export function getTailwindConfig(options) {
     }
   }
 
-  let prettierConfigPath = prettier.resolveConfigFile.sync(options.filepath)
-
   let { resolveConfig, createContext, generateRules, tailwindConfig } =
-    getFreshTailwindConfig(options, prettierConfigPath)
+    getFreshTailwindConfig(options)
 
   let expiration = new Date()
   expiration.setSeconds(expiration.getSeconds() + 10)
@@ -41,26 +39,28 @@ export function getTailwindConfig(options) {
   return result
 }
 
-function getFreshTailwindConfig(options, prettierConfigPath) {
+function getBaseDir(options) {
+  let prettierConfigPath = prettier.resolveConfigFile.sync(options.filepath)
+
+  if (options.tailwindConfig) {
+    return prettierConfigPath ? path.dirname(prettierConfigPath) : process.cwd()
+  }
+
+  return prettierConfigPath
+    ? path.dirname(prettierConfigPath)
+    : options.filepath
+    ? path.dirname(options.filepath)
+    : process.cwd()
+}
+
+function getFreshTailwindConfig(options) {
   let createContext = createContextFallback
   let generateRules = generateRulesFallback
   let resolveConfig = resolveConfigFallback
   let loadConfig = loadConfigFallback
-  let baseDir
-  let tailwindConfigPath = '__default__'
+  let baseDir = getBaseDir(options)
+  let tailwindConfigPath = getConfigPath(options, baseDir)
   let tailwindConfig = {}
-
-  if (options.tailwindConfig) {
-    baseDir = prettierConfigPath
-      ? path.dirname(prettierConfigPath)
-      : process.cwd()
-  } else {
-    baseDir = prettierConfigPath
-      ? path.dirname(prettierConfigPath)
-      : options.filepath
-      ? path.dirname(options.filepath)
-      : process.cwd()
-  }
 
   try {
     let pkgDir = path.dirname(resolveFrom(baseDir, 'tailwindcss/package.json'))
@@ -79,35 +79,10 @@ function getFreshTailwindConfig(options, prettierConfigPath) {
     loadConfig = require(path.join(pkgDir, 'loadConfig'))
   } catch {}
 
-  if (options.tailwindConfig) {
-    tailwindConfigPath = path.resolve(baseDir, options.tailwindConfig)
+  if (tailwindConfigPath) {
     clearModule(tailwindConfigPath)
     const loadedConfig = loadConfig(tailwindConfigPath)
     tailwindConfig = loadedConfig.default ?? loadedConfig
-  } else {
-    let configPath
-    try {
-      configPath = escalade(baseDir, (_dir, names) => {
-        if (names.includes('tailwind.config.js')) {
-          return 'tailwind.config.js'
-        }
-        if (names.includes('tailwind.config.cjs')) {
-          return 'tailwind.config.cjs'
-        }
-        if (names.includes('tailwind.config.mjs')) {
-          return 'tailwind.config.mjs'
-        }
-        if (names.includes('tailwind.config.ts')) {
-          return 'tailwind.config.ts'
-        }
-      })
-    } catch {}
-    if (configPath) {
-      tailwindConfigPath = configPath
-      clearModule(tailwindConfigPath)
-      const loadedConfig = loadConfig(tailwindConfigPath)
-      tailwindConfig = loadedConfig.default ?? loadedConfig
-    }
   }
 
   // suppress "empty content" warning
@@ -119,4 +94,34 @@ function getFreshTailwindConfig(options, prettierConfigPath) {
     generateRules,
     tailwindConfig,
   }
+}
+
+function getConfigPath(options, baseDir) {
+  if (options.tailwindConfig) {
+    return path.resolve(baseDir, options.tailwindConfig)
+  }
+
+  let configPath
+  try {
+    configPath = escalade(baseDir, (_dir, names) => {
+      if (names.includes('tailwind.config.js')) {
+        return 'tailwind.config.js'
+      }
+      if (names.includes('tailwind.config.cjs')) {
+        return 'tailwind.config.cjs'
+      }
+      if (names.includes('tailwind.config.mjs')) {
+        return 'tailwind.config.mjs'
+      }
+      if (names.includes('tailwind.config.ts')) {
+        return 'tailwind.config.ts'
+      }
+    })
+  } catch {}
+
+  if (configPath) {
+    return configPath
+  }
+
+  return null
 }

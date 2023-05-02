@@ -1,6 +1,11 @@
+import {
+  getCompatibleParser,
+  getAdditionalParsers,
+  getAdditionalPrinters,
+} from './compat.js'
 import { getTailwindConfig } from './config.js'
 import { sortClasses, sortClassList } from './sorting.js'
-import { visit, loadIfExists } from './utils.js'
+import { visit } from './utils.js'
 import * as astTypes from 'ast-types'
 import jsesc from 'jsesc'
 import lineColumn from 'line-column'
@@ -21,17 +26,13 @@ function createParser(parserFormat, transform) {
   return {
     ...base.parsers[parserFormat],
     preprocess(code, options) {
-      let original = getCompatibleParser(parserFormat, options)
+      let original = getCompatibleParser(base, parserFormat, options)
 
-      if (original.preprocess) {
-        return original.preprocess(code, options)
-      }
-
-      return code
+      return original.preprocess ? original.preprocess(code, options) : code
     },
 
     parse(text, parsers, options = {}) {
-      let original = getCompatibleParser(parserFormat, options)
+      let original = getCompatibleParser(base, parserFormat, options)
 
       if (original.astFormat in printers) {
         options.printer = printers[original.astFormat]
@@ -679,15 +680,6 @@ function transformSvelte(ast, { env, changes }) {
 }
 
 function getBasePlugins() {
-  // We need to load this plugin dynamically because it's not available by default
-  // And we are not bundling it with the main Prettier plugin
-  let astro = loadIfExists('prettier-plugin-astro')
-  let svelte = loadIfExists('prettier-plugin-svelte')
-  let melody = loadIfExists('prettier-plugin-twig-melody')
-  let pug = loadIfExists('@prettier/plugin-pug')
-  let liquid = loadIfExists('@shopify/prettier-plugin-liquid')
-  let marko = loadIfExists('prettier-plugin-marko')
-
   return {
     parsers: {
       html: prettierParserHTML.parsers.html,
@@ -707,77 +699,10 @@ function getBasePlugins() {
       meriyah: prettierParserMeriyah.parsers.meriyah,
       __js_expression: prettierParserBabel.parsers.__js_expression,
 
-      ...(svelte?.parsers ?? {}),
-      ...(astro?.parsers ?? {}),
-      ...(melody?.parsers ?? {}),
-      ...(pug?.parsers ?? {}),
-      ...(liquid?.parsers ?? {}),
-      ...(marko?.parsers ?? {}),
+      ...getAdditionalParsers(),
     },
     printers: {
-      ...(svelte ? { 'svelte-ast': svelte.printers['svelte-ast'] } : {}),
+      ...getAdditionalPrinters(),
     },
   }
-}
-
-/** @type {Map<string, any>} */
-let parserMap = new Map()
-let isTesting = process.env.NODE_ENV === 'test'
-
-function getCompatibleParser(parserFormat, options) {
-  if (parserMap.has(parserFormat) && !isTesting) {
-    return parserMap.get(parserFormat)
-  }
-
-  let parser = getFreshCompatibleParser(parserFormat, options)
-  parserMap.set(parserFormat, parser)
-  return parser
-}
-
-function getFreshCompatibleParser(parserFormat, options) {
-  if (!options.plugins) {
-    return base.parsers[parserFormat]
-  }
-
-  let parser = {
-    ...base.parsers[parserFormat],
-  }
-
-  // Now load parsers from plugins
-  let compatiblePlugins = [
-    '@ianvs/prettier-plugin-sort-imports',
-    '@trivago/prettier-plugin-sort-imports',
-    'prettier-plugin-organize-imports',
-    '@prettier/plugin-pug',
-    '@shopify/prettier-plugin-liquid',
-    'prettier-plugin-css-order',
-    'prettier-plugin-import-sort',
-    'prettier-plugin-jsdoc',
-    'prettier-plugin-organize-attributes',
-    'prettier-plugin-style-order',
-    'prettier-plugin-twig-melody',
-  ]
-
-  for (const name of compatiblePlugins) {
-    let path = null
-
-    try {
-      path = require.resolve(name)
-    } catch (err) {
-      continue
-    }
-
-    let plugin = options.plugins.find(
-      (plugin) => plugin.name === name || plugin.name === path,
-    )
-
-    // The plugin is not loaded
-    if (!plugin) {
-      continue
-    }
-
-    Object.assign(parser, plugin.parsers[parserFormat])
-  }
-
-  return parser
 }

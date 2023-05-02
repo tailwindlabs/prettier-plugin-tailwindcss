@@ -472,7 +472,7 @@ export const parsers = {
     : {}),
 }
 
-function transformAstro(ast, { env, changes }) {
+function transformAstro(ast, { env }) {
   if (
     ast.type === 'element' ||
     ast.type === 'custom-element' ||
@@ -492,11 +492,11 @@ function transformAstro(ast, { env, changes }) {
   }
 
   for (let child of ast.children ?? []) {
-    transformAstro(child, { env, changes })
+    transformAstro(child, { env })
   }
 }
 
-function transformMarko(ast, { env, changes }) {
+function transformMarko(ast, { env }) {
   const nodesToVisit = [ast]
   while (nodesToVisit.length > 0) {
     const currentNode = nodesToVisit.pop()
@@ -537,7 +537,7 @@ function transformMarko(ast, { env, changes }) {
   }
 }
 
-function transformMelody(ast, { env, changes }) {
+function transformMelody(ast, { env }) {
   for (let child of ast.expressions ?? []) {
     transformMelody(child, { env })
   }

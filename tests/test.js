@@ -25,31 +25,6 @@ function format(str, options = {}) {
     .trim()
 }
 
-function allowFixtureFormatting(callback) {
-  let renames = [
-    {
-      from: __dirname + '/../.prettierignore',
-      to: __dirname + '/../.prettierignore.testing',
-    },
-    {
-      from: __dirname + '/../prettier.config.js',
-      to: __dirname + '/../prettier.config.js.testing',
-    },
-  ]
-
-  for (const { from, to } of renames) {
-    fs.renameSync(from, to)
-  }
-
-  try {
-    return callback()
-  } finally {
-    for (const { from, to } of renames) {
-      fs.renameSync(to, from)
-    }
-  }
-}
-
 function formatFixture(name) {
   let binPath = path.resolve(__dirname, '../node_modules/.bin/prettier')
   let filePath = path.resolve(__dirname, `fixtures/${name}/index.html`)
@@ -58,7 +33,7 @@ function formatFixture(name) {
     '..',
   )}`
 
-  return allowFixtureFormatting(() => execSync(cmd).toString().trim())
+  return execSync(cmd).toString().trim()
 }
 
 let html = [
@@ -308,6 +283,54 @@ import Custom from '../components/Custom.astro'
   ],
 }
 
+let fixtures = [
+  {
+    name: 'no prettier config',
+    dir: 'no-prettier-config',
+    output: '<div class="bg-red-500 sm:bg-tomato"></div>',
+  },
+  {
+    name: 'inferred config path',
+    dir: 'basic',
+    output: '<div class="bg-red-500 sm:bg-tomato"></div>',
+  },
+  {
+    name: 'inferred config path (.cjs)',
+    dir: 'cjs',
+    output: '<div class="bg-red-500 sm:bg-hotpink"></div>',
+  },
+  {
+    name: 'using esm config',
+    dir: 'esm',
+    output: '<div class="bg-red-500 sm:bg-hotpink"></div>',
+  },
+  {
+    name: 'using esm config (explicit path)',
+    dir: 'esm-explicit',
+    output: '<div class="bg-red-500 sm:bg-hotpink"></div>',
+  },
+  {
+    name: 'using ts config',
+    dir: 'ts',
+    output: '<div class="bg-red-500 sm:bg-hotpink"></div>',
+  },
+  {
+    name: 'using ts config (explicit path)',
+    dir: 'ts-explicit',
+    output: '<div class="bg-red-500 sm:bg-hotpink"></div>',
+  },
+  {
+    name: 'using v3.2.7',
+    dir: 'v3-2',
+    output: '<div class="bg-red-500 sm:bg-tomato"></div>',
+  },
+  {
+    name: 'plugins',
+    dir: 'plugins',
+    output: '<div class="uppercase foo sm:bar"></div>',
+  },
+]
+
 describe('parsers', () => {
   for (let parser in tests) {
     test(parser, () => {
@@ -318,79 +341,50 @@ describe('parsers', () => {
   }
 })
 
-test('non-tailwind classes', () => {
-  expect(
-    format('<div class="sm:lowercase uppercase potato text-sm"></div>'),
-  ).toEqual('<div class="potato text-sm uppercase sm:lowercase"></div>')
+describe('other', () => {
+  test('non-tailwind classes', () => {
+    expect(
+      format('<div class="sm:lowercase uppercase potato text-sm"></div>'),
+    ).toEqual('<div class="potato text-sm uppercase sm:lowercase"></div>')
+  })
+
+  test('parasite utilities', () => {
+    expect(
+      format('<div class="group peer unknown-class p-0 container"></div>'),
+    ).toEqual('<div class="unknown-class group peer container p-0"></div>')
+  })
+
+  test('explicit config path', () => {
+    expect(
+      format('<div class="sm:bg-tomato bg-red-500"></div>', {
+        tailwindConfig: path.resolve(
+          __dirname,
+          'fixtures/basic/tailwind.config.js',
+        ),
+      }),
+    ).toEqual('<div class="bg-red-500 sm:bg-tomato"></div>')
+  })
 })
 
-test('no prettier config', () => {
-  expect(formatFixture('no-prettier-config')).toEqual(
-    '<div class="bg-red-500 sm:bg-tomato"></div>',
-  )
-})
+describe('fixtures', () => {
+  let configs = [
+    {
+      from: __dirname + '/../.prettierignore',
+      to: __dirname + '/../.prettierignore.testing',
+    },
+    {
+      from: __dirname + '/../prettier.config.js',
+      to: __dirname + '/../prettier.config.js.testing',
+    },
+  ]
 
-test('parasite utilities', () => {
-  expect(
-    format('<div class="group peer unknown-class p-0 container"></div>'),
-  ).toEqual('<div class="unknown-class group peer container p-0"></div>')
-})
+  // Temporarily move config files out of the way so they don't interfere with the tests
+  beforeAll(() => configs.forEach(({ from, to }) => fs.renameSync(from, to)))
+  afterAll(() => configs.forEach(({ from, to }) => fs.renameSync(to, from)))
 
-test('inferred config path', () => {
-  expect(formatFixture('basic')).toEqual(
-    '<div class="bg-red-500 sm:bg-tomato"></div>',
-  )
-})
-
-test('inferred config path (.cjs)', () => {
-  expect(formatFixture('cjs')).toEqual(
-    '<div class="bg-red-500 sm:bg-hotpink"></div>',
-  )
-})
-
-test('using esm config', () => {
-  expect(formatFixture('esm')).toEqual(
-    '<div class="bg-red-500 sm:bg-hotpink"></div>',
-  )
-})
-
-test('using esm config (explicit path)', () => {
-  expect(formatFixture('esm-explicit')).toEqual(
-    '<div class="bg-red-500 sm:bg-hotpink"></div>',
-  )
-})
-
-test('using ts config', () => {
-  expect(formatFixture('ts')).toEqual(
-    '<div class="bg-red-500 sm:bg-hotpink"></div>',
-  )
-})
-
-test('using ts config (explicit path)', () => {
-  expect(formatFixture('ts-explicit')).toEqual(
-    '<div class="bg-red-500 sm:bg-hotpink"></div>',
-  )
-})
-
-test('using v3.2.7', () => {
-  expect(formatFixture('v3-2')).toEqual(
-    '<div class="bg-red-500 sm:bg-tomato"></div>',
-  )
-})
-
-test('explicit config path', () => {
-  expect(
-    format('<div class="sm:bg-tomato bg-red-500"></div>', {
-      tailwindConfig: path.resolve(
-        __dirname,
-        'fixtures/basic/tailwind.config.js',
-      ),
-    }),
-  ).toEqual('<div class="bg-red-500 sm:bg-tomato"></div>')
-})
-
-test('plugins', () => {
-  expect(formatFixture('plugins')).toEqual(
-    '<div class="uppercase foo sm:bar"></div>',
-  )
+  for (const fixture of fixtures) {
+    test(fixture.name, () => {
+      expect(formatFixture(fixture.dir)).toEqual(fixture.output)
+    })
+  }
 })

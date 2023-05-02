@@ -1,3 +1,5 @@
+// @ts-check
+import { expiringMap } from './expiring-map.js'
 import clearModule from 'clear-module'
 import escalade from 'escalade/sync'
 import * as path from 'path'
@@ -8,39 +10,87 @@ import { createContext as createContextFallback } from 'tailwindcss/lib/lib/setu
 import loadConfigFallback from 'tailwindcss/loadConfig'
 import resolveConfigFallback from 'tailwindcss/resolveConfig'
 
-/** @type {Map<string, {context: any, generateRules: () => any, expiration: number}>} */
-let contextMap = new Map()
+/**
+ * @typedef {object} ContextContainer
+ * @property {any} context
+ * @property {() => any} generateRules
+ * @property {any} tailwindConfig
+ **/
 
+/**
+ * @typedef {object} PluginOptions
+ * @property {string} [tailwindConfig]
+ * @property {string} filepath
+ **/
+
+/**
+ * @template K
+ * @template V
+ * @typedef {import('./expiring-map.js').ExpiringMap<K,V>} ExpiringMap
+ **/
+
+/** @type {Map<string, string | null>} */
+let sourceToPathMap = new Map()
+
+/** @type {ExpiringMap<string | null, ContextContainer>} */
+let pathToContextMap = expiringMap(10_000)
+
+/** @type {ExpiringMap<string, string | null>} */
+let prettierConfigCache = expiringMap(10_000)
+
+/**
+ * @param {PluginOptions} options
+ * @returns {ContextContainer}
+ */
 export function getTailwindConfig(options) {
   let key = `${options.filepath}:${options.tailwindConfig ?? ''}`
+  let baseDir = getBaseDir(options)
 
-  if (contextMap.has(key)) {
-    let result = contextMap.get(key)
-    if (new Date() <= result.expiration) {
-      return result
-    }
+  // Map the source file to it's associated Tailwind config file
+  let configPath = sourceToPathMap.get(key)
+  if (configPath === undefined) {
+    configPath = getConfigPath(options, baseDir)
+    sourceToPathMap.set(key, configPath)
   }
 
-  let { resolveConfig, createContext, generateRules, tailwindConfig } =
-    getFreshTailwindConfig(options)
-
-  let expiration = new Date()
-  expiration.setSeconds(expiration.getSeconds() + 10)
-
-  let context = createContext(resolveConfig(tailwindConfig))
-  let result = {
-    context,
-    generateRules,
-    expiration,
+  // Now see if we've loaded the Tailwind config file before (and it's still valid)
+  let existing = pathToContextMap.get(configPath)
+  if (existing) {
+    return existing
   }
 
-  contextMap.set(key, result)
+  // By this point we know we need to load the Tailwind config file
+  let result = loadTailwindConfig(baseDir, configPath)
+
+  pathToContextMap.set(configPath, result)
 
   return result
 }
 
+/**
+ *
+ * @param {PluginOptions} options
+ * @returns {string | null}
+ */
+function getPrettierConfigPath(options) {
+  // Locating the config file can be mildly expensive so we cache it temporarily
+  let existingPath = prettierConfigCache.get(options.filepath)
+  if (existingPath !== undefined) {
+    return existingPath
+  }
+
+  let path = prettier.resolveConfigFile.sync(options.filepath)
+  prettierConfigCache.set(options.filepath, path)
+
+  return path
+}
+
+/**
+ * @param {PluginOptions} options
+ * @returns {string}
+ */
 function getBaseDir(options) {
-  let prettierConfigPath = prettier.resolveConfigFile.sync(options.filepath)
+  let prettierConfigPath = getPrettierConfigPath(options)
 
   if (options.tailwindConfig) {
     return prettierConfigPath ? path.dirname(prettierConfigPath) : process.cwd()
@@ -53,13 +103,17 @@ function getBaseDir(options) {
     : process.cwd()
 }
 
-function getFreshTailwindConfig(options) {
+/**
+ *
+ * @param {string} baseDir
+ * @param {string | null} tailwindConfigPath
+ * @returns {ContextContainer}
+ */
+function loadTailwindConfig(baseDir, tailwindConfigPath) {
   let createContext = createContextFallback
   let generateRules = generateRulesFallback
   let resolveConfig = resolveConfigFallback
   let loadConfig = loadConfigFallback
-  let baseDir = getBaseDir(options)
-  let tailwindConfigPath = getConfigPath(options, baseDir)
   let tailwindConfig = {}
 
   try {
@@ -88,14 +142,21 @@ function getFreshTailwindConfig(options) {
   // suppress "empty content" warning
   tailwindConfig.content = ['no-op']
 
+  // Create the context
+  let context = createContext(resolveConfig(tailwindConfig))
+
   return {
-    resolveConfig,
-    createContext,
-    generateRules,
+    context,
     tailwindConfig,
+    generateRules,
   }
 }
 
+/**
+ * @param {PluginOptions} options
+ * @param {string} baseDir
+ * @returns {string | null}
+ */
 function getConfigPath(options, baseDir) {
   if (options.tailwindConfig) {
     return path.resolve(baseDir, options.tailwindConfig)

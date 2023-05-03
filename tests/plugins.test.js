@@ -225,6 +225,10 @@ let tests = [
   },
 ]
 
+// Disable pug printer -- it produces noisy test output
+let pug = require('@prettier/plugin-pug')
+pug.logger.level = 'off'
+
 for (const group of tests) {
   let name = group.plugins.join(', ')
 

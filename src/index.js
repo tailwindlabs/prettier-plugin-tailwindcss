@@ -32,6 +32,8 @@ function createParser(parserFormat, transform) {
     },
 
     parse(text, parsers, options = {}) {
+      let { context, generateRules } = getTailwindConfig(options)
+
       let original = getCompatibleParser(base, parserFormat, options)
 
       if (original.astFormat in printers) {
@@ -39,9 +41,6 @@ function createParser(parserFormat, transform) {
       }
 
       let ast = original.parse(text, parsers, options)
-
-      let { context, generateRules } = getTailwindConfig(options)
-
       transform(ast, { env: { context, generateRules, parsers, options } })
       return ast
     },

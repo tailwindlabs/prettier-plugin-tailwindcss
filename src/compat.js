@@ -98,7 +98,7 @@ export function getAdditionalPrinters() {
   for (let { pkg, formats } of additionalPrinterPlugins) {
     let pluginPrinters = loadIfExists(pkg)?.printers
     for (let format of formats) {
-      if (format in pluginPrinters) {
+      if (pluginPrinters && format in pluginPrinters) {
         printers[format] = pluginPrinters[format]
       }
     }

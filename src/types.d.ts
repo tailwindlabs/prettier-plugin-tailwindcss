@@ -1,3 +1,5 @@
+import { ParserOptions, Printer } from 'prettier'
+
 export interface TransformerMetadata {
   // Default customizations for a given transformer
   staticAttrs?: string[]
@@ -25,7 +27,19 @@ export interface TransformerEnv {
 }
 
 export interface RawOptions {
-  tailwindConfig: string | null
+  tailwindConfig?: string
   tailwindFunctions?: string[]
   tailwindAttributes?: string[]
 }
+
+export interface InternalOptions {
+  printer: Printer<any>
+}
+
+export interface ContextContainer {
+  context: any
+  generateRules: () => any
+  tailwindConfig: any
+}
+
+export type PluginOptions = ParserOptions<any> & RawOptions & InternalOptions

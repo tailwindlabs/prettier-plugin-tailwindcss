@@ -1,3 +1,4 @@
+// @ts-check
 import {
   getCompatibleParser,
   getAdditionalParsers,
@@ -9,7 +10,7 @@ import { sortClasses, sortClassList } from './sorting.js'
 import { visit } from './utils.js'
 import * as astTypes from 'ast-types'
 import jsesc from 'jsesc'
-import lineColumn from 'line-column'
+import LineColumnFinder from 'line-column'
 import prettierParserAngular from 'prettier/parser-angular'
 import prettierParserBabel from 'prettier/parser-babel'
 import prettierParserEspree from 'prettier/parser-espree'
@@ -48,7 +49,14 @@ function createParser(parserFormat, transform, meta = {}) {
       return original.preprocess ? original.preprocess(code, options) : code
     },
 
-    parse(text, parsers, options = {}) {
+    /**
+     *
+     * @param {string} text
+     * @param {any} parsers
+     * @param {import('prettier').ParserOptions<any> & import('./config.js').PluginOptions} options
+     * @returns
+     */
+    parse(text, parsers, options) {
       let { context, generateRules } = getTailwindConfig(options)
 
       let original = getCompatibleParser(base, parserFormat, options)
@@ -65,9 +73,16 @@ function createParser(parserFormat, transform, meta = {}) {
         customizationDefaults,
       )
 
+      let changes = []
+
       transform(ast, {
         env: { context, customizations, generateRules, parsers, options },
+        changes,
       })
+
+      if (changes.length > 0) {
+        ast.changes = changes
+      }
 
       return ast
     },
@@ -96,12 +111,87 @@ function tryParseAngularAttribute(value, env) {
   errors.forEach((err) => console.warn(err))
 }
 
+function transformDynamicAngularAttribute(attr, env) {
+  let directiveAst = tryParseAngularAttribute(attr.value, env)
+
+  // If we've reached this point we couldn't parse the expression we we should bail
+  // `tryParseAngularAttribute` will display some warnings/errors
+  // But we shouldn't fail outright — just miss parsing some attributes
+  if (!directiveAst) {
+    return
+  }
+
+  visit(directiveAst, {
+    StringLiteral(node) {
+      if (!node.value) return
+      attr.value =
+        attr.value.slice(0, node.start + 1) +
+        sortClasses(node.value, { env }) +
+        attr.value.slice(node.end - 1)
+    },
+  })
+}
+
+function transformDynamicJsAttribute(attr, env) {
+  let { functions } = env.customizations
+
+  let ast = recast.parse(`let __prettier_temp__ = ${attr.value}`, {
+    parser: prettierParserBabel.parsers['babel-ts'],
+  })
+
+  let didChange = false
+
+  astTypes.visit(ast, {
+    visitLiteral(path) {
+      if (isStringLiteral(path.node)) {
+        if (sortStringLiteral(path.node, { env })) {
+          didChange = true
+
+          // https://github.com/benjamn/recast/issues/171#issuecomment-224996336
+          // @ts-ignore
+          let quote = path.node.extra.raw[0]
+          let value = jsesc(path.node.value, {
+            quotes: quote === "'" ? 'single' : 'double',
+          })
+          // @ts-ignore
+          path.node.value = new String(quote + value + quote)
+        }
+      }
+      this.traverse(path)
+    },
+
+    visitTemplateLiteral(path) {
+      if (sortTemplateLiteral(path.node, { env })) {
+        didChange = true
+      }
+      this.traverse(path)
+    },
+
+    visitTaggedTemplateExpression(path) {
+      if (
+        path.node.tag.type === 'Identifier' &&
+        functions.has(path.node.tag.name)
+      ) {
+        if (sortTemplateLiteral(path.node.quasi, { env })) {
+          didChange = true
+        }
+      }
+      this.traverse(path)
+    },
+  })
+
+  if (didChange) {
+    attr.value = recast.print(ast.program.body[0].declarations[0].init).code
+  }
+}
+
 /**
  * @param {any} ast
  * @param {TransformerContext} param1
  */
-function transformHtml(ast, { env }) {
-  let { staticAttrs, dynamicAttrs, functions } = env.customizations
+function transformHtml(ast, { env, changes }) {
+  let { staticAttrs, dynamicAttrs } = env.customizations
+  let { parser } = env.options
 
   for (let attr of ast.attrs ?? []) {
     if (staticAttrs.has(attr.name)) {
@@ -111,78 +201,16 @@ function transformHtml(ast, { env }) {
         continue
       }
 
-      if (env.options.parser === 'angular') {
-        let directiveAst = tryParseAngularAttribute(attr.value, env)
-
-        // If we've reached this point we couldn't parse the expression we we should bail
-        // `tryParseAngularAttribute` will display some warnings/errors
-        // But we shouldn't fail outright — just miss parsing some attributes
-        if (!directiveAst) {
-          continue
-        }
-
-        visit(directiveAst, {
-          StringLiteral(node) {
-            if (!node.value) return
-            attr.value =
-              attr.value.slice(0, node.start + 1) +
-              sortClasses(node.value, { env }) +
-              attr.value.slice(node.end - 1)
-          },
-        })
-        continue
-      }
-
-      let ast = recast.parse(`let __prettier_temp__ = ${attr.value}`, {
-        parser: prettierParserBabel.parsers['babel-ts'],
-      })
-      let didChange = false
-
-      astTypes.visit(ast, {
-        visitLiteral(path) {
-          if (isStringLiteral(path.node)) {
-            if (sortStringLiteral(path.node, { env })) {
-              didChange = true
-
-              // https://github.com/benjamn/recast/issues/171#issuecomment-224996336
-              let quote = path.node.extra.raw[0]
-              let value = jsesc(path.node.value, {
-                quotes: quote === "'" ? 'single' : 'double',
-              })
-              path.node.value = new String(quote + value + quote)
-            }
-          }
-          this.traverse(path)
-        },
-
-        visitTemplateLiteral(path) {
-          if (sortTemplateLiteral(path.node, { env })) {
-            didChange = true
-          }
-          this.traverse(path)
-        },
-
-        visitTaggedTemplateExpression(path) {
-          if (
-            path.node.tag.type === 'Identifier' &&
-            functions.has(path.node.tag.name)
-          ) {
-            if (sortTemplateLiteral(path.node.quasi, { env })) {
-              didChange = true
-            }
-          }
-          this.traverse(path)
-        },
-      })
-
-      if (didChange) {
-        attr.value = recast.print(ast.program.body[0].declarations[0].init).code
+      if (parser === 'angular') {
+        transformDynamicAngularAttribute(attr, env)
+      } else {
+        transformDynamicJsAttribute(attr, env)
       }
     }
   }
 
   for (let child of ast.children ?? []) {
-    transformHtml(child, { env })
+    transformHtml(child, { env, changes })
   }
 }
 
@@ -478,7 +506,7 @@ export const printers = {
               options.__mutatedOriginalText = true
               let changes = path.stack[0].changes
               if (changes?.length) {
-                let finder = lineColumn(options.originalText)
+                let finder = new LineColumnFinder(options.originalText)
 
                 for (let change of changes) {
                   let start = finder.toIndex(
@@ -561,17 +589,9 @@ export const parsers = {
 
   ...(base.parsers.svelte
     ? {
-        svelte: createParser(
-          'svelte',
-          (ast, { env }) => {
-            let changes = []
-            transformSvelte(ast.html, { env, changes })
-            ast.changes = changes
-          },
-          {
-            staticAttrs: ['class'],
-          },
-        ),
+        svelte: createParser('svelte', transformSvelte, {
+          staticAttrs: ['class'],
+        }),
       }
     : {}),
   ...(base.parsers.astro
@@ -615,7 +635,7 @@ export const parsers = {
  * @param {any} ast
  * @param {TransformerContext} param1
  */
-function transformAstro(ast, { env }) {
+function transformAstro(ast, { env, changes }) {
   let { staticAttrs } = env.customizations
 
   if (
@@ -637,7 +657,7 @@ function transformAstro(ast, { env }) {
   }
 
   for (let child of ast.children ?? []) {
-    transformAstro(child, { env })
+    transformAstro(child, { env, changes })
   }
 }
 
@@ -691,11 +711,11 @@ function transformMarko(ast, { env }) {
  * @param {any} ast
  * @param {TransformerContext} param1
  */
-function transformMelody(ast, { env }) {
+function transformMelody(ast, { env, changes }) {
   let { staticAttrs } = env.customizations
 
   for (let child of ast.expressions ?? []) {
-    transformMelody(child, { env })
+    transformMelody(child, { env, changes })
   }
 
   visit(ast, {
@@ -845,6 +865,10 @@ function transformSvelte(ast, { env, changes }) {
   }
 }
 
+/**
+ *
+ * @returns {{parsers: Record<string, import('prettier').Parser<any>>, printers: Record<string, import('prettier').Printer<any>>}}
+ */
 function getBasePlugins() {
   return {
     parsers: {

@@ -26,13 +26,13 @@ export const options = {
   },
 }
 
-/** @typedef {import('./types').RawOptions} RawOptions */
+/** @typedef {import('./types').PluginOptions} PluginOptions */
 /** @typedef {import('./types').Customizations} Customizations */
 
 /**
- * @param {RawOptions} options
+ * @param {PluginOptions} options
  * @param {string} parser
- * @param {Partial<Customizations>} defaults
+ * @param {Customizations} defaults
  * @returns {Customizations}
  */
 export function getCustomizations(options, parser, defaults) {
@@ -75,9 +75,9 @@ export function getCustomizations(options, parser, defaults) {
   }
 
   // If no attributes are specified, use the default attributes for the parser
-  if (staticAttrs.size === 0) staticAttrs = defaults.staticAttrs ?? new Set()
-  if (dynamicAttrs.size === 0) dynamicAttrs = defaults.dynamicAttrs ?? new Set()
-  if (functions.size === 0) functions = defaults.functions ?? new Set()
+  if (staticAttrs.size === 0) staticAttrs = defaults.staticAttrs
+  if (dynamicAttrs.size === 0) dynamicAttrs = defaults.dynamicAttrs
+  if (functions.size === 0) functions = defaults.functions
 
   return {
     functions,

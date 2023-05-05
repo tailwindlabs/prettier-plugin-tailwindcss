@@ -53,10 +53,10 @@ function createParser(parserFormat, transform, meta = {}) {
      *
      * @param {string} text
      * @param {any} parsers
-     * @param {import('prettier').ParserOptions<any> & import('./config.js').PluginOptions} options
+     * @param {import('./types').PluginOptions} options
      * @returns
      */
-    parse(text, parsers, options) {
+    parse(text, parsers, options = {}) {
       let { context, generateRules } = getTailwindConfig(options)
 
       let original = getCompatibleParser(base, parserFormat, options)

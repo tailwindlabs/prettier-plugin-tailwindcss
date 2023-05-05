@@ -426,7 +426,7 @@ describe('fixtures', () => {
   )
 
   for (const fixture of fixtures) {
-    test.concurrent(fixture.name, async () => {
+    test(fixture.name, async () => {
       let formatted = await formatFixture(fixture.dir, fixture.ext ?? 'html')
       expect(formatted).toEqual(fixture.output)
     })

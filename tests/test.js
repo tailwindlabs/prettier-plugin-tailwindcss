@@ -421,7 +421,7 @@ describe('fixtures', () => {
   afterAll(() => configs.forEach(({ from, to }) => fs.renameSync(to, from)))
 
   for (const fixture of fixtures) {
-    test(fixture.name, async () => {
+    test.concurrent(fixture.name, async () => {
       let formatted = await formatFixture(fixture.dir, fixture.ext ?? 'html')
       expect(formatted).toEqual(fixture.output)
     })

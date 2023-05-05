@@ -417,8 +417,13 @@ describe('fixtures', () => {
   ]
 
   // Temporarily move config files out of the way so they don't interfere with the tests
-  beforeAll(() => configs.forEach(({ from, to }) => fs.renameSync(from, to)))
-  afterAll(() => configs.forEach(({ from, to }) => fs.renameSync(to, from)))
+  beforeAll(() =>
+    Promise.all(configs.map(({ from, to }) => fs.promises.rename(from, to))),
+  )
+
+  afterAll(() =>
+    Promise.all(configs.map(({ from, to }) => fs.promises.rename(to, from))),
+  )
 
   for (const fixture of fixtures) {
     test.concurrent(fixture.name, async () => {

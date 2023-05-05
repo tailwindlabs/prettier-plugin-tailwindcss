@@ -4,6 +4,7 @@ import {
   getAdditionalPrinters,
 } from './compat.js'
 import { getTailwindConfig } from './config.js'
+import { getCustomizations } from './options.js'
 import { sortClasses, sortClassList } from './sorting.js'
 import { visit } from './utils.js'
 import * as astTypes from 'ast-types'
@@ -22,25 +23,20 @@ import * as recast from 'recast'
 
 let base = getBasePlugins()
 
-function createNameChecker(values) {
-  if (!values?.length) {
-    return false
-  }
-  const processedValues = values.map((v) =>
-    v.startsWith('^') ? new RegExp(v) : v,
-  )
-  const hasRegex = processedValues.some((v) => v instanceof RegExp)
-  if (!hasRegex) {
-    return (value) => processedValues.includes(value)
-  }
-  return (value) =>
-    processedValues.some((v) => {
-      if (v instanceof RegExp) {
-        return v.test(value)
-      }
-      return v === value
-    })
-}
+/**
+ * @typedef {object} TransformerEnv
+ * @property {any} context
+ * @property {import('./options.js').Customizations} customizations
+ * @property {() => any} generateRules
+ * @property {any} parsers
+ * @property {any} options
+ */
+
+/**
+ * @typedef {object} TransformerContext
+ * @property {TransformerEnv} env
+ * @property {{text: string, loc: any}[]} changes
+ */
 
 function createParser(parserFormat, transform) {
   return {
@@ -52,22 +48,6 @@ function createParser(parserFormat, transform) {
     },
 
     parse(text, parsers, options = {}) {
-      let customizations = {
-        checkJSXPropName: createNameChecker(
-          options.tailwindJSXProps ?? ['class', 'className'],
-        ),
-        checkFunctionCallName: createNameChecker(options.tailwindFunctionCalls),
-        checkTaggedTemplateName: createNameChecker(
-          options.tailwindTaggedTemplates,
-        ),
-      }
-
-      if (!customizations.checkJSXPropName) {
-        console.warn(
-          "prettier-plugin-tailwindcss: Prettier 'tailwindJSXProps' option is empty. JSX props will not be sorted.",
-        )
-      }
-
       let { context, generateRules } = getTailwindConfig(options)
 
       let original = getCompatibleParser(base, parserFormat, options)
@@ -77,6 +57,8 @@ function createParser(parserFormat, transform) {
       }
 
       let ast = original.parse(text, parsers, options)
+
+      let customizations = getCustomizations(options)
 
       transform(ast, {
         env: { context, customizations, generateRules, parsers, options },
@@ -114,11 +96,20 @@ function transformHtml(
   computedAttributes = [],
   computedType = 'js',
 ) {
+  /**
+   * @param {any} ast
+   * @param {TransformerContext} param1
+   */
   let transform = (ast, { env }) => {
+    let { staticAttrs, dynamicAttrs, functions } = env.customizations
+
+    if (staticAttrs.size === 0) staticAttrs = new Set(attributes)
+    if (dynamicAttrs.size === 0) dynamicAttrs = new Set(computedAttributes)
+
     for (let attr of ast.attrs ?? []) {
-      if (attributes.includes(attr.name)) {
+      if (staticAttrs.has(attr.name)) {
         attr.value = sortClasses(attr.value, { env })
-      } else if (computedAttributes.includes(attr.name)) {
+      } else if (dynamicAttrs.has(attr.name)) {
         if (!/[`'"]/.test(attr.value)) {
           continue
         }
@@ -172,6 +163,17 @@ function transformHtml(
             }
             this.traverse(path)
           },
+          visitTaggedTemplateExpression(path) {
+            if (
+              path.node.tag.type === 'Identifier' &&
+              functions.has(path.node.tag.name)
+            ) {
+              if (sortTemplateLiteral(path.node.quasi, { env })) {
+                didChange = true
+              }
+            }
+            this.traverse(path)
+          },
         })
 
         if (didChange) {
@@ -186,15 +188,16 @@ function transformHtml(
       transform(child, { env })
     }
   }
+
   return transform
 }
 
 function transformGlimmer(ast, { env }) {
+  let attributes = new Set(['class'])
+
   visit(ast, {
     AttrNode(attr, parent, key, index, meta) {
-      let attributes = ['class']
-
-      if (attributes.includes(attr.name) && attr.value) {
+      if (attributes.has(attr.name) && attr.value) {
         meta.sortTextNodes = true
       }
     },
@@ -389,58 +392,62 @@ function sortTemplateLiteral(node, { env }) {
   return didChange
 }
 
+/**
+ * @param {any} ast
+ * @param {TransformerContext} param1
+ */
 function transformJavaScript(ast, { env }) {
-  const { checkJSXPropName, checkFunctionCallName, checkTaggedTemplateName } =
-    env.customizations
+  let { staticAttrs, dynamicAttrs, functions } = env.customizations
 
-  visit(ast, {
-    ...(checkJSXPropName && {
-      JSXAttribute(node) {
-        if (!node.value) {
-          return
-        }
-        if (checkJSXPropName(node.name.name)) {
-          if (isStringLiteral(node.value)) {
-            sortStringLiteral(node.value, { env })
-          } else if (node.value.type === 'JSXExpressionContainer') {
-            visit(node.value, (node, parent, key) => {
-              if (isStringLiteral(node)) {
-                sortStringLiteral(node, { env })
-              } else if (node.type === 'TemplateLiteral') {
-                sortTemplateLiteral(node, { env })
-              }
-            })
-          }
-        }
-      },
-    }),
-    ...(checkFunctionCallName && {
-      CallExpression(node) {
-        const calleeName = node.callee?.name ?? ''
-        if (!node.arguments?.length || !checkFunctionCallName(calleeName)) {
-          return
-        }
-        node.arguments.forEach((arg) => {
-          visit(arg, (node) => {
-            if (isStringLiteral(node)) {
-              sortStringLiteral(node, { env })
-            } else if (node.type === 'TemplateLiteral') {
-              sortTemplateLiteral(node, { env })
-            }
-          })
-        })
-      },
-    }),
-    ...(checkTaggedTemplateName && {
-      TaggedTemplateExpression(node) {
-        if (
-          node.tag.type === 'Identifier' &&
-          checkTaggedTemplateName(node.tag.name)
-        ) {
+  if (staticAttrs.size === 0) staticAttrs = new Set(['class', 'className'])
+  if (dynamicAttrs.size === 0) dynamicAttrs = new Set(['class', 'className'])
+
+  function sortInside(ast) {
+    visit(ast, (node) => {
+      if (isStringLiteral(node)) {
+        sortStringLiteral(node, { env })
+      } else if (node.type === 'TemplateLiteral') {
+        sortTemplateLiteral(node, { env })
+      } else if (node.type === 'TaggedTemplateExpression') {
+        if (node.tag.type === 'Identifier' && functions.has(node.tag.name)) {
           sortTemplateLiteral(node.quasi, { env })
         }
-      },
-    }),
+      }
+    })
+  }
+
+  visit(ast, {
+    JSXAttribute(node) {
+      if (!node.value) {
+        return
+      }
+
+      if (
+        !staticAttrs.has(node.name.name) &&
+        !dynamicAttrs.has(node.name.name)
+      ) {
+        return
+      }
+
+      if (isStringLiteral(node.value)) {
+        sortStringLiteral(node.value, { env })
+      } else if (node.value.type === 'JSXExpressionContainer') {
+        sortInside(node.value)
+      }
+    },
+
+    CallExpression(node) {
+      if (!node.arguments?.length) return
+      if (!functions.has(node.callee?.name ?? '')) return
+
+      node.arguments.forEach((arg) => sortInside(arg))
+    },
+
+    TaggedTemplateExpression(node) {
+      if (node.tag.type === 'Identifier' && functions.has(node.tag.name)) {
+        sortTemplateLiteral(node.quasi, { env })
+      }
+    },
   })
 }
 
@@ -455,35 +462,7 @@ function transformCss(ast, { env }) {
   })
 }
 
-export const options = {
-  tailwindConfig: {
-    type: 'string',
-    category: 'Tailwind CSS',
-    description: 'Path to Tailwind configuration file',
-  },
-  tailwindJSXProps: {
-    default: [{ since: '0.3.0', value: ['class', 'className'] }],
-    type: 'string',
-    array: true,
-    category: 'Tailwind CSS',
-    description: 'List of JSX props to sort Tailwind classes in',
-  },
-  tailwindFunctionCalls: {
-    default: [{ since: '0.3.0', value: [] }],
-    type: 'string',
-    array: true,
-    category: 'Tailwind CSS',
-    description: 'List of function names to sort Tailwind classes in',
-  },
-  tailwindTaggedTemplates: {
-    default: [{ since: '0.3.0', value: [] }],
-    type: 'string',
-    array: true,
-    category: 'Tailwind CSS',
-    description:
-      'List of tagged template function names to sort Tailwind classes in',
-  },
-}
+export { options } from './options.js'
 
 export const printers = {
   ...(base.printers['svelte-ast']

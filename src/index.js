@@ -80,7 +80,7 @@ function createParser(parserFormat, transform, meta = {}) {
         changes,
       })
 
-      if (changes.length > 0) {
+      if (parserFormat === 'svelte') {
         ast.changes = changes
       }
 
@@ -862,6 +862,10 @@ function transformSvelte(ast, { env, changes }) {
     for (let child of nodes) {
       transformSvelte(child, { env, changes })
     }
+  }
+
+  if (ast.html) {
+    transformSvelte(ast.html, { env, changes })
   }
 }
 

@@ -1,8 +1,10 @@
 const prettier = require('prettier')
 const path = require('path')
 const fs = require('fs')
-const { execSync } = require('child_process')
+const { exec } = require('child_process')
 const { t, yes, no } = require('./utils')
+const { promisify } = require('util')
+const execAsync = promisify(exec)
 
 function format(str, options = {}) {
   options.plugins = options.plugins ?? [
@@ -25,7 +27,7 @@ function format(str, options = {}) {
     .trim()
 }
 
-function formatFixture(name, extension) {
+async function formatFixture(name, extension) {
   let binPath = path.resolve(__dirname, '../node_modules/.bin/prettier')
   let filePath = path.resolve(__dirname, `fixtures/${name}/index.${extension}`)
 
@@ -34,7 +36,7 @@ function formatFixture(name, extension) {
     '..',
   )}`
 
-  return execSync(cmd).toString().trim()
+  return execAsync(cmd).then(({ stdout }) => stdout.trim())
 }
 
 let html = [
@@ -419,8 +421,8 @@ describe('fixtures', () => {
   afterAll(() => configs.forEach(({ from, to }) => fs.renameSync(to, from)))
 
   for (const fixture of fixtures) {
-    test(fixture.name, () => {
-      let formatted = formatFixture(fixture.dir, fixture.ext ?? 'html')
+    test(fixture.name, async () => {
+      let formatted = await formatFixture(fixture.dir, fixture.ext ?? 'html')
       expect(formatted).toEqual(fixture.output)
     })
   }

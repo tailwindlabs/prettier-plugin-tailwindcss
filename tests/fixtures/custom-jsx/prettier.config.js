@@ -1,3 +1,3 @@
 module.exports = {
-  tailwindJSXProps: ['sortMe', '^.+ClassName$'],
+  tailwindAttributes: ['sortMe', 'className', 'sortedPatternClassName'],
 };

@@ -1,4 +1,3 @@
 module.exports = {
-  tailwindFunctionCalls: ['sortMeFn'],
-  tailwindTaggedTemplates: ['sortMeTemplate'],
+  tailwindFunctions: ['sortMeFn', 'sortMeTemplate'],
 };

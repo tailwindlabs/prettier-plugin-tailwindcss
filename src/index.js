@@ -494,143 +494,6 @@ function transformCss(ast, { env }) {
   })
 }
 
-export { options } from './options.js'
-
-export const printers = {
-  ...(base.printers['svelte-ast']
-    ? {
-        'svelte-ast': {
-          ...base.printers['svelte-ast'],
-          print: (path, options, print) => {
-            if (!options.__mutatedOriginalText) {
-              options.__mutatedOriginalText = true
-              let changes = path.stack[0].changes
-              if (changes?.length) {
-                let finder = new LineColumnFinder(options.originalText)
-
-                for (let change of changes) {
-                  let start = finder.toIndex(
-                    change.loc.start.line,
-                    change.loc.start.column + 1,
-                  )
-                  let end = finder.toIndex(
-                    change.loc.end.line,
-                    change.loc.end.column + 1,
-                  )
-
-                  options.originalText =
-                    options.originalText.substring(0, start) +
-                    change.text +
-                    options.originalText.substring(end)
-                }
-              }
-            }
-
-            return base.printers['svelte-ast'].print(path, options, print)
-          },
-        },
-      }
-    : {}),
-}
-
-export const parsers = {
-  html: createParser('html', transformHtml, {
-    staticAttrs: ['class'],
-  }),
-  glimmer: createParser('glimmer', transformGlimmer, {
-    staticAttrs: ['class'],
-  }),
-  lwc: createParser('lwc', transformHtml, {
-    staticAttrs: ['class'],
-  }),
-  angular: createParser('angular', transformHtml, {
-    staticAttrs: ['class'],
-    dynamicAttrs: ['[ngClass]'],
-  }),
-  vue: createParser('vue', transformHtml, {
-    staticAttrs: ['class'],
-    dynamicAttrs: [':class', 'v-bind:class'],
-  }),
-
-  css: createParser('css', transformCss),
-  scss: createParser('scss', transformCss),
-  less: createParser('less', transformCss),
-  babel: createParser('babel', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  'babel-flow': createParser('babel-flow', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  flow: createParser('flow', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  typescript: createParser('typescript', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  'babel-ts': createParser('babel-ts', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  espree: createParser('espree', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  meriyah: createParser('meriyah', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  __js_expression: createParser('__js_expression', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  ...(base.parsers.svelte
-    ? {
-        svelte: createParser('svelte', transformSvelte, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
-  ...(base.parsers.astro
-    ? {
-        astro: createParser('astro', transformAstro, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
-  ...(base.parsers.marko
-    ? {
-        marko: createParser('marko', transformMarko, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
-  ...(base.parsers.melody
-    ? {
-        melody: createParser('melody', transformMelody, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
-  ...(base.parsers.pug
-    ? {
-        pug: createParser('pug', transformPug, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
-  ...(base.parsers['liquid-html']
-    ? {
-        'liquid-html': createParser('liquid-html', transformLiquid, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
-}
-
 /**
  * @param {any} ast
  * @param {TransformerContext} param1
@@ -867,6 +730,143 @@ function transformSvelte(ast, { env, changes }) {
   if (ast.html) {
     transformSvelte(ast.html, { env, changes })
   }
+}
+
+export { options } from './options.js'
+
+export const printers = {
+  ...(base.printers['svelte-ast']
+    ? {
+        'svelte-ast': {
+          ...base.printers['svelte-ast'],
+          print: (path, options, print) => {
+            if (!options.__mutatedOriginalText) {
+              options.__mutatedOriginalText = true
+              let changes = path.stack[0].changes
+              if (changes?.length) {
+                let finder = new LineColumnFinder(options.originalText)
+
+                for (let change of changes) {
+                  let start = finder.toIndex(
+                    change.loc.start.line,
+                    change.loc.start.column + 1,
+                  )
+                  let end = finder.toIndex(
+                    change.loc.end.line,
+                    change.loc.end.column + 1,
+                  )
+
+                  options.originalText =
+                    options.originalText.substring(0, start) +
+                    change.text +
+                    options.originalText.substring(end)
+                }
+              }
+            }
+
+            return base.printers['svelte-ast'].print(path, options, print)
+          },
+        },
+      }
+    : {}),
+}
+
+export const parsers = {
+  html: createParser('html', transformHtml, {
+    staticAttrs: ['class'],
+  }),
+  glimmer: createParser('glimmer', transformGlimmer, {
+    staticAttrs: ['class'],
+  }),
+  lwc: createParser('lwc', transformHtml, {
+    staticAttrs: ['class'],
+  }),
+  angular: createParser('angular', transformHtml, {
+    staticAttrs: ['class'],
+    dynamicAttrs: ['[ngClass]'],
+  }),
+  vue: createParser('vue', transformHtml, {
+    staticAttrs: ['class'],
+    dynamicAttrs: [':class', 'v-bind:class'],
+  }),
+
+  css: createParser('css', transformCss),
+  scss: createParser('scss', transformCss),
+  less: createParser('less', transformCss),
+  babel: createParser('babel', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  'babel-flow': createParser('babel-flow', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  flow: createParser('flow', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  typescript: createParser('typescript', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  'babel-ts': createParser('babel-ts', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  espree: createParser('espree', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  meriyah: createParser('meriyah', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  __js_expression: createParser('__js_expression', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  ...(base.parsers.svelte
+    ? {
+        svelte: createParser('svelte', transformSvelte, {
+          staticAttrs: ['class'],
+        }),
+      }
+    : {}),
+  ...(base.parsers.astro
+    ? {
+        astro: createParser('astro', transformAstro, {
+          staticAttrs: ['class'],
+        }),
+      }
+    : {}),
+  ...(base.parsers.marko
+    ? {
+        marko: createParser('marko', transformMarko, {
+          staticAttrs: ['class'],
+        }),
+      }
+    : {}),
+  ...(base.parsers.melody
+    ? {
+        melody: createParser('melody', transformMelody, {
+          staticAttrs: ['class'],
+        }),
+      }
+    : {}),
+  ...(base.parsers.pug
+    ? {
+        pug: createParser('pug', transformPug, {
+          staticAttrs: ['class'],
+        }),
+      }
+    : {}),
+  ...(base.parsers['liquid-html']
+    ? {
+        'liquid-html': createParser('liquid-html', transformLiquid, {
+          staticAttrs: ['class'],
+        }),
+      }
+    : {}),
 }
 
 /**

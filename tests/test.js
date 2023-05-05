@@ -333,39 +333,20 @@ let fixtures = [
     output: '<div class="uppercase foo sm:bar"></div>',
   },
   {
-    name: 'customizations: jsx',
-    dir: 'custom-jsx',
-    ext: 'jsx',
-    output: `const A = (props) => {
-  return <div className={props.sortMe} />;
-};
-
-const B = () => {
-  return (
-    <A
-      sortMe="p-2 sm:p-1"
-      sortedPatternClassName="p-2 sm:p-1"
-      dontSort="sm:p-1 p-2"
-    />
-  );
-};`,
-  },
-  {
-    name: 'customizations: js',
+    name: 'customizations: js/jsx',
     dir: 'custom-js',
-    ext: 'js',
-    output: `const sortMeFn = () => {};
-const dontSortFn = () => {};
-const a = sortMeFn("p-2 sm:p-1");
+    ext: 'jsx',
+    output: `const a = sortMeFn("p-2 sm:p-1");
 const b = sortMeFn({
   foo: "p-2 sm:p-1",
 });
 
 const c = dontSortFn("sm:p-1 p-2");
-const sortMeTemplate = () => {};
-const dontSortMeTemplate = () => {};
 const d = sortMeTemplate\`p-2 sm:p-1\`;
-const e = dontSortMeTemplate\`sm:p-1 p-2\`;`,
+const e = dontSortMeTemplate\`sm:p-1 p-2\`;
+
+const A = (props) => <div className={props.sortMe} />;
+const B = () => <A sortMe="p-2 sm:p-1" dontSort="sm:p-1 p-2" />;`,
   },
 ]
 

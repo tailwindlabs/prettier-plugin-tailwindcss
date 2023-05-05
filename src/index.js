@@ -10,7 +10,7 @@ import { sortClasses, sortClassList } from './sorting.js'
 import { visit } from './utils.js'
 import * as astTypes from 'ast-types'
 import jsesc from 'jsesc'
-import LineColumnFinder from 'line-column'
+import lineColumn from 'line-column'
 import prettierParserAngular from 'prettier/parser-angular'
 import prettierParserBabel from 'prettier/parser-babel'
 import prettierParserEspree from 'prettier/parser-espree'
@@ -744,7 +744,7 @@ export const printers = {
               options.__mutatedOriginalText = true
               let changes = path.stack[0].changes
               if (changes?.length) {
-                let finder = new LineColumnFinder(options.originalText)
+                let finder = lineColumn(options.originalText)
 
                 for (let change of changes) {
                   let start = finder.toIndex(

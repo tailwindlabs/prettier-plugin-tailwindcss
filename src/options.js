@@ -26,31 +26,24 @@ export const options = {
   },
 }
 
-/**
- * @typedef {object} RawOptions
- * @property {string | null} tailwindConfig
- * @property {string[]} tailwindFunctions
- * @property {string[]} tailwindAttributes
- */
-
-/**
- * @typedef {object} Customizations
- * @property {Set<string>} functions
- * @property {Set<string>} staticAttrs
- * @property {Set<string>} dynamicAttrs
- */
+/** @typedef {import('./types').RawOptions} RawOptions */
+/** @typedef {import('./types').Customizations} Customizations */
 
 /**
  * @param {RawOptions} options
  * @param {string} parser
+ * @param {Partial<Customizations>} defaults
  * @returns {Customizations}
  */
-export function getCustomizations(options, parser) {
+export function getCustomizations(options, parser, defaults) {
   /** @type {Set<string>} */
   let staticAttrs = new Set()
 
   /** @type {Set<string>} */
   let dynamicAttrs = new Set()
+
+  /** @type {Set<string>} */
+  let functions = new Set(options.tailwindFunctions ?? [])
 
   // Create a list of "static" attributes
   for (let attr of options.tailwindAttributes ?? []) {
@@ -81,8 +74,13 @@ export function getCustomizations(options, parser) {
     }
   }
 
+  // If no attributes are specified, use the default attributes for the parser
+  if (staticAttrs.size === 0) staticAttrs = defaults.staticAttrs ?? new Set()
+  if (dynamicAttrs.size === 0) dynamicAttrs = defaults.dynamicAttrs ?? new Set()
+  if (functions.size === 0) functions = defaults.functions ?? new Set()
+
   return {
-    functions: new Set(options.tailwindFunctions),
+    functions,
     staticAttrs,
     dynamicAttrs,
   }

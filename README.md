@@ -58,7 +58,7 @@ With this configuration, any classes found in the `myClassList` attribute will b
 ```jsx
 function MyButton({ children }) {
   return (
-    <button myClassList="rounded py-2 px-4 text-base bg-blue-500 text-white">
+    <button myClassList="rounded bg-blue-500 px-4 py-2 text-base text-white">
       {children}
     </button>
   );
@@ -85,7 +85,7 @@ import clsx from 'clsx'
 
 function MyButton({ isHovering, children }) {
   let classes = clsx(
-    'rounded py-2 px-4 text-base bg-blue-500 text-white',
+    'rounded bg-blue-500 px-4 py-2 text-base text-white',
     {
       'bg-blue-700 text-gray-100': isHovering,
     },
@@ -120,7 +120,7 @@ import tw from 'twrnc'
 
 function MyScreen() {
   return (
-    <View style={tw`p-4 bg-white dark:bg-black`}>
+    <View style={tw`bg-white p-4 dark:bg-black`}>
       <Text style={tw`text-md text-black dark:text-white`}>Hello World</Text>
     </View>
   )

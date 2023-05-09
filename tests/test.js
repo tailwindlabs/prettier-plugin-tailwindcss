@@ -334,7 +334,7 @@ let fixtures = [
   },
   {
     name: 'customizations: js/jsx',
-    dir: 'custom-js',
+    dir: 'custom-jsx',
     ext: 'jsx',
     output: `const a = sortMeFn("p-2 sm:p-1");
 const b = sortMeFn({

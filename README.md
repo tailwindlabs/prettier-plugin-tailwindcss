@@ -21,9 +21,11 @@ module.exports = {
 }
 ```
 
-## Resolving your Tailwind configuration
+## Options
 
-To ensure that the class sorting is taking into consideration any of your project's Tailwind customizations, it needs access to your [Tailwind configuration file](https://tailwindcss.com/docs/configuration) (`tailwind.config.js`).
+### Customizing your Tailwind config path
+
+To ensure that the class sorting takes into consideration any of your project's Tailwind customizations, it needs access to your [Tailwind configuration file](https://tailwindcss.com/docs/configuration) (`tailwind.config.js`).
 
 By default the plugin will look for this file in the same directory as your Prettier configuration file. However, if your Tailwind configuration is somewhere else, you can specify this using the `tailwindConfig` option in your Prettier configuration.
 
@@ -37,6 +39,93 @@ module.exports = {
 ```
 
 If a local configuration file cannot be found the plugin will fallback to the default Tailwind configuration.
+
+## Sorting non-standard attributes
+
+By default this plugin only sorts classes in the `class` attribute as well as any framework-specific equivalents like `class`, `className`, `:class`, `[ngClass]`, etc.
+
+You can sort additional attributes using the `tailwindAttributes` option, which takes an array of attribute names:
+
+```js
+// prettier.config.js
+module.exports = {
+  tailwindAttributes: ['myClassList'],
+}
+```
+
+With this configuration, any classes found in the `myClassList` attribute will be sorted:
+
+```jsx
+function MyButton({ children }) {
+  return (
+    <button myClassList="rounded bg-blue-500 px-4 py-2 text-base text-white">
+      {children}
+    </button>
+  );
+}
+```
+
+## Sorting classes in function calls
+
+In addition to sorting classes in attributes, you can also sort classes in strings provided to function calls. This is useful when working with libraries like [clsx](https://github.com/lukeed/clsx) or [cva](https://cva.style/).
+
+You can sort classes in function calls using the `tailwindFunctions` option, which takes a list of function names:
+
+```js
+// prettier.config.js
+module.exports = {
+  tailwindFunctions: ['clsx'],
+}
+```
+
+With this configuration, any classes in `clsx()` function calls will be sorted:
+
+```jsx
+import clsx from 'clsx'
+
+function MyButton({ isHovering, children }) {
+  let classes = clsx(
+    'rounded bg-blue-500 px-4 py-2 text-base text-white',
+    {
+      'bg-blue-700 text-gray-100': isHovering,
+    },
+  )
+
+  return (
+    <button className={classes}>
+      {children}
+    </button>
+  )
+}
+```
+
+## Sorting classes in template literals
+
+This plugin also enables sorting of classes in tagged template literals.
+
+You can sort classes in template literals using the `tailwindFunctions` option, which takes a list of function names:
+
+```js
+// prettier.config.js
+module.exports = {
+  tailwindFunctions: ['tw'],
+}
+```
+
+With this configuration, any classes in template literals tagged with `tw` will automatically be sorted:
+
+```jsx
+import { View, Text } from 'react-native'
+import tw from 'twrnc'
+
+function MyScreen() {
+  return (
+    <View style={tw`bg-white p-4 dark:bg-black`}>
+      <Text style={tw`text-md text-black dark:text-white`}>Hello World</Text>
+    </View>
+  )
+}
+```
 
 ## Compatibility with other Prettier plugins
 

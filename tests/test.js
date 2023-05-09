@@ -1,8 +1,10 @@
 const prettier = require('prettier')
 const path = require('path')
 const fs = require('fs')
-const { execSync } = require('child_process')
+const { exec } = require('child_process')
 const { t, yes, no } = require('./utils')
+const { promisify } = require('util')
+const execAsync = promisify(exec)
 
 function format(str, options = {}) {
   options.plugins = options.plugins ?? [
@@ -25,15 +27,16 @@ function format(str, options = {}) {
     .trim()
 }
 
-function formatFixture(name) {
+async function formatFixture(name, extension) {
   let binPath = path.resolve(__dirname, '../node_modules/.bin/prettier')
-  let filePath = path.resolve(__dirname, `fixtures/${name}/index.html`)
+  let filePath = path.resolve(__dirname, `fixtures/${name}/index.${extension}`)
+
   let cmd = `${binPath} ${filePath} --plugin-search-dir ${__dirname} --plugin ${path.resolve(
     __dirname,
     '..',
   )}`
 
-  return execSync(cmd).toString().trim()
+  return execAsync(cmd).then(({ stdout }) => stdout.trim())
 }
 
 let html = [
@@ -329,6 +332,38 @@ let fixtures = [
     dir: 'plugins',
     output: '<div class="uppercase foo sm:bar"></div>',
   },
+  {
+    name: 'customizations: js/jsx',
+    dir: 'custom-jsx',
+    ext: 'jsx',
+    output: `const a = sortMeFn("p-2 sm:p-1");
+const b = sortMeFn({
+  foo: "p-2 sm:p-1",
+});
+
+const c = dontSortFn("sm:p-1 p-2");
+const d = sortMeTemplate\`p-2 sm:p-1\`;
+const e = dontSortMeTemplate\`sm:p-1 p-2\`;
+
+const A = (props) => <div className={props.sortMe} />;
+const B = () => <A sortMe="p-2 sm:p-1" dontSort="sm:p-1 p-2" />;`,
+  },
+  {
+    name: 'customizations: vue',
+    dir: 'custom-vue',
+    ext: 'vue',
+    output: `<script setup>
+let a = sortMeFn("p-2 sm:p-1");
+let b = sortMeFn({ "p-2 sm:p-1": true });
+let c = dontSortFn("sm:p-1 p-2");
+let d = sortMeTemplate\`p-2 sm:p-1\`;
+let e = dontSortMeTemplate\`sm:p-1 p-2\`;
+</script>
+<template>
+  <div class="p-2 sm:p-1" sortMe="p-2 sm:p-1" dontSortMe="sm:p-1 p-2"></div>
+  <div :class="{ 'p-2 sm:p-1': true }"></div>
+</template>`,
+  },
 ]
 
 describe('parsers', () => {
@@ -379,12 +414,18 @@ describe('fixtures', () => {
   ]
 
   // Temporarily move config files out of the way so they don't interfere with the tests
-  beforeAll(() => configs.forEach(({ from, to }) => fs.renameSync(from, to)))
-  afterAll(() => configs.forEach(({ from, to }) => fs.renameSync(to, from)))
+  beforeAll(() =>
+    Promise.all(configs.map(({ from, to }) => fs.promises.rename(from, to))),
+  )
+
+  afterAll(() =>
+    Promise.all(configs.map(({ from, to }) => fs.promises.rename(to, from))),
+  )
 
   for (const fixture of fixtures) {
-    test(fixture.name, () => {
-      expect(formatFixture(fixture.dir)).toEqual(fixture.output)
+    test(fixture.name, async () => {
+      let formatted = await formatFixture(fixture.dir, fixture.ext ?? 'html')
+      expect(formatted).toEqual(fixture.output)
     })
   }
 })

@@ -10,18 +10,8 @@ import { createContext as createContextFallback } from 'tailwindcss/lib/lib/setu
 import loadConfigFallback from 'tailwindcss/loadConfig'
 import resolveConfigFallback from 'tailwindcss/resolveConfig'
 
-/**
- * @typedef {object} ContextContainer
- * @property {any} context
- * @property {() => any} generateRules
- * @property {any} tailwindConfig
- **/
-
-/**
- * @typedef {object} PluginOptions
- * @property {string} [tailwindConfig]
- * @property {string} filepath
- **/
+/** @typedef {import('./types').ContextContainer} ContextContainer **/
+/** @typedef {import('./types').PluginOptions} PluginOptions **/
 
 /**
  * @template K

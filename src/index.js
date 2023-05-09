@@ -1,11 +1,4 @@
-import {
-  getCompatibleParser,
-  getAdditionalParsers,
-  getAdditionalPrinters,
-} from './compat.js'
-import { getTailwindConfig } from './config.js'
-import { sortClasses, sortClassList } from './sorting.js'
-import { visit } from './utils.js'
+// @ts-check
 import * as astTypes from 'ast-types'
 import jsesc from 'jsesc'
 import lineColumn from 'line-column'
@@ -19,10 +12,35 @@ import prettierParserMeriyah from 'prettier/parser-meriyah'
 import prettierParserPostCSS from 'prettier/parser-postcss'
 import prettierParserTypescript from 'prettier/parser-typescript'
 import * as recast from 'recast'
+import {
+  getCompatibleParser,
+  getAdditionalParsers,
+  getAdditionalPrinters,
+} from './compat.js'
+import { getTailwindConfig } from './config.js'
+import { getCustomizations } from './options.js'
+import { sortClasses, sortClassList } from './sorting.js'
+import { visit } from './utils.js'
 
 let base = getBasePlugins()
 
-function createParser(parserFormat, transform) {
+/** @typedef {import('./types').Customizations} Customizations */
+/** @typedef {import('./types').TransformerContext} TransformerContext */
+/** @typedef {import('./types').TransformerMetadata} TransformerMetadata */
+
+/**
+ * @param {string} parserFormat
+ * @param {(ast: any, context: TransformerContext) => void} transform
+ * @param {TransformerMetadata} meta
+ */
+function createParser(parserFormat, transform, meta = {}) {
+  /** @type {Customizations} */
+  let customizationDefaults = {
+    staticAttrs: new Set(meta.staticAttrs ?? []),
+    dynamicAttrs: new Set(meta.dynamicAttrs ?? []),
+    functions: new Set(meta.functions ?? []),
+  }
+
   return {
     ...base.parsers[parserFormat],
     preprocess(code, options) {
@@ -31,6 +49,13 @@ function createParser(parserFormat, transform) {
       return original.preprocess ? original.preprocess(code, options) : code
     },
 
+    /**
+     *
+     * @param {string} text
+     * @param {any} parsers
+     * @param {import('./types').PluginOptions} options
+     * @returns
+     */
     parse(text, parsers, options = {}) {
       let { context, generateRules } = getTailwindConfig(options)
 
@@ -41,7 +66,24 @@ function createParser(parserFormat, transform) {
       }
 
       let ast = original.parse(text, parsers, options)
-      transform(ast, { env: { context, generateRules, parsers, options } })
+
+      let customizations = getCustomizations(
+        options,
+        parserFormat,
+        customizationDefaults,
+      )
+
+      let changes = []
+
+      transform(ast, {
+        env: { context, customizations, generateRules, parsers, options },
+        changes,
+      })
+
+      if (parserFormat === 'svelte') {
+        ast.changes = changes
+      }
+
       return ast
     },
   }
@@ -69,92 +111,119 @@ function tryParseAngularAttribute(value, env) {
   errors.forEach((err) => console.warn(err))
 }
 
-function transformHtml(
-  attributes,
-  computedAttributes = [],
-  computedType = 'js',
-) {
-  let transform = (ast, { env }) => {
-    for (let attr of ast.attrs ?? []) {
-      if (attributes.includes(attr.name)) {
-        attr.value = sortClasses(attr.value, { env })
-      } else if (computedAttributes.includes(attr.name)) {
-        if (!/[`'"]/.test(attr.value)) {
-          continue
-        }
+function transformDynamicAngularAttribute(attr, env) {
+  let directiveAst = tryParseAngularAttribute(attr.value, env)
 
-        if (computedType === 'angular') {
-          let directiveAst = tryParseAngularAttribute(attr.value, env)
-
-          // If we've reached this point we couldn't parse the expression we we should bail
-          // `tryParseAngularAttribute` will display some warnings/errors
-          // But we shouldn't fail outright — just miss parsing some attributes
-          if (!directiveAst) {
-            continue
-          }
-
-          visit(directiveAst, {
-            StringLiteral(node) {
-              if (!node.value) return
-              attr.value =
-                attr.value.slice(0, node.start + 1) +
-                sortClasses(node.value, { env }) +
-                attr.value.slice(node.end - 1)
-            },
-          })
-          continue
-        }
-
-        let ast = recast.parse(`let __prettier_temp__ = ${attr.value}`, {
-          parser: prettierParserBabel.parsers['babel-ts'],
-        })
-        let didChange = false
-
-        astTypes.visit(ast, {
-          visitLiteral(path) {
-            if (isStringLiteral(path.node)) {
-              if (sortStringLiteral(path.node, { env })) {
-                didChange = true
-
-                // https://github.com/benjamn/recast/issues/171#issuecomment-224996336
-                let quote = path.node.extra.raw[0]
-                let value = jsesc(path.node.value, {
-                  quotes: quote === "'" ? 'single' : 'double',
-                })
-                path.node.value = new String(quote + value + quote)
-              }
-            }
-            this.traverse(path)
-          },
-          visitTemplateLiteral(path) {
-            if (sortTemplateLiteral(path.node, { env })) {
-              didChange = true
-            }
-            this.traverse(path)
-          },
-        })
-
-        if (didChange) {
-          attr.value = recast.print(
-            ast.program.body[0].declarations[0].init,
-          ).code
-        }
-      }
-    }
-
-    for (let child of ast.children ?? []) {
-      transform(child, { env })
-    }
+  // If we've reached this point we couldn't parse the expression we we should bail
+  // `tryParseAngularAttribute` will display some warnings/errors
+  // But we shouldn't fail outright — just miss parsing some attributes
+  if (!directiveAst) {
+    return
   }
-  return transform
+
+  visit(directiveAst, {
+    StringLiteral(node) {
+      if (!node.value) return
+      attr.value =
+        attr.value.slice(0, node.start + 1) +
+        sortClasses(node.value, { env }) +
+        attr.value.slice(node.end - 1)
+    },
+  })
 }
 
+function transformDynamicJsAttribute(attr, env) {
+  let { functions } = env.customizations
+
+  let ast = recast.parse(`let __prettier_temp__ = ${attr.value}`, {
+    parser: prettierParserBabel.parsers['babel-ts'],
+  })
+
+  let didChange = false
+
+  astTypes.visit(ast, {
+    visitLiteral(path) {
+      if (isStringLiteral(path.node)) {
+        if (sortStringLiteral(path.node, { env })) {
+          didChange = true
+
+          // https://github.com/benjamn/recast/issues/171#issuecomment-224996336
+          // @ts-ignore
+          let quote = path.node.extra.raw[0]
+          let value = jsesc(path.node.value, {
+            quotes: quote === "'" ? 'single' : 'double',
+          })
+          // @ts-ignore
+          path.node.value = new String(quote + value + quote)
+        }
+      }
+      this.traverse(path)
+    },
+
+    visitTemplateLiteral(path) {
+      if (sortTemplateLiteral(path.node, { env })) {
+        didChange = true
+      }
+      this.traverse(path)
+    },
+
+    visitTaggedTemplateExpression(path) {
+      if (
+        path.node.tag.type === 'Identifier' &&
+        functions.has(path.node.tag.name)
+      ) {
+        if (sortTemplateLiteral(path.node.quasi, { env })) {
+          didChange = true
+        }
+      }
+      this.traverse(path)
+    },
+  })
+
+  if (didChange) {
+    attr.value = recast.print(ast.program.body[0].declarations[0].init).code
+  }
+}
+
+/**
+ * @param {any} ast
+ * @param {TransformerContext} param1
+ */
+function transformHtml(ast, { env, changes }) {
+  let { staticAttrs, dynamicAttrs } = env.customizations
+  let { parser } = env.options
+
+  for (let attr of ast.attrs ?? []) {
+    if (staticAttrs.has(attr.name)) {
+      attr.value = sortClasses(attr.value, { env })
+    } else if (dynamicAttrs.has(attr.name)) {
+      if (!/[`'"]/.test(attr.value)) {
+        continue
+      }
+
+      if (parser === 'angular') {
+        transformDynamicAngularAttribute(attr, env)
+      } else {
+        transformDynamicJsAttribute(attr, env)
+      }
+    }
+  }
+
+  for (let child of ast.children ?? []) {
+    transformHtml(child, { env, changes })
+  }
+}
+
+/**
+ * @param {any} ast
+ * @param {TransformerContext} param1
+ */
 function transformGlimmer(ast, { env }) {
+  let { staticAttrs } = env.customizations
+
   visit(ast, {
     AttrNode(attr, parent, key, index, meta) {
-      let attributes = ['class']
-
-      if (attributes.includes(attr.name) && attr.value) {
+      if (staticAttrs.has(attr.name) && attr.value) {
         meta.sortTextNodes = true
       }
     },
@@ -195,12 +264,20 @@ function transformGlimmer(ast, { env }) {
   })
 }
 
+/**
+ * @param {any} ast
+ * @param {TransformerContext} param1
+ */
 function transformLiquid(ast, { env }) {
+  let { staticAttrs } = env.customizations
+
   /** @param {{name: string | {type: string, value: string}[]}} node */
   function isClassAttr(node) {
     return Array.isArray(node.name)
-      ? node.name.every((n) => n.type === 'TextNode' && n.value === 'class')
-      : node.name === 'class'
+      ? node.name.every(
+          (n) => n.type === 'TextNode' && staticAttrs.has(n.value),
+        )
+      : staticAttrs.has(node.name)
   }
 
   /**
@@ -349,29 +426,63 @@ function sortTemplateLiteral(node, { env }) {
   return didChange
 }
 
+/**
+ * @param {any} ast
+ * @param {TransformerContext} param1
+ */
 function transformJavaScript(ast, { env }) {
+  let { staticAttrs, functions } = env.customizations
+
+  function sortInside(ast) {
+    visit(ast, (node) => {
+      if (isStringLiteral(node)) {
+        sortStringLiteral(node, { env })
+      } else if (node.type === 'TemplateLiteral') {
+        sortTemplateLiteral(node, { env })
+      } else if (node.type === 'TaggedTemplateExpression') {
+        if (node.tag.type === 'Identifier' && functions.has(node.tag.name)) {
+          sortTemplateLiteral(node.quasi, { env })
+        }
+      }
+    })
+  }
+
   visit(ast, {
     JSXAttribute(node) {
       if (!node.value) {
         return
       }
-      if (['class', 'className'].includes(node.name.name)) {
-        if (isStringLiteral(node.value)) {
-          sortStringLiteral(node.value, { env })
-        } else if (node.value.type === 'JSXExpressionContainer') {
-          visit(node.value, (node, parent, key) => {
-            if (isStringLiteral(node)) {
-              sortStringLiteral(node, { env })
-            } else if (node.type === 'TemplateLiteral') {
-              sortTemplateLiteral(node, { env })
-            }
-          })
-        }
+
+      if (!staticAttrs.has(node.name.name)) {
+        return
+      }
+
+      if (isStringLiteral(node.value)) {
+        sortStringLiteral(node.value, { env })
+      } else if (node.value.type === 'JSXExpressionContainer') {
+        sortInside(node.value)
+      }
+    },
+
+    CallExpression(node) {
+      if (!node.arguments?.length) return
+      if (!functions.has(node.callee?.name ?? '')) return
+
+      node.arguments.forEach((arg) => sortInside(arg))
+    },
+
+    TaggedTemplateExpression(node) {
+      if (node.tag.type === 'Identifier' && functions.has(node.tag.name)) {
+        sortTemplateLiteral(node.quasi, { env })
       }
     },
   })
 }
 
+/**
+ * @param {any} ast
+ * @param {TransformerContext} param1
+ */
 function transformCss(ast, { env }) {
   ast.walk((node) => {
     if (node.type === 'css-atrule' && node.name === 'apply') {
@@ -383,96 +494,13 @@ function transformCss(ast, { env }) {
   })
 }
 
-export const options = {
-  tailwindConfig: {
-    type: 'string',
-    category: 'Tailwind CSS',
-    description: 'TODO',
-  },
-}
+/**
+ * @param {any} ast
+ * @param {TransformerContext} param1
+ */
+function transformAstro(ast, { env, changes }) {
+  let { staticAttrs } = env.customizations
 
-export const printers = {
-  ...(base.printers['svelte-ast']
-    ? {
-        'svelte-ast': {
-          ...base.printers['svelte-ast'],
-          print: (path, options, print) => {
-            if (!options.__mutatedOriginalText) {
-              options.__mutatedOriginalText = true
-              let changes = path.stack[0].changes
-              if (changes?.length) {
-                let finder = lineColumn(options.originalText)
-
-                for (let change of changes) {
-                  let start = finder.toIndex(
-                    change.loc.start.line,
-                    change.loc.start.column + 1,
-                  )
-                  let end = finder.toIndex(
-                    change.loc.end.line,
-                    change.loc.end.column + 1,
-                  )
-
-                  options.originalText =
-                    options.originalText.substring(0, start) +
-                    change.text +
-                    options.originalText.substring(end)
-                }
-              }
-            }
-
-            return base.printers['svelte-ast'].print(path, options, print)
-          },
-        },
-      }
-    : {}),
-}
-
-export const parsers = {
-  html: createParser('html', transformHtml(['class'])),
-  glimmer: createParser('glimmer', transformGlimmer),
-  lwc: createParser('lwc', transformHtml(['class'])),
-  angular: createParser(
-    'angular',
-    transformHtml(['class'], ['[ngClass]'], 'angular'),
-  ),
-  vue: createParser('vue', transformHtml(['class'], [':class'])),
-  css: createParser('css', transformCss),
-  scss: createParser('scss', transformCss),
-  less: createParser('less', transformCss),
-  babel: createParser('babel', transformJavaScript),
-  'babel-flow': createParser('babel-flow', transformJavaScript),
-  flow: createParser('flow', transformJavaScript),
-  typescript: createParser('typescript', transformJavaScript),
-  'babel-ts': createParser('babel-ts', transformJavaScript),
-  espree: createParser('espree', transformJavaScript),
-  meriyah: createParser('meriyah', transformJavaScript),
-  __js_expression: createParser('__js_expression', transformJavaScript),
-  ...(base.parsers.svelte
-    ? {
-        svelte: createParser('svelte', (ast, { env }) => {
-          let changes = []
-          transformSvelte(ast.html, { env, changes })
-          ast.changes = changes
-        }),
-      }
-    : {}),
-  ...(base.parsers.astro
-    ? { astro: createParser('astro', transformAstro) }
-    : {}),
-  ...(base.parsers.marko
-    ? { marko: createParser('marko', transformMarko) }
-    : {}),
-  ...(base.parsers.melody
-    ? { melody: createParser('melody', transformMelody) }
-    : {}),
-  ...(base.parsers.pug ? { pug: createParser('pug', transformPug) } : {}),
-  ...(base.parsers['liquid-html']
-    ? { 'liquid-html': createParser('liquid-html', transformLiquid) }
-    : {}),
-}
-
-function transformAstro(ast, { env }) {
   if (
     ast.type === 'element' ||
     ast.type === 'custom-element' ||
@@ -480,7 +508,7 @@ function transformAstro(ast, { env }) {
   ) {
     for (let attr of ast.attributes ?? []) {
       if (
-        attr.name === 'class' &&
+        staticAttrs.has(attr.name) &&
         attr.type === 'attribute' &&
         attr.kind === 'quoted'
       ) {
@@ -492,11 +520,17 @@ function transformAstro(ast, { env }) {
   }
 
   for (let child of ast.children ?? []) {
-    transformAstro(child, { env })
+    transformAstro(child, { env, changes })
   }
 }
 
+/**
+ * @param {any} ast
+ * @param {TransformerContext} param1
+ */
 function transformMarko(ast, { env }) {
+  let { staticAttrs } = env.customizations
+
   const nodesToVisit = [ast]
   while (nodesToVisit.length > 0) {
     const currentNode = nodesToVisit.pop()
@@ -515,38 +549,41 @@ function transformMarko(ast, { env }) {
         nodesToVisit.push(...currentNode.body)
         break
       case 'MarkoAttribute':
-        if (currentNode.name === 'class') {
-          switch (currentNode.value.type) {
-            case 'ArrayExpression':
-              const classList = currentNode.value.elements
-              for (const node of classList) {
-                if (node.type === 'StringLiteral') {
-                  node.value = sortClasses(node.value, { env })
-                }
+        if (!staticAttrs.has(currentNode.name)) break
+        switch (currentNode.value.type) {
+          case 'ArrayExpression':
+            const classList = currentNode.value.elements
+            for (const node of classList) {
+              if (node.type === 'StringLiteral') {
+                node.value = sortClasses(node.value, { env })
               }
-              break
-            case 'StringLiteral':
-              currentNode.value.value = sortClasses(currentNode.value.value, {
-                env,
-              })
-              break
-          }
+            }
+            break
+          case 'StringLiteral':
+            currentNode.value.value = sortClasses(currentNode.value.value, {
+              env,
+            })
+            break
         }
         break
     }
   }
 }
 
-function transformMelody(ast, { env }) {
+/**
+ * @param {any} ast
+ * @param {TransformerContext} param1
+ */
+function transformMelody(ast, { env, changes }) {
+  let { staticAttrs } = env.customizations
+
   for (let child of ast.expressions ?? []) {
-    transformMelody(child, { env })
+    transformMelody(child, { env, changes })
   }
 
   visit(ast, {
     Attribute(node, _parent, _key, _index, meta) {
-      if (node.name.name !== 'class') {
-        return
-      }
+      if (!staticAttrs.has(node.name.name)) return
 
       meta.sortTextNodes = true
     },
@@ -563,7 +600,13 @@ function transformMelody(ast, { env }) {
   })
 }
 
+/**
+ * @param {any} ast
+ * @param {TransformerContext} param1
+ */
 function transformPug(ast, { env }) {
+  let { staticAttrs } = env.customizations
+
   // This isn't optimal
   // We should merge the classes together across class attributes and class tokens
   // And then we sort them
@@ -571,7 +614,7 @@ function transformPug(ast, { env }) {
 
   // First sort the classes in attributes
   for (const token of ast.tokens) {
-    if (token.type === 'attribute' && token.name === 'class') {
+    if (token.type === 'attribute' && staticAttrs.has(token.name)) {
       token.val = [
         token.val.slice(0, 1),
         sortClasses(token.val.slice(1, -1), { env }),
@@ -617,44 +660,51 @@ function transformPug(ast, { env }) {
   }
 }
 
+/**
+ * @param {any} ast
+ * @param {TransformerContext} param1
+ */
 function transformSvelte(ast, { env, changes }) {
+  let { staticAttrs } = env.customizations
+
   for (let attr of ast.attributes ?? []) {
-    if (attr.name === 'class' && attr.type === 'Attribute') {
-      for (let i = 0; i < attr.value.length; i++) {
-        let value = attr.value[i]
-        if (value.type === 'Text') {
-          let same = value.raw === value.data
-          value.raw = sortClasses(value.raw, {
-            env,
-            ignoreFirst: i > 0 && !/^\s/.test(value.raw),
-            ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.raw),
-          })
-          value.data = same
-            ? value.raw
-            : sortClasses(value.data, {
-                env,
-                ignoreFirst: i > 0 && !/^\s/.test(value.data),
-                ignoreLast:
-                  i < attr.value.length - 1 && !/\s$/.test(value.data),
-              })
-        } else if (value.type === 'MustacheTag') {
-          visit(value.expression, {
-            Literal(node) {
-              if (isStringLiteral(node)) {
-                if (sortStringLiteral(node, { env })) {
-                  changes.push({ text: node.raw, loc: node.loc })
-                }
+    if (!staticAttrs.has(attr.name) || attr.type !== 'Attribute') {
+      continue
+    }
+
+    for (let i = 0; i < attr.value.length; i++) {
+      let value = attr.value[i]
+      if (value.type === 'Text') {
+        let same = value.raw === value.data
+        value.raw = sortClasses(value.raw, {
+          env,
+          ignoreFirst: i > 0 && !/^\s/.test(value.raw),
+          ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.raw),
+        })
+        value.data = same
+          ? value.raw
+          : sortClasses(value.data, {
+              env,
+              ignoreFirst: i > 0 && !/^\s/.test(value.data),
+              ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.data),
+            })
+      } else if (value.type === 'MustacheTag') {
+        visit(value.expression, {
+          Literal(node) {
+            if (isStringLiteral(node)) {
+              if (sortStringLiteral(node, { env })) {
+                changes.push({ text: node.raw, loc: node.loc })
               }
-            },
-            TemplateLiteral(node) {
-              if (sortTemplateLiteral(node, { env })) {
-                for (let quasi of node.quasis) {
-                  changes.push({ text: quasi.value.raw, loc: quasi.loc })
-                }
+            }
+          },
+          TemplateLiteral(node) {
+            if (sortTemplateLiteral(node, { env })) {
+              for (let quasi of node.quasis) {
+                changes.push({ text: quasi.value.raw, loc: quasi.loc })
               }
-            },
-          })
-        }
+            }
+          },
+        })
       }
     }
   }
@@ -676,8 +726,153 @@ function transformSvelte(ast, { env, changes }) {
       transformSvelte(child, { env, changes })
     }
   }
+
+  if (ast.html) {
+    transformSvelte(ast.html, { env, changes })
+  }
 }
 
+export { options } from './options.js'
+
+export const printers = {
+  ...(base.printers['svelte-ast']
+    ? {
+        'svelte-ast': {
+          ...base.printers['svelte-ast'],
+          print: (path, options, print) => {
+            if (!options.__mutatedOriginalText) {
+              options.__mutatedOriginalText = true
+              let changes = path.stack[0].changes
+              if (changes?.length) {
+                let finder = lineColumn(options.originalText)
+
+                for (let change of changes) {
+                  let start = finder.toIndex(
+                    change.loc.start.line,
+                    change.loc.start.column + 1,
+                  )
+                  let end = finder.toIndex(
+                    change.loc.end.line,
+                    change.loc.end.column + 1,
+                  )
+
+                  options.originalText =
+                    options.originalText.substring(0, start) +
+                    change.text +
+                    options.originalText.substring(end)
+                }
+              }
+            }
+
+            return base.printers['svelte-ast'].print(path, options, print)
+          },
+        },
+      }
+    : {}),
+}
+
+export const parsers = {
+  html: createParser('html', transformHtml, {
+    staticAttrs: ['class'],
+  }),
+  glimmer: createParser('glimmer', transformGlimmer, {
+    staticAttrs: ['class'],
+  }),
+  lwc: createParser('lwc', transformHtml, {
+    staticAttrs: ['class'],
+  }),
+  angular: createParser('angular', transformHtml, {
+    staticAttrs: ['class'],
+    dynamicAttrs: ['[ngClass]'],
+  }),
+  vue: createParser('vue', transformHtml, {
+    staticAttrs: ['class'],
+    dynamicAttrs: [':class', 'v-bind:class'],
+  }),
+
+  css: createParser('css', transformCss),
+  scss: createParser('scss', transformCss),
+  less: createParser('less', transformCss),
+  babel: createParser('babel', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  'babel-flow': createParser('babel-flow', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  flow: createParser('flow', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  typescript: createParser('typescript', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  'babel-ts': createParser('babel-ts', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  espree: createParser('espree', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  meriyah: createParser('meriyah', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  __js_expression: createParser('__js_expression', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  ...(base.parsers.svelte
+    ? {
+        svelte: createParser('svelte', transformSvelte, {
+          staticAttrs: ['class'],
+        }),
+      }
+    : {}),
+  ...(base.parsers.astro
+    ? {
+        astro: createParser('astro', transformAstro, {
+          staticAttrs: ['class'],
+        }),
+      }
+    : {}),
+  ...(base.parsers.marko
+    ? {
+        marko: createParser('marko', transformMarko, {
+          staticAttrs: ['class'],
+        }),
+      }
+    : {}),
+  ...(base.parsers.melody
+    ? {
+        melody: createParser('melody', transformMelody, {
+          staticAttrs: ['class'],
+        }),
+      }
+    : {}),
+  ...(base.parsers.pug
+    ? {
+        pug: createParser('pug', transformPug, {
+          staticAttrs: ['class'],
+        }),
+      }
+    : {}),
+  ...(base.parsers['liquid-html']
+    ? {
+        'liquid-html': createParser('liquid-html', transformLiquid, {
+          staticAttrs: ['class'],
+        }),
+      }
+    : {}),
+}
+
+/**
+ *
+ * @returns {{parsers: Record<string, import('prettier').Parser<any>>, printers: Record<string, import('prettier').Printer<any>>}}
+ */
 function getBasePlugins() {
   return {
     parsers: {

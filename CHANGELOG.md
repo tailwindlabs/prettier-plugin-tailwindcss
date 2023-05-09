@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added support for `prettier-plugin-marko` ([#151](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/151))
+- Allow sorting of custom attributes, functions, and tagged template literals ([#155](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/155))
 
 ### Fixed
 

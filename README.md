@@ -42,7 +42,9 @@ If a local configuration file cannot be found the plugin will fallback to the de
 
 ## Sorting non-standard attributes
 
-By default this plugin only sorts classes in the `class` attribute as well as any framework-specific equivalents like `class`, `className`, `:class`, `[ngClass]`, etc. You can sort additional attributes using the `tailwindAttributes` option, which takes an array of attribute names:
+By default this plugin only sorts classes in the `class` attribute as well as any framework-specific equivalents like `class`, `className`, `:class`, `[ngClass]`, etc.
+
+You can sort additional attributes using the `tailwindAttributes` option, which takes an array of attribute names:
 
 ```js
 // prettier.config.js
@@ -65,7 +67,9 @@ function MyButton({ children }) {
 
 ## Sorting classes in function calls
 
-In addition to sorting classes in attributes, you can also sort classes in strings provided to function calls. This is useful when working with libraries like [clsx](https://github.com/lukeed/clsx) or [cva](https://cva.style/). You can sort classes in function calls using the `tailwindFunctions` option, which takes a list of function names:
+In addition to sorting classes in attributes, you can also sort classes in strings provided to function calls. This is useful when working with libraries like [clsx](https://github.com/lukeed/clsx) or [cva](https://cva.style/).
+
+You can sort classes in function calls using the `tailwindFunctions` option, which takes a list of function names:
 
 ```js
 // prettier.config.js
@@ -97,7 +101,9 @@ function MyButton({ isHovering, children }) {
 
 ## Sorting classes in template literals
 
-This plugin also enables sorting of classes in tagged template literals. You can sort classes in template literals using the `tailwindFunctions` option, which takes a list of function names:
+This plugin also enables sorting of classes in tagged template literals.
+
+You can sort classes in template literals using the `tailwindFunctions` option, which takes a list of function names:
 
 ```js
 // prettier.config.js

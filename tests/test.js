@@ -348,6 +348,22 @@ const e = dontSortMeTemplate\`sm:p-1 p-2\`;
 const A = (props) => <div className={props.sortMe} />;
 const B = () => <A sortMe="p-2 sm:p-1" dontSort="sm:p-1 p-2" />;`,
   },
+  {
+    name: 'customizations: vue',
+    dir: 'custom-vue',
+    ext: 'vue',
+    output: `<script setup>
+let a = sortMeFn("p-2 sm:p-1");
+let b = sortMeFn({ "p-2 sm:p-1": true });
+let c = dontSortFn("sm:p-1 p-2");
+let d = sortMeTemplate\`p-2 sm:p-1\`;
+let e = dontSortMeTemplate\`sm:p-1 p-2\`;
+</script>
+<template>
+  <div class="p-2 sm:p-1" sortMe="p-2 sm:p-1" dontSortMe="sm:p-1 p-2"></div>
+  <div :class="{ 'p-2 sm:p-1': true }"></div>
+</template>`,
+  },
 ]
 
 describe('parsers', () => {

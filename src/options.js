@@ -37,13 +37,13 @@ export const options = {
  */
 export function getCustomizations(options, parser, defaults) {
   /** @type {Set<string>} */
-  let staticAttrs = new Set()
+  let staticAttrs = new Set(defaults.staticAttrs)
 
   /** @type {Set<string>} */
-  let dynamicAttrs = new Set()
+  let dynamicAttrs = new Set(defaults.dynamicAttrs)
 
   /** @type {Set<string>} */
-  let functions = new Set(options.tailwindFunctions ?? [])
+  let functions = new Set(defaults.functions)
 
   // Create a list of "static" attributes
   for (let attr of options.tailwindAttributes ?? []) {
@@ -74,10 +74,10 @@ export function getCustomizations(options, parser, defaults) {
     }
   }
 
-  // If no attributes are specified, use the default attributes for the parser
-  if (staticAttrs.size === 0) staticAttrs = defaults.staticAttrs
-  if (dynamicAttrs.size === 0) dynamicAttrs = defaults.dynamicAttrs
-  if (functions.size === 0) functions = defaults.functions
+  // Generate a list of supported functions
+  for (let fn of options.tailwindFunctions ?? []) {
+    functions.add(fn)
+  }
 
   return {
     functions,

@@ -118,5 +118,11 @@ function findEnabledPlugin(options, name) {
     return plugin
   }
 
+  // The plugin was loaded with require so we use object equality to find it
+  let mod = loadIfExists(path)
+  if (mod && mod.parsers && options.plugins.includes(mod)) {
+    return mod
+  }
+
   return null
 }

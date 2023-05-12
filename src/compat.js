@@ -57,24 +57,11 @@ function getFreshCompatibleParser(base, parserFormat, options) {
 
   // Now load parsers from plugins
   for (const name of compatiblePlugins) {
-    let path = null
+    let plugin = findEnabledPlugin(options, name)
 
-    try {
-      path = require.resolve(name)
-    } catch (err) {
-      continue
+    if (plugin) {
+      Object.assign(parser, plugin.parsers[parserFormat])
     }
-
-    let plugin = options.plugins.find(
-      (plugin) => plugin.name === name || plugin.name === path,
-    )
-
-    // The plugin is not loaded
-    if (!plugin) {
-      continue
-    }
-
-    Object.assign(parser, plugin.parsers[parserFormat])
   }
 
   return parser
@@ -105,4 +92,31 @@ export function getAdditionalPrinters() {
   }
 
   return printers
+}
+
+/**
+ *
+ * @param {*} options
+ * @param {string} name
+ * @returns {import('prettier').Plugin<any> | null}
+ */
+function findEnabledPlugin(options, name) {
+  let path = null
+
+  try {
+    path = require.resolve(name)
+  } catch (err) {
+    return null
+  }
+
+  let plugin = options.plugins.find(
+    (plugin) => plugin.name === name || plugin.name === path,
+  )
+
+  // The plugin was found by name or path
+  if (plugin) {
+    return plugin
+  }
+
+  return null
 }

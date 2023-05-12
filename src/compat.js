@@ -46,6 +46,13 @@ export function getCompatibleParser(base, parserFormat, options) {
   return parser
 }
 
+/**
+ *
+ * @param {*} base
+ * @param {string} parserFormat
+ * @param {import('prettier').Options} options
+ * @returns {import('prettier').Parser<any>}
+ */
 function getFreshCompatibleParser(base, parserFormat, options) {
   if (!options.plugins) {
     return base.parsers[parserFormat]
@@ -57,31 +64,19 @@ function getFreshCompatibleParser(base, parserFormat, options) {
 
   // Now load parsers from plugins
   for (const name of compatiblePlugins) {
-    let path = null
+    let plugin = findEnabledPlugin(options, name)
 
-    try {
-      path = require.resolve(name)
-    } catch (err) {
-      continue
+    if (plugin) {
+      Object.assign(parser, plugin.parsers[parserFormat])
     }
-
-    let plugin = options.plugins.find(
-      (plugin) => plugin.name === name || plugin.name === path,
-    )
-
-    // The plugin is not loaded
-    if (!plugin) {
-      continue
-    }
-
-    Object.assign(parser, plugin.parsers[parserFormat])
   }
 
   return parser
 }
 
-// We need to load this plugin dynamically because it's not available by default
-// And we are not bundling it with the main Prettier plugin
+/**
+ * @returns {Record<string, import('prettier').Parser<any>>}
+ */
 export function getAdditionalParsers() {
   let parsers = {}
 
@@ -92,6 +87,9 @@ export function getAdditionalParsers() {
   return parsers
 }
 
+/**
+ * @returns {Record<string, import('prettier').Printer<any>>}
+ */
 export function getAdditionalPrinters() {
   let printers = {}
 
@@ -105,4 +103,37 @@ export function getAdditionalPrinters() {
   }
 
   return printers
+}
+
+/**
+ *
+ * @param {import('prettier').Options} options
+ * @param {string} name
+ * @returns {import('prettier').Plugin<any> | null}
+ */
+function findEnabledPlugin(options, name) {
+  let path = null
+
+  try {
+    path = require.resolve(name)
+  } catch (err) {
+    return null
+  }
+
+  let plugin = options.plugins.find(
+    (plugin) => plugin.name === name || plugin.name === path,
+  )
+
+  // The plugin was found by name or path
+  if (plugin) {
+    return plugin
+  }
+
+  // The plugin was loaded with require so we use object equality to find it
+  let mod = loadIfExists(path)
+  if (mod && mod.parsers && options.plugins.includes(mod)) {
+    return mod
+  }
+
+  return null
 }

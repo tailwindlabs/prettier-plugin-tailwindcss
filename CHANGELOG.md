@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Speed up formatting ([#153](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/153))
+- Fix plugin compatibility when loaded with require ([#159](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/159))
 
 ## [0.2.8] - 2023-04-28
 

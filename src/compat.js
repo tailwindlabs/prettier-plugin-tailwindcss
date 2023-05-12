@@ -46,6 +46,13 @@ export function getCompatibleParser(base, parserFormat, options) {
   return parser
 }
 
+/**
+ *
+ * @param {*} base
+ * @param {string} parserFormat
+ * @param {import('prettier').Options} options
+ * @returns {import('prettier').Parser<any>}
+ */
 function getFreshCompatibleParser(base, parserFormat, options) {
   if (!options.plugins) {
     return base.parsers[parserFormat]
@@ -67,8 +74,9 @@ function getFreshCompatibleParser(base, parserFormat, options) {
   return parser
 }
 
-// We need to load this plugin dynamically because it's not available by default
-// And we are not bundling it with the main Prettier plugin
+/**
+ * @returns {Record<string, import('prettier').Parser<any>>}
+ */
 export function getAdditionalParsers() {
   let parsers = {}
 
@@ -79,6 +87,9 @@ export function getAdditionalParsers() {
   return parsers
 }
 
+/**
+ * @returns {Record<string, import('prettier').Printer<any>>}
+ */
 export function getAdditionalPrinters() {
   let printers = {}
 
@@ -96,7 +107,7 @@ export function getAdditionalPrinters() {
 
 /**
  *
- * @param {*} options
+ * @param {import('prettier').Options} options
  * @param {string} name
  * @returns {import('prettier').Plugin<any> | null}
  */

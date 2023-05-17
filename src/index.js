@@ -53,7 +53,7 @@ function createParser(parserFormat, transform, meta = {}) {
      *
      * @param {string} text
      * @param {any} parsers
-     * @param {import('./types').PluginOptions} options
+     * @param {import('prettier').ParserOptions} options
      * @returns
      */
     parse(text, parsers, options = {}) {

@@ -33,5 +33,16 @@ esbuild.build({
         })
       },
     },
+    {
+      name: 'copy-types',
+      setup(build) {
+        build.onEnd(() =>
+          fs.promises.copyFile(
+            path.resolve(__dirname, './src/index.d.ts'),
+            path.resolve(__dirname, './dist/index.d.ts'),
+          ),
+        )
+      },
+    },
   ],
 })

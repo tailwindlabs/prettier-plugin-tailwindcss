@@ -1,5 +1,4 @@
 // @ts-check
-import { expiringMap } from './expiring-map.js'
 import clearModule from 'clear-module'
 import escalade from 'escalade/sync'
 import * as path from 'path'
@@ -9,9 +8,10 @@ import { generateRules as generateRulesFallback } from 'tailwindcss/lib/lib/gene
 import { createContext as createContextFallback } from 'tailwindcss/lib/lib/setupContextUtils'
 import loadConfigFallback from 'tailwindcss/loadConfig'
 import resolveConfigFallback from 'tailwindcss/resolveConfig'
+import { expiringMap } from './expiring-map.js'
 
+/** @typedef {import('prettier').ParserOptions} ParserOptions **/
 /** @typedef {import('./types').ContextContainer} ContextContainer **/
-/** @typedef {import('./types').PluginOptions} PluginOptions **/
 
 /**
  * @template K
@@ -29,7 +29,7 @@ let pathToContextMap = expiringMap(10_000)
 let prettierConfigCache = expiringMap(10_000)
 
 /**
- * @param {PluginOptions} options
+ * @param {ParserOptions} options
  * @returns {ContextContainer}
  */
 export function getTailwindConfig(options) {
@@ -59,7 +59,7 @@ export function getTailwindConfig(options) {
 
 /**
  *
- * @param {PluginOptions} options
+ * @param {ParserOptions} options
  * @returns {string | null}
  */
 function getPrettierConfigPath(options) {
@@ -76,7 +76,7 @@ function getPrettierConfigPath(options) {
 }
 
 /**
- * @param {PluginOptions} options
+ * @param {ParserOptions} options
  * @returns {string}
  */
 function getBaseDir(options) {
@@ -143,7 +143,7 @@ function loadTailwindConfig(baseDir, tailwindConfigPath) {
 }
 
 /**
- * @param {PluginOptions} options
+ * @param {ParserOptions} options
  * @param {string} baseDir
  * @returns {string | null}
  */

@@ -26,11 +26,11 @@ export const options = {
   },
 }
 
-/** @typedef {import('./types').PluginOptions} PluginOptions */
+/** @typedef {import('prettier').RequiredOptions} RequiredOptions */
 /** @typedef {import('./types').Customizations} Customizations */
 
 /**
- * @param {PluginOptions} options
+ * @param {RequiredOptions} options
  * @param {string} parser
  * @param {Customizations} defaults
  * @returns {Customizations}

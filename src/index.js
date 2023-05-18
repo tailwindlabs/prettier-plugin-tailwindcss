@@ -487,8 +487,13 @@ function transformJavaScript(ast, { env }) {
 
     /** @param {import('@babel/types').CallExpression} node */
     CallExpression(node) {
-      if (!node.arguments?.length) return
-      if (!functions.has(node.callee?.name ?? '')) return
+      if (!node.arguments?.length) {
+        return
+      }
+
+      if (!functions.has(node.callee?.name ?? '')) {
+        return
+      }
 
       node.arguments.forEach((arg) => sortInside(arg))
     },

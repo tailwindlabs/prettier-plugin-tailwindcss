@@ -4,7 +4,9 @@ import escalade from 'escalade/sync'
 import * as path from 'path'
 import prettier from 'prettier'
 import resolveFrom from 'resolve-from'
+// @ts-ignore
 import { generateRules as generateRulesFallback } from 'tailwindcss/lib/lib/generateRules'
+// @ts-ignore
 import { createContext as createContextFallback } from 'tailwindcss/lib/lib/setupContextUtils'
 import loadConfigFallback from 'tailwindcss/loadConfig'
 import resolveConfigFallback from 'tailwindcss/resolveConfig'

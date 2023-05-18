@@ -446,12 +446,13 @@ function sortTemplateLiteral(node, { env }) {
 }
 
 /**
- * @param {any} ast
+ * @param {import('@babel/types').Node} ast
  * @param {TransformerContext} param1
  */
 function transformJavaScript(ast, { env }) {
   let { staticAttrs, functions } = env.customizations
 
+  /** @param {import('@babel/types').Node} ast */
   function sortInside(ast) {
     visit(ast, (node) => {
       if (isStringLiteral(node)) {
@@ -467,6 +468,7 @@ function transformJavaScript(ast, { env }) {
   }
 
   visit(ast, {
+    /** @param {import('@babel/types').JSXAttribute} node */
     JSXAttribute(node) {
       if (!node.value) {
         return
@@ -483,6 +485,7 @@ function transformJavaScript(ast, { env }) {
       }
     },
 
+    /** @param {import('@babel/types').CallExpression} node */
     CallExpression(node) {
       if (!node.arguments?.length) return
       if (!functions.has(node.callee?.name ?? '')) return
@@ -490,10 +493,13 @@ function transformJavaScript(ast, { env }) {
       node.arguments.forEach((arg) => sortInside(arg))
     },
 
+    /** @param {import('@babel/types').TaggedTemplateExpression} node */
     TaggedTemplateExpression(node) {
-      if (node.tag.type === 'Identifier' && functions.has(node.tag.name)) {
-        sortTemplateLiteral(node.quasi, { env })
+      if (node.tag.type !== 'Identifier' || !functions.has(node.tag.name)) {
+        return
       }
+
+      sortTemplateLiteral(node.quasi, { env })
     },
   })
 }

@@ -26,20 +26,17 @@ export interface TransformerEnv {
   options: any
 }
 
-export interface RawOptions {
-  tailwindConfig?: string
-  tailwindFunctions?: string[]
-  tailwindAttributes?: string[]
-}
-
-export interface InternalOptions {
-  printer: Printer<any>
-}
-
 export interface ContextContainer {
   context: any
   generateRules: () => any
   tailwindConfig: any
 }
 
-export type PluginOptions = ParserOptions<any> & RawOptions & InternalOptions
+export interface InternalOptions {
+  printer: Printer<any>
+}
+
+declare module 'prettier' {
+  interface RequiredOptions extends InternalOptions {}
+  interface ParserOptions extends InternalOptions {}
+}

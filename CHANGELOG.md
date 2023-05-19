@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Export types for Prettier config ([#162](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/162))
+
 ### Fixed
 
 - Don't move partial classes inside Liquid script attributes ([#164](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/164))

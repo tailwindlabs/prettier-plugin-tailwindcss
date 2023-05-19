@@ -220,6 +220,8 @@ let tests = [
         t`<div class='${yes} {% render 'foo', bar: true %}'></div>`,
         t`<div class='${yes} {% include 'foo' %}'></div>`,
         t`<div class='${yes} {% include 'foo', bar: true %}'></div>`,
+        t`<div class='${yes} foo--{{ id }}'></div>`,
+        t`<div class='${yes} {{ id }}'></div>`,
       ],
     },
   },

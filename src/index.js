@@ -296,33 +296,52 @@ function transformLiquid(ast, { env }) {
   /** @type {{pos: {start: number, end: number}, value: string}[]} */
   let changes = []
 
+  /** @typedef {import('@shopify/prettier-plugin-liquid/dist/types.js').AttrSingleQuoted} AttrSingleQuoted */
+  /** @typedef {import('@shopify/prettier-plugin-liquid/dist/types.js').AttrDoubleQuoted} AttrDoubleQuoted */
+
+  /**
+   * @param {AttrSingleQuoted | AttrDoubleQuoted} attr
+   */
   function sortAttribute(attr) {
-    visit(attr.value, {
-      TextNode(node) {
-        node.value = sortClasses(node.value, { env })
+    for (let i = 0; i < attr.value.length; i++) {
+      let node = attr.value[i]
+      if (node.type === 'TextNode') {
+        node.value = sortClasses(node.value, {
+          env,
+          ignoreFirst: i > 0 && !/^\s/.test(node.value),
+          ignoreLast: i < attr.value.length - 1 && !/\s$/.test(node.value),
+        })
+
         changes.push({
           pos: node.position,
           value: node.value,
         })
-      },
+      } else if (
+        node.type === 'LiquidDrop' &&
+        typeof node.markup === 'object' &&
+        node.markup.type === 'LiquidVariable'
+      ) {
+        visit(node.markup.expression, {
+          String(node) {
+            let pos = { ...node.position }
 
-      String(node) {
-        let pos = { ...node.position }
+            // We have to offset the position ONLY when quotes are part of the String node
+            // This is because `value` does NOT include quotes
+            if (hasSurroundingQuotes(node.source.slice(pos.start, pos.end))) {
+              pos.start += 1
+              pos.end -= 1
+            }
 
-        // We have to offset the position ONLY when quotes are part of the String node
-        // This is because `value` does NOT include quotes
-        if (hasSurroundingQuotes(node.source.slice(pos.start, pos.end))) {
-          pos.start += 1
-          pos.end -= 1
-        }
+            node.value = sortClasses(node.value, { env })
 
-        node.value = sortClasses(node.value, { env })
-        changes.push({
-          pos,
-          value: node.value,
+            changes.push({
+              pos,
+              value: node.value,
+            })
+          },
         })
-      },
-    })
+      }
+    }
   }
 
   visit(ast, {
@@ -351,7 +370,7 @@ function transformLiquid(ast, { env }) {
 
   // Sort so all changes occur in order
   changes = changes.sort((a, b) => {
-    return a.start - b.start || a.end - b.end
+    return a.pos.start - b.pos.start || a.pos.end - b.pos.end
   })
 
   for (let change of changes) {

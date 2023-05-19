@@ -2,17 +2,17 @@ import { Parser, Printer, SupportOption } from 'prettier';
 
 export interface PluginOptions {
   /**
-   * Path to the Tailwind config file
+   * Path to the Tailwind config file.
    */
   tailwindConfig?: string
 
   /**
-   * List of functions and template literal tags with arguments that contain classes that should be sorted
+   * List of custom function and tag names that contain classes.
    */
   tailwindFunctions: string[]
 
   /**
-   * List of custom attributes that contain classes that should be sorted
+   * List of custom attributes that contain classes.
    */
   tailwindAttributes: string[]
 }

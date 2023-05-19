@@ -351,7 +351,7 @@ function transformLiquid(ast, { env }) {
 
   // Sort so all changes occur in order
   changes = changes.sort((a, b) => {
-    return a.start - b.start || a.end - b.end
+    return a.pos.start - b.pos.start || a.pos.end - b.pos.end
   })
 
   for (let change of changes) {

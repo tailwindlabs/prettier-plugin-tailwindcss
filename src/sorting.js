@@ -54,7 +54,7 @@ export function sortClasses(
   }
 
   let result = ''
-  let parts = classStr.split(/(\s+)/)
+  let parts = classStr.split(/([\t\r\f\n ]+)/)
   let classes = parts.filter((_, i) => i % 2 === 0)
   let whitespace = parts.filter((_, i) => i % 2 !== 0)
 

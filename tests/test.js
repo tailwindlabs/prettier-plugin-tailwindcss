@@ -83,6 +83,10 @@ let javascript = [
     `;<div class={\`sm:p-0 p-0 \${someVar}sm:block md:inline flex\`} />`,
     `;<div class={\`p-0 sm:p-0 \${someVar}sm:block flex md:inline\`} />`,
   ],
+  [
+    `;<div class="block px-1\u3000py-2" />`,
+    `;<div class="px-1\u3000py-2 block" />`,
+  ],
 ]
 javascript = javascript.concat(
   javascript.map((test) => test.map((t) => t.replace(/class/g, 'className'))),

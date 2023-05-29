@@ -453,6 +453,19 @@ function isSortableTemplateExpression(node, functions) {
     return functions.has(node.tag.name)
   }
 
+  if (node.tag.type === 'MemberExpression') {
+    let expr = node.tag.object
+
+    // If the tag is a MemberExpression we should traverse all MemberExpression's until we find the leading Identifier
+    while (expr.type === 'MemberExpression') {
+      expr = expr.object
+    }
+
+    if (expr.type === 'Identifier') {
+      return functions.has(expr.name)
+    }
+  }
+
   return false
 }
 

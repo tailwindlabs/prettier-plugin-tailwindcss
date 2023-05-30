@@ -168,10 +168,7 @@ function transformDynamicJsAttribute(attr, env) {
     },
 
     visitTaggedTemplateExpression(path) {
-      if (
-        path.node.tag.type === 'Identifier' &&
-        functions.has(path.node.tag.name)
-      ) {
+      if (isSortableTemplateExpression(path.node, functions)) {
         if (sortTemplateLiteral(path.node.quasi, { env })) {
           didChange = true
         }
@@ -446,6 +443,33 @@ function sortTemplateLiteral(node, { env }) {
 }
 
 /**
+ *
+ * @param {import('@babel/types').TaggedTemplateExpression | import('ast-types').namedTypes.TaggedTemplateExpression} node
+ * @param {Set<string>} functions
+ * @returns {boolean}
+ */
+function isSortableTemplateExpression(node, functions) {
+  if (node.tag.type === 'Identifier') {
+    return functions.has(node.tag.name)
+  }
+
+  if (node.tag.type === 'MemberExpression') {
+    let expr = node.tag.object
+
+    // If the tag is a MemberExpression we should traverse all MemberExpression's until we find the leading Identifier
+    while (expr.type === 'MemberExpression') {
+      expr = expr.object
+    }
+
+    if (expr.type === 'Identifier') {
+      return functions.has(expr.name)
+    }
+  }
+
+  return false
+}
+
+/**
  * @param {import('@babel/types').Node} ast
  * @param {TransformerContext} param1
  */
@@ -460,7 +484,7 @@ function transformJavaScript(ast, { env }) {
       } else if (node.type === 'TemplateLiteral') {
         sortTemplateLiteral(node, { env })
       } else if (node.type === 'TaggedTemplateExpression') {
-        if (node.tag.type === 'Identifier' && functions.has(node.tag.name)) {
+        if (isSortableTemplateExpression(node, functions)) {
           sortTemplateLiteral(node.quasi, { env })
         }
       }
@@ -500,7 +524,7 @@ function transformJavaScript(ast, { env }) {
 
     /** @param {import('@babel/types').TaggedTemplateExpression} node */
     TaggedTemplateExpression(node) {
-      if (node.tag.type !== 'Identifier' || !functions.has(node.tag.name)) {
+      if (!isSortableTemplateExpression(node, functions)) {
         return
       }
 

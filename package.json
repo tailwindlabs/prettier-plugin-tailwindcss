@@ -66,7 +66,7 @@
     "@shopify/prettier-plugin-liquid": "*",
     "@shufo/prettier-plugin-blade": "*",
     "@trivago/prettier-plugin-sort-imports": "*",
-    "prettier": ">=2.2.0",
+    "prettier": "^2.2.0",
     "prettier-plugin-astro": "*",
     "prettier-plugin-css-order": "*",
     "prettier-plugin-import-sort": "*",

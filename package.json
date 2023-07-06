@@ -16,7 +16,7 @@
   },
   "scripts": {
     "_pre": "rimraf dist && cpy node_modules/tailwindcss/lib/css dist/css",
-    "_esbuild": "node build.js",
+    "_esbuild": "node build.mjs",
     "prebuild": "npm run _pre",
     "build": "npm run _esbuild -- --minify",
     "predev": "npm run _pre",
@@ -35,7 +35,7 @@
     "@trivago/prettier-plugin-sort-imports": "^3.4.0",
     "clear-module": "^4.1.2",
     "cpy-cli": "^3.1.1",
-    "esbuild": "^0.14.11",
+    "esbuild": "^0.18.0",
     "escalade": "^3.1.1",
     "import-sort-style-module": "^6.0.0",
     "jest": "^27.4.7",

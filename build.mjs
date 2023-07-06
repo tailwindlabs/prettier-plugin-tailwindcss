@@ -1,8 +1,11 @@
-const esbuild = require('esbuild')
-const path = require('path')
-const fs = require('fs')
+import esbuild from 'esbuild'
+import path from 'path'
+import fs from 'fs'
+import { fileURLToPath } from 'url'
 
-esbuild.build({
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+let context = await esbuild.context({
   entryPoints: [path.resolve(__dirname, './src/index.js')],
   outfile: path.resolve(__dirname, './dist/index.js'),
   bundle: true,
@@ -10,7 +13,6 @@ esbuild.build({
   target: 'node12.13.0',
   external: ['prettier'],
   minify: process.argv.includes('--minify'),
-  watch: process.argv.includes('--watch'),
   plugins: [
     {
       // https://github.com/benjamn/recast/issues/611
@@ -46,3 +48,11 @@ esbuild.build({
     },
   ],
 })
+
+await context.rebuild()
+
+if (process.argv.includes('--watch')) {
+  await context.watch()
+}
+
+await context.dispose()

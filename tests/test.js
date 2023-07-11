@@ -15,6 +15,8 @@ async function formatFixture(name, extension) {
 
   if (prettier.version.startsWith('2.')) {
     cmd = `${binPath} ${filePath} --plugin-search-dir ${__dirname} --plugin ${pluginPath}`
+  } else {
+    cmd = `${binPath} ${filePath} --plugin ${pluginPath}`
   }
 
   return execAsync(cmd).then(({ stdout }) => stdout.trim())
@@ -158,10 +160,12 @@ let tests = {
     t`<div [ngClass]="[someVar ?? '${yes}']"></div>`,
     t`<div [ngClass]="{ '${yes}': true }"></div>`,
     t`<div [ngClass]="clsx('${yes}')"></div>`,
-    [
+    prettier.version.startsWith('2.')
+    ? [
       `<div [ngClass]="{ 'sm:p-0 p-0': (some.thing | urlPipe: { option: true } | async), 'sm:p-0 p-0': true }"></div>`,
       `<div [ngClass]="{ 'p-0 sm:p-0': (some.thing | urlPipe : { option: true } | async), 'p-0 sm:p-0': true }"></div>`,
-    ],
+    ]
+    : t`<div [ngClass]="{ '${yes}': (some.thing | urlPipe: { option: true } | async), '${yes}': true }"></div>`,
     t`<div [ngClass]="{ '${yes}': foo && bar?.['baz'] }" class="${yes}"></div>`,
 
     // TODO: Enable this test — it causes console noise but not a failure
@@ -175,7 +179,11 @@ let tests = {
   'babel-ts': javascript,
   flow: javascript,
   'babel-flow': javascript,
-  espree: javascript,
+  ...(
+    prettier.version.startsWith('2.')
+      ? { espree: javascript }
+      : { acorn: javascript }
+  ),
   meriyah: javascript,
   mdx: javascript
     .filter((test) => !test.find((t) => /^\/\*/.test(t)))

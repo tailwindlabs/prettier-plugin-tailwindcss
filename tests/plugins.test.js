@@ -343,7 +343,7 @@ for (const group of tests) {
 
   let canRun = prettier.version.startsWith('2.')
     ? group.versions.includes(2)
-    : false
+    : group.versions.includes(3)
 
   for (let parser in group.tests) {
     if (!canRun) {

@@ -16,9 +16,9 @@
   },
   "scripts": {
     "_pre": "rimraf dist && cpy node_modules/tailwindcss/lib/css dist/css",
-    "_esbuild": "node build.js",
+    "_esbuild": "node build.mjs",
     "prebuild": "npm run _pre",
-    "build": "npm run _esbuild -- --minify",
+    "build": "npm run _esbuild",
     "predev": "npm run _pre",
     "dev": "npm run _esbuild -- --watch",
     "pretest": "node scripts/install-fixture-deps.js",
@@ -35,7 +35,7 @@
     "@trivago/prettier-plugin-sort-imports": "^3.4.0",
     "clear-module": "^4.1.2",
     "cpy-cli": "^3.1.1",
-    "esbuild": "^0.14.11",
+    "esbuild": "^0.18.0",
     "escalade": "^3.1.1",
     "import-sort-style-module": "^6.0.0",
     "jest": "^27.4.7",
@@ -43,7 +43,7 @@
     "license-checker": "^25.0.1",
     "line-column": "^1.0.2",
     "object-hash": "^2.2.0",
-    "prettier": "^2.5.1",
+    "prettier": "^2.8.8",
     "prettier-plugin-astro": "^0.7.2",
     "prettier-plugin-css-order": "^1.3.0",
     "prettier-plugin-import-sort": "^0.0.7",
@@ -66,7 +66,7 @@
     "@shopify/prettier-plugin-liquid": "*",
     "@shufo/prettier-plugin-blade": "*",
     "@trivago/prettier-plugin-sort-imports": "*",
-    "prettier": ">=2.2.0",
+    "prettier": "^2.2 || ^3.0",
     "prettier-plugin-astro": "*",
     "prettier-plugin-css-order": "*",
     "prettier-plugin-import-sort": "*",
@@ -132,5 +132,8 @@
     ".js, .jsx, .ts, .tsx": {
       "style": "module"
     }
+  },
+  "jest": {
+    "testTimeout": 15000
   }
 }

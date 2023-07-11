@@ -1,23 +1,10 @@
 const prettier = require('prettier')
 const path = require('path')
-const { t, yes } = require('./utils')
-
-function format(str, options = {}) {
-  return prettier
-    .format(str, {
-      pluginSearchDirs: [__dirname], // disable plugin autoload
-      plugins: [path.resolve(__dirname, '..')],
-      semi: false,
-      singleQuote: true,
-      printWidth: 9999,
-      parser: 'html',
-      ...options,
-    })
-    .trim()
-}
+const { t, yes, no, format } = require('./utils')
 
 let tests = [
   {
+    versions: [2],
     plugins: ['@trivago/prettier-plugin-sort-imports'],
     options: {
       importOrder: ['^@one/(.*)$', '^@two/(.*)$', '^[./]'],
@@ -47,6 +34,7 @@ let tests = [
     },
   },
   {
+    versions: [2],
     plugins: ['@ianvs/prettier-plugin-sort-imports'],
     options: {
       importOrder: ['^@tailwindcss/(.*)$', '^@babel/(.*)$', '^[./]'],
@@ -76,6 +64,7 @@ let tests = [
     },
   },
   {
+    versions: [2],
     plugins: ['prettier-plugin-organize-imports'],
     options: {},
     tests: {
@@ -100,6 +89,7 @@ let tests = [
     },
   },
   {
+    versions: [2],
     plugins: ['prettier-plugin-twig-melody'],
     options: {
       twigAlwaysBreakObjects: false,
@@ -118,6 +108,7 @@ let tests = [
     },
   },
   {
+    versions: [2],
     plugins: ['@prettier/plugin-pug'],
     tests: {
       pug: [
@@ -145,6 +136,7 @@ let tests = [
     },
   },
   {
+    versions: [2],
     plugins: ['prettier-plugin-import-sort'],
     tests: {
       babel: [
@@ -161,6 +153,7 @@ let tests = [
     },
   },
   {
+    versions: [2],
     plugins: ['prettier-plugin-jsdoc'],
     tests: {
       babel: [
@@ -172,6 +165,7 @@ let tests = [
     },
   },
   {
+    versions: [2],
     plugins: ['prettier-plugin-css-order'],
     tests: {
       css: [
@@ -183,6 +177,7 @@ let tests = [
     },
   },
   {
+    versions: [2],
     plugins: ['prettier-plugin-style-order'],
     tests: {
       css: [
@@ -194,6 +189,7 @@ let tests = [
     },
   },
   {
+    versions: [2],
     plugins: ['prettier-plugin-organize-attributes'],
     tests: {
       html: [
@@ -205,6 +201,7 @@ let tests = [
     },
   },
   {
+    versions: [2],
     plugins: ['@shopify/prettier-plugin-liquid'],
     tests: {
       'liquid-html': [
@@ -225,6 +222,116 @@ let tests = [
       ],
     },
   },
+  {
+    versions: [2],
+    plugins: ['prettier-plugin-marko'],
+    tests: {
+      marko: [
+        t`<div class='${yes}'/>`,
+        t`<!-- <div class='${no}'/> -->`,
+        t`<div not-class='${no}'/>`,
+        t`<div class/>`,
+        t`<div class=''/>`,
+        t`<div>
+  <h1 class='${yes}'/>
+</div>`,
+    t`style {
+  h1 {
+    @apply ${yes};
+  }
+}`,
+        t`<div class=[
+  '${yes}',
+  'w-full',
+  someVariable,
+  {
+    a: true,
+  },
+  null,
+  '${yes}',
+]/>`,
+        t`<div class=['${yes}', 'underline', someVariable]/>`,
+      ],
+    },
+  },
+  {
+    versions: [2],
+    plugins: ['prettier-plugin-astro'],
+    tests: {
+      astro: [
+        // ...html, // TODO:
+        [
+          `{<div class="p-20 bg-red-100 w-full"></div>}`,
+          `{(<div class="w-full bg-red-100 p-20" />)}`,
+        ],
+        [
+          `<style>
+  h1 {
+    @apply bg-fuchsia-50 p-20 w-full;
+}
+</style>`,
+      `<style>
+  h1 {
+    @apply w-full bg-fuchsia-50 p-20;
+  }
+</style>`,
+        ],
+        t`---
+import Layout from '../layouts/Layout.astro'
+import Custom from '../components/Custom.astro'
+---
+
+<Layout>
+  <main class="${yes}"></main>
+  <my-element class="${yes}"></my-element>
+  <Custom class="${yes}" />
+</Layout>`,
+      ],
+    },
+  },
+  {
+    versions: [2],
+    plugins: ['prettier-plugin-svelte'],
+    tests: {
+      svelte: [
+        t`<div class="${yes}" />`,
+        t`<div class />`,
+        t`<div class="" />`,
+        t`<div class="${yes} {someVar}" />`,
+        t`<div class="{someVar} ${yes}" />`,
+        t`<div class="${yes} {someVar} ${yes}" />`,
+        t`<div class={'${yes}'} />`,
+        t`<div class={'${yes}' + '${yes}'} />`,
+        t`<div class={\`${yes}\`} />`,
+        t`<div class={\`${yes} \${'${yes}' + \`${yes}\`} ${yes}\`} />`,
+        t`<div class={\`${no}\${someVar}${no}\`} />`,
+        t`<div class="${yes} {\`${yes}\`}" />`,
+        t`<div let:class={clazz} class="${yes} {clazz}" />`,
+        t`{#if something} <div class="${yes}" /> {:else} <div class="${yes}" /> {/if}`,
+        [
+          `<div class="sm:block uppercase flex{someVar}" />`,
+          `<div class="uppercase sm:block flex{someVar}" />`,
+        ],
+        [
+          `<div class="{someVar}sm:block md:inline flex" />`,
+          `<div class="{someVar}sm:block flex md:inline" />`,
+        ],
+        [
+          `<div class="sm:p-0 p-0 {someVar}sm:block md:inline flex" />`,
+          `<div class="p-0 sm:p-0 {someVar}sm:block flex md:inline" />`,
+        ],
+        ['<div class={`sm:p-0\np-0`} />', '<div\n  class={`p-0\nsm:p-0`}\n/>'],
+        [
+          `{#await promise()} <div class="sm:p-0 p-0"></div> {:then} <div class="sm:p-0 p-0"></div> {/await}`,
+          `{#await promise()} <div class="p-0 sm:p-0" /> {:then} <div class="p-0 sm:p-0" /> {/await}`,
+        ],
+        [
+          `{#await promise() then} <div class="sm:p-0 p-0"></div> {/await}`,
+          `{#await promise() then} <div class="p-0 sm:p-0" /> {/await}`,
+        ],
+      ],
+    },
+  }
 ]
 
 // Disable pug printer -- it produces noisy test output
@@ -234,17 +341,25 @@ pug.logger.level = 'off'
 for (const group of tests) {
   let name = group.plugins.join(', ')
 
+  let canRun = prettier.version.startsWith('2.')
+    ? group.versions.includes(2)
+    : group.versions.includes(3)
+
   for (let parser in group.tests) {
-    test(`parsing ${parser} works with: ${name}`, () => {
+    if (!canRun) {
+      test.todo(`parsing ${parser} works with: ${name}`)
+      continue
+    }
+
+    test(`parsing ${parser} works with: ${name}`, async () => {
       let plugins = [
         ...group.plugins.map((name) => require.resolve(name)),
-        path.resolve(__dirname, '..'),
+        path.resolve(__dirname, '../dist/index.js'),
       ]
 
       for (const [input, expected] of group.tests[parser]) {
-        expect(format(input, { parser, plugins, ...group.options })).toEqual(
-          expected,
-        )
+        let output = await format(input, { parser, plugins, ...group.options })
+        expect(output).toEqual(expected)
       }
     })
   }

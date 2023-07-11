@@ -2,39 +2,22 @@ const prettier = require('prettier')
 const path = require('path')
 const fs = require('fs')
 const { exec } = require('child_process')
-const { t, yes, no } = require('./utils')
+const { t, yes, no, format } = require('./utils')
 const { promisify } = require('util')
 const execAsync = promisify(exec)
-
-function format(str, options = {}) {
-  options.plugins = options.plugins ?? [
-    require.resolve('prettier-plugin-astro'),
-    require.resolve('prettier-plugin-svelte'),
-    require.resolve('prettier-plugin-marko'),
-  ]
-
-  options.plugins = [...options.plugins, path.resolve(__dirname, '..')]
-
-  return prettier
-    .format(str, {
-      pluginSearchDirs: [__dirname], // disable plugin autoload
-      semi: false,
-      singleQuote: true,
-      printWidth: 9999,
-      parser: 'html',
-      ...options,
-    })
-    .trim()
-}
 
 async function formatFixture(name, extension) {
   let binPath = path.resolve(__dirname, '../node_modules/.bin/prettier')
   let filePath = path.resolve(__dirname, `fixtures/${name}/index.${extension}`)
+  let pluginPath = path.resolve(__dirname, '../dist/index.js')
 
-  let cmd = `${binPath} ${filePath} --plugin-search-dir ${__dirname} --plugin ${path.resolve(
-    __dirname,
-    '..',
-  )}`
+  let cmd
+
+  if (prettier.version.startsWith('2.')) {
+    cmd = `${binPath} ${filePath} --plugin-search-dir ${__dirname} --plugin ${pluginPath}`
+  } else {
+    cmd = `${binPath} ${filePath} --plugin ${pluginPath}`
+  }
 
   return execAsync(cmd).then(({ stdout }) => stdout.trim())
 }
@@ -177,7 +160,12 @@ let tests = {
     t`<div [ngClass]="[someVar ?? '${yes}']"></div>`,
     t`<div [ngClass]="{ '${yes}': true }"></div>`,
     t`<div [ngClass]="clsx('${yes}')"></div>`,
-    t`<div [ngClass]="{ '${yes}': (some.thing | urlPipe: { option: true } | async), '${yes}': true }"></div>`,
+    prettier.version.startsWith('2.')
+    ? [
+      `<div [ngClass]="{ 'sm:p-0 p-0': (some.thing | urlPipe: { option: true } | async), 'sm:p-0 p-0': true }"></div>`,
+      `<div [ngClass]="{ 'p-0 sm:p-0': (some.thing | urlPipe : { option: true } | async), 'p-0 sm:p-0': true }"></div>`,
+    ]
+    : t`<div [ngClass]="{ '${yes}': (some.thing | urlPipe: { option: true } | async), '${yes}': true }"></div>`,
     t`<div [ngClass]="{ '${yes}': foo && bar?.['baz'] }" class="${yes}"></div>`,
 
     // TODO: Enable this test — it causes console noise but not a failure
@@ -191,103 +179,15 @@ let tests = {
   'babel-ts': javascript,
   flow: javascript,
   'babel-flow': javascript,
-  espree: javascript,
+  ...(
+    prettier.version.startsWith('2.')
+      ? { espree: javascript }
+      : { acorn: javascript }
+  ),
   meriyah: javascript,
   mdx: javascript
     .filter((test) => !test.find((t) => /^\/\*/.test(t)))
     .map((test) => test.map((t) => t.replace(/^;/, ''))),
-  svelte: [
-    t`<div class="${yes}" />`,
-    t`<div class />`,
-    t`<div class="" />`,
-    t`<div class="${yes} {someVar}" />`,
-    t`<div class="{someVar} ${yes}" />`,
-    t`<div class="${yes} {someVar} ${yes}" />`,
-    t`<div class={'${yes}'} />`,
-    t`<div class={'${yes}' + '${yes}'} />`,
-    t`<div class={\`${yes}\`} />`,
-    t`<div class={\`${yes} \${'${yes}' + \`${yes}\`} ${yes}\`} />`,
-    t`<div class={\`${no}\${someVar}${no}\`} />`,
-    t`<div class="${yes} {\`${yes}\`}" />`,
-    t`<div let:class={clazz} class="${yes} {clazz}" />`,
-    t`{#if something} <div class="${yes}" /> {:else} <div class="${yes}" /> {/if}`,
-    [
-      `<div class="sm:block uppercase flex{someVar}" />`,
-      `<div class="uppercase sm:block flex{someVar}" />`,
-    ],
-    [
-      `<div class="{someVar}sm:block md:inline flex" />`,
-      `<div class="{someVar}sm:block flex md:inline" />`,
-    ],
-    [
-      `<div class="sm:p-0 p-0 {someVar}sm:block md:inline flex" />`,
-      `<div class="p-0 sm:p-0 {someVar}sm:block flex md:inline" />`,
-    ],
-    ['<div class={`sm:p-0\np-0`} />', '<div\n  class={`p-0\nsm:p-0`}\n/>'],
-    [
-      `{#await promise()} <div class="sm:p-0 p-0"></div> {:then} <div class="sm:p-0 p-0"></div> {/await}`,
-      `{#await promise()} <div class="p-0 sm:p-0" /> {:then} <div class="p-0 sm:p-0" /> {/await}`,
-    ],
-    [
-      `{#await promise() then} <div class="sm:p-0 p-0"></div> {/await}`,
-      `{#await promise() then} <div class="p-0 sm:p-0" /> {/await}`,
-    ],
-  ],
-  astro: [
-    ...html,
-    [
-      `{<div class="p-20 bg-red-100 w-full"></div>}`,
-      `{(<div class="w-full bg-red-100 p-20" />)}`,
-    ],
-    [
-      `<style>
-  h1 {
-    @apply bg-fuchsia-50 p-20 w-full;
-  }
-</style>`,
-      `<style>
-  h1 {
-    @apply w-full bg-fuchsia-50 p-20;
-  }
-</style>`,
-    ],
-    t`---
-import Layout from '../layouts/Layout.astro'
-import Custom from '../components/Custom.astro'
----
-
-<Layout>
-  <main class="${yes}"></main>
-  <my-element class="${yes}"></my-element>
-  <Custom class="${yes}" />
-</Layout>`,
-  ],
-  marko: [
-    t`<div class='${yes}'/>`,
-    t`<!-- <div class='${no}'/> -->`,
-    t`<div not-class='${no}'/>`,
-    t`<div class/>`,
-    t`<div class=''/>`,
-    t`<div>
-  <h1 class='${yes}'/>
-</div>`,
-    t`style {
-  h1 {
-    @apply ${yes};
-  }
-}`,
-    t`<div class=[
-  '${yes}',
-  'w-full',
-  someVariable,
-  {
-    a: true,
-  },
-  null,
-  '${yes}',
-]/>`,
-    t`<div class=['${yes}', 'underline', someVariable]/>`,
-  ],
 }
 
 let fixtures = [
@@ -376,30 +276,30 @@ let e = dontSortMeTemplate\`sm:p-1 p-2\`;
 
 describe('parsers', () => {
   for (let parser in tests) {
-    test(parser, () => {
+    test(parser, async () => {
       for (let [input, expected] of tests[parser]) {
-        expect(format(input, { parser })).toEqual(expected)
+        expect(await format(input, { parser })).toEqual(expected)
       }
     })
   }
 })
 
 describe('other', () => {
-  test('non-tailwind classes', () => {
+  test('non-tailwind classes', async () => {
     expect(
-      format('<div class="sm:lowercase uppercase potato text-sm"></div>'),
+      await format('<div class="sm:lowercase uppercase potato text-sm"></div>'),
     ).toEqual('<div class="potato text-sm uppercase sm:lowercase"></div>')
   })
 
-  test('parasite utilities', () => {
+  test('parasite utilities', async () => {
     expect(
-      format('<div class="group peer unknown-class p-0 container"></div>'),
+      await format('<div class="group peer unknown-class p-0 container"></div>'),
     ).toEqual('<div class="unknown-class group peer container p-0"></div>')
   })
 
-  test('explicit config path', () => {
+  test('explicit config path', async () => {
     expect(
-      format('<div class="sm:bg-tomato bg-red-500"></div>', {
+      await format('<div class="sm:bg-tomato bg-red-500"></div>', {
         tailwindConfig: path.resolve(
           __dirname,
           'fixtures/basic/tailwind.config.js',

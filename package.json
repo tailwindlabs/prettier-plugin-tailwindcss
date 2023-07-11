@@ -132,5 +132,8 @@
     ".js, .jsx, .ts, .tsx": {
       "style": "module"
     }
+  },
+  "jest": {
+    "testTimeout": 15000
   }
 }

@@ -14,13 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Export types for Prettier config ([#162](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/162))
+- Add Prettier v3 support ([#179](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/179))
 
 ### Fixed
 
 - Don't move partial classes inside Liquid script attributes ([#164](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/164))
 - Do not split classes by non-ASCII whitespace ([#166](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/166))
 - Match tagged template literals with tag expressions ([#169](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/169))
-- Add Prettier v3 support ([#179](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/179))
 
 ## [0.3.0] - 2023-05-15
 

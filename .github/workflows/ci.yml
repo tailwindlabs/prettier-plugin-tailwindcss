@@ -1,4 +1,4 @@
-name: Release Insiders
+name: CI
 
 on:
   push:
@@ -55,4 +55,3 @@ jobs:
       - name: Test against Prettier v${{ matrix.prettier-version }}
         run: |
           NODE_OPTIONS=--experimental-vm-modules npm run test
-

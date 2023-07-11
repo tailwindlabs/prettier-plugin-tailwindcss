@@ -18,7 +18,7 @@
     "_pre": "rimraf dist && cpy node_modules/tailwindcss/lib/css dist/css",
     "_esbuild": "node build.mjs",
     "prebuild": "npm run _pre",
-    "build": "npm run _esbuild",
+    "build": "npm run _esbuild -- --minify",
     "predev": "npm run _pre",
     "dev": "npm run _esbuild -- --watch",
     "pretest": "node scripts/install-fixture-deps.js",

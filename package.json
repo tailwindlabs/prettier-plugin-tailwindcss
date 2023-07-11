@@ -1,6 +1,6 @@
 {
   "name": "prettier-plugin-tailwindcss",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A Prettier plugin for sorting Tailwind CSS classes.",
   "license": "MIT",
   "main": "dist/index.js",

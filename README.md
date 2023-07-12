@@ -20,6 +20,13 @@ module.exports = {
   plugins: [require('prettier-plugin-tailwindcss')],
 }
 ```
+or
+```js
+// prettier.config.js (Prettier v3.x)
+module.exports = {
+  plugins: ['prettier-plugin-tailwindcss'],
+}
+```
 
 ## Options
 

@@ -328,7 +328,7 @@ import Custom from '../components/Custom.astro'
         ],
       ],
     },
-  }
+  },
 ]
 
 // Disable pug printer -- it produces noisy test output

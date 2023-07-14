@@ -100,10 +100,7 @@ let tests = [
           `<section class="{{ {base:css.prices}|classes }}"></section>`,
           `<section class="{{ { base: css.prices }|classes }}"></section>`,
         ],
-        [
-          `<section class="sm:p-0 p-4"></section>`,
-          `<section class="p-4 sm:p-0"></section>`,
-        ],
+        t`<section class="${yes}"></section>`,
       ],
     },
   },

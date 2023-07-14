@@ -100,10 +100,17 @@ let tests = [
           `<section class="{{ {base:css.prices}|classes }}"></section>`,
           `<section class="{{ { base: css.prices }|classes }}"></section>`,
         ],
-        [
-          `<section class="sm:p-0 p-4"></section>`,
-          `<section class="p-4 sm:p-0"></section>`,
-        ],
+        t`<section class="${yes}"></section>`,
+        t`<section class="${yes} text-{{ i }}"></section>`,
+        t`<section class="${yes} {{ i }}-text"></section>`,
+        t`<section class="text-{{ i }} ${yes}"></section>`,
+        t`<section class="{{ i }}-text ${yes}"></section>`,
+
+        // text-center is used because it's placed between p-0 and sm:p-0
+        t`<section class="${yes} text-center{{ i }}"></section>`,
+        t`<section class="${yes} {{ i }}text-center"></section>`,
+        t`<section class="text-center{{ i }} ${yes}"></section>`,
+        t`<section class="{{ i }}text-center ${yes}"></section>`,
       ],
     },
   },
@@ -235,7 +242,7 @@ let tests = [
         t`<div>
   <h1 class='${yes}'/>
 </div>`,
-    t`style {
+        t`style {
   h1 {
     @apply ${yes};
   }
@@ -270,7 +277,7 @@ let tests = [
     @apply bg-fuchsia-50 p-20 w-full;
 }
 </style>`,
-      `<style>
+          `<style>
   h1 {
     @apply w-full bg-fuchsia-50 p-20;
   }
@@ -331,7 +338,7 @@ import Custom from '../components/Custom.astro'
         ],
       ],
     },
-  }
+  },
 ]
 
 // Disable pug printer -- it produces noisy test output

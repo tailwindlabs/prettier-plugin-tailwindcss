@@ -642,13 +642,19 @@ function transformMelody(ast, { env, changes }) {
       meta.sortTextNodes = true
     },
 
-    StringLiteral(node, _parent, _key, _index, meta) {
+    StringLiteral(node, parent, _key, _index, meta) {
       if (!meta.sortTextNodes) {
         return
       }
 
+      const isConcat = parent.type === 'BinaryConcatExpression'
+
       node.value = sortClasses(node.value, {
         env,
+        ignoreFirst:
+          isConcat && _key === 'right' && !/^[^\S\r\n]/.test(node.value),
+        ignoreLast:
+          isConcat && _key === 'left' && !/[^\S\r\n]$/.test(node.value),
       })
     },
   })

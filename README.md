@@ -4,20 +4,18 @@ A [Prettier](https://prettier.io/) plugin for Tailwind CSS v3.0+ that automatica
 
 ## Installation
 
-To get started, just install `prettier-plugin-tailwindcss` as a dev-dependency:
+To get started, install `prettier-plugin-tailwindcss` as a dev-dependency:
 
 ```sh
 npm install -D prettier prettier-plugin-tailwindcss
 ```
 
-When using Prettier v2, this plugin follows Prettier’s autoloading convention, so as long as you’ve got Prettier set up in your project, it’ll start working automatically as soon as it’s installed.
-
-_Note that plugin autoloading is not supported when using Prettier v3, or when using certain package managers with Prettier v2, such as pnpm or Yarn PnP. In this case you may need to add the plugin to your Prettier config explicitly:_
+Then add the plugin to your Prettier config:
 
 ```js
 // prettier.config.js
 module.exports = {
-  plugins: [require('prettier-plugin-tailwindcss')],
+  plugins: ['prettier-plugin-tailwindcss'],
 }
 ```
 

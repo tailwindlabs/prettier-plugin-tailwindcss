@@ -7,9 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Nothing yet!
+
+## [0.4.1] - 2023-07-14
+
+### Fixed
+
+- Don't move partial classes inside Twig attributes ([#184](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/184))
+
+## [0.4.0] - 2023-07-11
+
 ### Added
 
 - Export types for Prettier config ([#162](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/162))
+- Add Prettier v3 support ([#179](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/179))
 
 ### Fixed
 
@@ -179,7 +190,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.3.0...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.8...v0.3.0
 [0.2.8]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.7...v0.2.8
 [0.2.7]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.6...v0.2.7

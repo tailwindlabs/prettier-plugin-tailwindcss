@@ -1,6 +1,6 @@
 {
   "name": "prettier-plugin-tailwindcss",
-  "version": "0.3.0",
+  "version": "0.4.1",
   "description": "A Prettier plugin for sorting Tailwind CSS classes.",
   "license": "MIT",
   "main": "dist/index.js",
@@ -16,7 +16,7 @@
   },
   "scripts": {
     "_pre": "rimraf dist && cpy node_modules/tailwindcss/lib/css dist/css",
-    "_esbuild": "node build.js",
+    "_esbuild": "node build.mjs",
     "prebuild": "npm run _pre",
     "build": "npm run _esbuild -- --minify",
     "predev": "npm run _pre",
@@ -24,7 +24,9 @@
     "pretest": "node scripts/install-fixture-deps.js",
     "test": "jest",
     "prepublishOnly": "npm run build && npm test && node scripts/copy-licenses.js",
-    "format": "prettier \"src/**/*.js\" \"scripts/**/*.js\" \"tests/test.js\" --write --print-width 100 --single-quote --no-semi --plugin-search-dir ./tests"
+    "format": "prettier \"src/**/*.js\" \"scripts/**/*.js\" \"tests/test.js\" --write --print-width 100 --single-quote --no-semi --plugin-search-dir ./tests",
+    "release-channel": "node ./scripts/release-channel.js",
+    "release-notes": "node ./scripts/release-notes.js"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^3.7.0",
@@ -35,7 +37,7 @@
     "@trivago/prettier-plugin-sort-imports": "^3.4.0",
     "clear-module": "^4.1.2",
     "cpy-cli": "^3.1.1",
-    "esbuild": "^0.14.11",
+    "esbuild": "^0.18.0",
     "escalade": "^3.1.1",
     "import-sort-style-module": "^6.0.0",
     "jest": "^27.4.7",
@@ -43,7 +45,7 @@
     "license-checker": "^25.0.1",
     "line-column": "^1.0.2",
     "object-hash": "^2.2.0",
-    "prettier": "^2.5.1",
+    "prettier": "^2.8.8",
     "prettier-plugin-astro": "^0.7.2",
     "prettier-plugin-css-order": "^1.3.0",
     "prettier-plugin-import-sort": "^0.0.7",
@@ -66,7 +68,7 @@
     "@shopify/prettier-plugin-liquid": "*",
     "@shufo/prettier-plugin-blade": "*",
     "@trivago/prettier-plugin-sort-imports": "*",
-    "prettier": ">=2.2.0",
+    "prettier": "^2.2 || ^3.0",
     "prettier-plugin-astro": "*",
     "prettier-plugin-css-order": "*",
     "prettier-plugin-import-sort": "*",
@@ -132,5 +134,8 @@
     ".js, .jsx, .ts, .tsx": {
       "style": "module"
     }
+  },
+  "jest": {
+    "testTimeout": 15000
   }
 }

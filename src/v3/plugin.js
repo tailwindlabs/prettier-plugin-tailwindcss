@@ -2,31 +2,31 @@
 import * as astTypes from 'ast-types'
 import jsesc from 'jsesc'
 import lineColumn from 'line-column'
-import prettierParserAngular from 'prettier/parser-angular'
-import prettierParserBabel from 'prettier/parser-babel'
-import prettierParserEspree from 'prettier/parser-espree'
-import prettierParserFlow from 'prettier/parser-flow'
-import prettierParserGlimmer from 'prettier/parser-glimmer'
-import prettierParserHTML from 'prettier/parser-html'
-import prettierParserMeriyah from 'prettier/parser-meriyah'
-import prettierParserPostCSS from 'prettier/parser-postcss'
-import prettierParserTypescript from 'prettier/parser-typescript'
+import * as prettierParserAngular from 'prettier/plugins/angular'
+import * as prettierParserBabel from 'prettier/plugins/babel'
+import * as prettierParserAcorn from 'prettier/plugins/acorn'
+import * as prettierParserFlow from 'prettier/plugins/flow'
+import * as prettierParserGlimmer from 'prettier/plugins/glimmer'
+import * as prettierParserHTML from 'prettier/plugins/html'
+import * as prettierParserMeriyah from 'prettier/plugins/meriyah'
+import * as prettierParserPostCSS from 'prettier/plugins/postcss'
+import * as prettierParserTypescript from 'prettier/plugins/typescript'
 import * as recast from 'recast'
 import {
   getCompatibleParser,
   getAdditionalParsers,
   getAdditionalPrinters,
-} from './compat-v2.js'
-import { getTailwindConfig } from './config-v2.js'
-import { getCustomizations } from './options.js'
-import { sortClasses, sortClassList } from './sorting.js'
-import { visit } from './utils.js'
+} from './compat.js'
+import { getTailwindConfig } from './config.js'
+import { getCustomizations } from '../options.js'
+import { sortClasses, sortClassList } from '../sorting.js'
+import { visit } from '../utils.js'
 
 let base = getBasePlugins()
 
-/** @typedef {import('./types').Customizations} Customizations */
-/** @typedef {import('./types').TransformerContext} TransformerContext */
-/** @typedef {import('./types').TransformerMetadata} TransformerMetadata */
+/** @typedef {import('../types.js').Customizations} Customizations */
+/** @typedef {import('../types.js').TransformerContext} TransformerContext */
+/** @typedef {import('../types.js').TransformerMetadata} TransformerMetadata */
 
 /**
  * @param {string} parserFormat
@@ -56,8 +56,8 @@ function createParser(parserFormat, transform, meta = {}) {
      * @param {import('prettier').ParserOptions} options
      * @returns
      */
-    parse(text, parsers, options = {}) {
-      let { context, generateRules } = getTailwindConfig(options)
+    async parse(text, options = {}) {
+      let { context, generateRules } = await getTailwindConfig(options)
 
       let original = getCompatibleParser(base, parserFormat, options)
 
@@ -65,7 +65,7 @@ function createParser(parserFormat, transform, meta = {}) {
         options.printer = printers[original.astFormat]
       }
 
-      let ast = original.parse(text, parsers, options)
+      let ast = await original.parse(text, options)
 
       let customizations = getCustomizations(
         options,
@@ -76,7 +76,7 @@ function createParser(parserFormat, transform, meta = {}) {
       let changes = []
 
       transform(ast, {
-        env: { context, customizations, generateRules, parsers, options },
+        env: { context, customizations, generateRules, parsers: {}, options },
         changes,
       })
 
@@ -799,7 +799,7 @@ function transformSvelte(ast, { env, changes }) {
   }
 }
 
-export { options } from './options.js'
+export { options } from '../options.js'
 
 export const printers = {
   ...(base.printers['svelte-ast']
@@ -880,7 +880,7 @@ export const parsers = {
     staticAttrs: ['class', 'className'],
   }),
 
-  espree: createParser('espree', transformJavaScript, {
+  acorn: createParser('acorn', transformJavaScript, {
     staticAttrs: ['class', 'className'],
   }),
 
@@ -957,14 +957,14 @@ function getBasePlugins() {
       flow: prettierParserFlow.parsers.flow,
       typescript: prettierParserTypescript.parsers.typescript,
       'babel-ts': prettierParserBabel.parsers['babel-ts'],
-      espree: prettierParserEspree.parsers.espree,
+      acorn: prettierParserAcorn.parsers.acorn,
       meriyah: prettierParserMeriyah.parsers.meriyah,
       __js_expression: prettierParserBabel.parsers.__js_expression,
 
-      ...getAdditionalParsers(),
+      // ...getAdditionalParsers(),
     },
     printers: {
-      ...getAdditionalPrinters(),
+      // ...getAdditionalPrinters(),
     },
   }
 }

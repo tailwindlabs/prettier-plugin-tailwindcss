@@ -1,26 +1,13 @@
 import { loadIfExists } from './utils.js'
 
 let compatiblePlugins = [
-  '@ianvs/prettier-plugin-sort-imports',
-  '@trivago/prettier-plugin-sort-imports',
-  'prettier-plugin-organize-imports',
   '@prettier/plugin-pug',
-  '@shopify/prettier-plugin-liquid',
-  'prettier-plugin-css-order',
-  'prettier-plugin-import-sort',
-  'prettier-plugin-jsdoc',
-  'prettier-plugin-organize-attributes',
-  'prettier-plugin-style-order',
-  'prettier-plugin-twig-melody',
 ]
 
 let additionalParserPlugins = [
   'prettier-plugin-astro',
   'prettier-plugin-svelte',
-  'prettier-plugin-twig-melody',
   '@prettier/plugin-pug',
-  '@shopify/prettier-plugin-liquid',
-  'prettier-plugin-marko',
 ]
 
 let additionalPrinterPlugins = [

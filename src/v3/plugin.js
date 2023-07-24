@@ -17,16 +17,16 @@ import {
   getAdditionalParsers,
   getAdditionalPrinters,
 } from './compat.js'
-import { getTailwindConfig } from './config-v3.js'
-import { getCustomizations } from './options.js'
-import { sortClasses, sortClassList } from './sorting.js'
-import { visit } from './utils.js'
+import { getTailwindConfig } from './config.js'
+import { getCustomizations } from '../options.js'
+import { sortClasses, sortClassList } from '../sorting.js'
+import { visit } from '../utils.js'
 
 let base = getBasePlugins()
 
-/** @typedef {import('./types.js').Customizations} Customizations */
-/** @typedef {import('./types.js').TransformerContext} TransformerContext */
-/** @typedef {import('./types.js').TransformerMetadata} TransformerMetadata */
+/** @typedef {import('../types.js').Customizations} Customizations */
+/** @typedef {import('../types.js').TransformerContext} TransformerContext */
+/** @typedef {import('../types.js').TransformerMetadata} TransformerMetadata */
 
 /**
  * @param {string} parserFormat
@@ -792,7 +792,7 @@ function transformSvelte(ast, { env, changes }) {
   }
 }
 
-export { options } from './options.js'
+export { options } from '../options.js'
 
 export const printers = {
   ...(base.printers['svelte-ast']

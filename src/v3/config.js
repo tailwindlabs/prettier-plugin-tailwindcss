@@ -10,15 +10,15 @@ import { generateRules as generateRulesFallback } from 'tailwindcss/lib/lib/gene
 import { createContext as createContextFallback } from 'tailwindcss/lib/lib/setupContextUtils'
 import loadConfigFallback from 'tailwindcss/loadConfig'
 import resolveConfigFallback from 'tailwindcss/resolveConfig'
-import { expiringMap } from './expiring-map.js'
+import { expiringMap } from '../expiring-map.js'
 
 /** @typedef {import('prettier').ParserOptions} ParserOptions **/
-/** @typedef {import('./types.js').ContextContainer} ContextContainer **/
+/** @typedef {import('../types.js').ContextContainer} ContextContainer **/
 
 /**
  * @template K
  * @template V
- * @typedef {import('./expiring-map.js').ExpiringMap<K,V>} ExpiringMap
+ * @typedef {import('../expiring-map.js').ExpiringMap<K,V>} ExpiringMap
  **/
 
 /** @type {Map<string, string | null>} */

@@ -16,7 +16,7 @@ import {
   getCompatibleParser,
   getAdditionalParsers,
   getAdditionalPrinters,
-} from './compat.js'
+} from './compat-v2.js'
 import { getTailwindConfig } from './config-v2.js'
 import { getCustomizations } from './options.js'
 import { sortClasses, sortClassList } from './sorting.js'

@@ -40,7 +40,7 @@
     "esbuild": "^0.18.0",
     "escalade": "^3.1.1",
     "import-sort-style-module": "^6.0.0",
-    "jest": "^27.4.7",
+    "jest": "^29.6.1",
     "jsesc": "^2.5.2",
     "license-checker": "^25.0.1",
     "line-column": "^1.0.2",

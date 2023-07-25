@@ -12,7 +12,7 @@ This plugin supports both Prettier v2 and v3. Here we detail the last known-work
 | `prettier-plugin-css-order`             | v1.3        | -           |
 | `prettier-plugin-import-sort`           | v0.0.7      | -           |
 | `prettier-plugin-jsdoc`                 | v0.4        | v1.0        |
-| `prettier-plugin-marko`                 | v1.5        | v2.0        |
+| `prettier-plugin-marko`                 | v2.0        | -           |
 | `prettier-plugin-organize-attributes`   | v0.0.5      | v1.0        |
 | `prettier-plugin-organize-imports`      | v3.2        | v3.2        |
 | `prettier-plugin-style-order`           | v0.2        | -           |

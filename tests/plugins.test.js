@@ -173,6 +173,18 @@ let tests = [
     },
   },
   {
+    versions: [3],
+    plugins: ['prettier-plugin-jsdoc'],
+    tests: {
+      babel: [
+        [
+          `/**\n             * @param {  string   }    param0 description\n             */\n            export default function Foo(param0) { return <div className="sm:p-0 p-4"></div> }`,
+          `/**\n * @param {  string   }    param0 description\n */\nexport default function Foo(param0) {\n  return <div className="p-4 sm:p-0"></div>\n}`,
+        ],
+      ],
+    },
+  },
+  {
     versions: [2],
     plugins: ['prettier-plugin-css-order'],
     tests: {
@@ -197,6 +209,7 @@ let tests = [
     },
   },
   {
+    // TODO: This isn't working in Prettier v3
     versions: [2],
     plugins: ['prettier-plugin-organize-attributes'],
     tests: {
@@ -231,6 +244,7 @@ let tests = [
     },
   },
   {
+    // TODO: This isn't working in Prettier v3
     versions: [2],
     plugins: ['prettier-plugin-marko'],
     tests: {
@@ -304,7 +318,8 @@ import Custom from '../components/Custom.astro'
     },
   },
   {
-    versions: [2],
+    // TODO: This isn't working in Prettier v3
+    versions: [2, 3],
     plugins: ['prettier-plugin-svelte'],
     tests: {
       svelte: [

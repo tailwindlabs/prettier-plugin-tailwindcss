@@ -15,9 +15,25 @@ export async function loadIfExistsESM(name) {
       return import(name)
     }
   } catch (e) {
-    console.log(e)
-    return null
+    return {
+      parsers: {},
+      printers: {},
+    }
   }
+}
+
+/**
+ * @param {Record<string, string>} names
+ * @returns {Promise<Record<string, any>>}
+ */
+export async function loadAll(names) {
+  return Object.fromEntries(
+    await Promise.all(
+      Object.entries(names).map(async ([key, name]) => {
+        return [key, await loadIfExistsESM(name)]
+      }),
+    ),
+  )
 }
 
 // https://lihautan.com/manipulating-ast-with-javascript/

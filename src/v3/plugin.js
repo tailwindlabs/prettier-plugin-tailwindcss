@@ -4,25 +4,14 @@ import jsesc from 'jsesc'
 import lineColumn from 'line-column'
 import * as prettierParserAngular from 'prettier/plugins/angular'
 import * as prettierParserBabel from 'prettier/plugins/babel'
-import * as prettierParserAcorn from 'prettier/plugins/acorn'
-import * as prettierParserFlow from 'prettier/plugins/flow'
-import * as prettierParserGlimmer from 'prettier/plugins/glimmer'
-import * as prettierParserHTML from 'prettier/plugins/html'
-import * as prettierParserMeriyah from 'prettier/plugins/meriyah'
-import * as prettierParserPostCSS from 'prettier/plugins/postcss'
-import * as prettierParserTypescript from 'prettier/plugins/typescript'
 import * as recast from 'recast'
-import {
-  getCompatibleParser,
-  getAdditionalParsers,
-  getAdditionalPrinters,
-} from './compat.js'
-import { getTailwindConfig } from './config.js'
 import { getCustomizations } from '../options.js'
 import { sortClasses, sortClassList } from '../sorting.js'
 import { visit } from '../utils.js'
+import { getTailwindConfig } from './config.js'
+import { loadPlugins } from './plugins.js'
 
-let base = await getBasePlugins()
+let base = await loadPlugins()
 
 /** @typedef {import('../types.js').Customizations} Customizations */
 /** @typedef {import('../types.js').TransformerContext} TransformerContext */
@@ -44,23 +33,22 @@ function createParser(parserFormat, transform, meta = {}) {
   return {
     ...base.parsers[parserFormat],
 
-    // preprocess(code, options) {
-    //   let original = await getCompatibleParser(base, parserFormat, options)
+    preprocess(code, options) {
+      let original = base.originalParser(parserFormat, options)
 
-    //   return original.preprocess ? original.preprocess(code, options) : code
-    // },
+      return original.preprocess ? original.preprocess(code, options) : code
+    },
 
     /**
      *
      * @param {string} text
-     * @param {any} parsers
      * @param {import('prettier').ParserOptions} options
      * @returns
      */
-    async parse(text, options = {}) {
+    async parse(text, options) {
       let { context, generateRules } = await getTailwindConfig(options)
 
-      let original = await getCompatibleParser(base, parserFormat, options)
+      let original = base.originalParser(parserFormat, options)
 
       if (original.astFormat in printers) {
         options.printer = printers[original.astFormat]
@@ -554,7 +542,7 @@ function transformCss(ast, { env }) {
  * @param {TransformerContext} param1
  */
 function transformAstro(ast, { env, changes }) {
-  console.log("ASTRO")
+  console.log('ASTRO')
 
   let { staticAttrs } = env.customizations
 
@@ -904,9 +892,13 @@ export const parsers = {
     : {}),
   ...(base.parsers.astroExpressionParser
     ? {
-        astroExpressionParser: createParser('astroExpressionParser', transformJavaScript, {
-          staticAttrs: ['class'],
-        }),
+        astroExpressionParser: createParser(
+          'astroExpressionParser',
+          transformJavaScript,
+          {
+            staticAttrs: ['class'],
+          },
+        ),
       }
     : {}),
   ...(base.parsers.marko
@@ -937,36 +929,4 @@ export const parsers = {
         }),
       }
     : {}),
-}
-
-/**
- *
- * @returns {Promise<{parsers: Record<string, import('prettier').Parser<any>>, printers: Record<string, import('prettier').Printer<any>>}>}
- */
-async function getBasePlugins() {
-  return {
-    parsers: {
-      html: prettierParserHTML.parsers.html,
-      glimmer: prettierParserGlimmer.parsers.glimmer,
-      lwc: prettierParserHTML.parsers.lwc,
-      angular: prettierParserHTML.parsers.angular,
-      vue: prettierParserHTML.parsers.vue,
-      css: prettierParserPostCSS.parsers.css,
-      scss: prettierParserPostCSS.parsers.scss,
-      less: prettierParserPostCSS.parsers.less,
-      babel: prettierParserBabel.parsers.babel,
-      'babel-flow': prettierParserBabel.parsers['babel-flow'],
-      flow: prettierParserFlow.parsers.flow,
-      typescript: prettierParserTypescript.parsers.typescript,
-      'babel-ts': prettierParserBabel.parsers['babel-ts'],
-      acorn: prettierParserAcorn.parsers.acorn,
-      meriyah: prettierParserMeriyah.parsers.meriyah,
-      __js_expression: prettierParserBabel.parsers.__js_expression,
-
-      ...(await getAdditionalParsers()),
-    },
-    printers: {
-      ...(await getAdditionalPrinters()),
-    },
-  }
 }

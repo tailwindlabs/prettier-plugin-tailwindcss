@@ -7,13 +7,26 @@ import * as prettierParserHTML from 'prettier/plugins/html'
 import * as prettierParserMeriyah from 'prettier/plugins/meriyah'
 import * as prettierParserPostCSS from 'prettier/plugins/postcss'
 import * as prettierParserTypescript from 'prettier/plugins/typescript'
-import { loadAll } from '../utils.js'
 
 /**
  * @typedef {object} PluginDetails
  * @property {Record<string, import('prettier').Parser<any>>} parsers
  * @property {Record<string, import('prettier').Printer<any>>} printers
  */
+
+async function loadIfExistsESM(name) {
+  try {
+    if (createRequire(import.meta.url).resolve(name)) {
+      let mod = await import(name)
+      return mod.default ?? mod
+    }
+  } catch (e) {
+    return {
+      parsers: {},
+      printers: {},
+    }
+  }
+}
 
 export async function loadPlugins() {
   const builtin = await loadBuiltinPlugins()
@@ -52,8 +65,9 @@ export async function loadPlugins() {
         return mod
       }
 
-      // options.plugins.* == mod
-      if (Object.keys(mod.parsers).length > 0 && plugin === mod) {
+      // basically options.plugins.* == mod
+      // But that can't work because prettier normalizes plugins which destroys top-level object identity
+      if (plugin.parsers && mod.parsers && plugin.parsers == mod.parsers) {
         return mod
       }
     }
@@ -119,27 +133,26 @@ async function loadBuiltinPlugins() {
  * @returns {Promise<PluginDetails}>}
  */
 async function loadThirdPartyPlugins() {
-  const { astro, liquid, marko, melody, pug, svelte } = await loadAll({
-    astro: 'prettier-plugin-astro',
-    liquid: '@shopify/prettier-plugin-liquid',
-    marko: 'prettier-plugin-marko',
-    melody: 'prettier-plugin-twig-melody',
-    pug: '@prettier/plugin-pug',
-    svelte: 'prettier-plugin-svelte',
-  })
+  let plugins = await Promise.all([
+    loadIfExistsESM('prettier-plugin-astro'),
+    loadIfExistsESM('@shopify/prettier-plugin-liquid'),
+    loadIfExistsESM('prettier-plugin-marko'),
+    loadIfExistsESM('prettier-plugin-twig-melody'),
+    loadIfExistsESM('@prettier/plugin-pug'),
+    loadIfExistsESM('prettier-plugin-svelte'),
+  ])
+
+  let parsers = {}
+  let printers = {}
+
+  for (let plugin of plugins) {
+    Object.assign(parsers, plugin.parsers ?? {})
+    Object.assign(parsers, plugin.printers ?? {})
+  }
 
   return {
-    parsers: {
-      ...astro.parsers,
-      ...svelte.parsers,
-      ...melody.parsers,
-      ...pug.parsers,
-      ...liquid.parsers,
-      ...marko.parsers,
-    },
-    printers: {
-      ...svelte.printers,
-    },
+    parsers,
+    printers,
   }
 }
 
@@ -147,12 +160,12 @@ async function loadCompatiblePlugins() {
   let plugins = [
     '@ianvs/prettier-plugin-sort-imports',
     '@trivago/prettier-plugin-sort-imports',
-    'prettier-plugin-organize-imports',
-    'prettier-plugin-css-order',
-    'prettier-plugin-import-sort',
-    'prettier-plugin-jsdoc',
-    'prettier-plugin-organize-attributes',
-    'prettier-plugin-style-order',
+    // 'prettier-plugin-organize-imports',
+    // 'prettier-plugin-css-order',
+    // 'prettier-plugin-import-sort',
+    // 'prettier-plugin-jsdoc',
+    // 'prettier-plugin-organize-attributes',
+    // 'prettier-plugin-style-order',
   ]
 
   // Load all the available compatible plugins up front
@@ -165,8 +178,8 @@ async function loadCompatiblePlugins() {
       let mod = await loadIfExistsESM(name)
 
       return {
-        ...mod,
         name,
+        mod,
       }
     }),
   )

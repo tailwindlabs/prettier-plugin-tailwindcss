@@ -136,12 +136,13 @@ async function loadBuiltinPlugins() {
  * @returns {Promise<PluginDetails}>}
  */
 async function loadThirdPartyPlugins() {
-  let [astro, liquid, marko, melody, pug, svelte] = await Promise.all([
+  // Commented out plugins do not currently work with Prettier v3.0
+  let [astro, liquid, marko, svelte] = await Promise.all([
     loadIfExistsESM('prettier-plugin-astro'),
     loadIfExistsESM('@shopify/prettier-plugin-liquid'),
     loadIfExistsESM('prettier-plugin-marko'),
-    loadIfExistsESM('prettier-plugin-twig-melody'),
-    loadIfExistsESM('@prettier/plugin-pug'),
+    // loadIfExistsESM('prettier-plugin-twig-melody'),
+    // loadIfExistsESM('@prettier/plugin-pug'),
     loadIfExistsESM('prettier-plugin-svelte'),
   ])
 
@@ -150,8 +151,8 @@ async function loadThirdPartyPlugins() {
       ...astro.parsers,
       ...liquid.parsers,
       ...marko.parsers,
-      ...melody.parsers,
-      ...pug.parsers,
+      // ...melody.parsers,
+      // ...pug.parsers,
       ...svelte.parsers,
     },
     printers: {
@@ -161,14 +162,15 @@ async function loadThirdPartyPlugins() {
 }
 
 async function loadCompatiblePlugins() {
+  // Commented out plugins do not currently work with Prettier v3.0
   let plugins = [
     '@ianvs/prettier-plugin-sort-imports',
     '@trivago/prettier-plugin-sort-imports',
-    // 'prettier-plugin-organize-imports',
+    'prettier-plugin-organize-imports',
     // 'prettier-plugin-css-order',
     // 'prettier-plugin-import-sort',
-    // 'prettier-plugin-jsdoc',
-    // 'prettier-plugin-organize-attributes',
+    'prettier-plugin-jsdoc',
+    'prettier-plugin-organize-attributes',
     // 'prettier-plugin-style-order',
   ]
 

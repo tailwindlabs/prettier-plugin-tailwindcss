@@ -64,8 +64,7 @@ let tests = [
     },
   },
   {
-    // TODO: Doesn't work in v3. Don't know why.
-    versions: [2],
+    versions: [2, 3],
     plugins: ['prettier-plugin-organize-imports'],
     options: {},
     tests: {
@@ -161,25 +160,13 @@ let tests = [
     },
   },
   {
-    versions: [2],
+    versions: [2, 3],
     plugins: ['prettier-plugin-jsdoc'],
     tests: {
       babel: [
         [
           `/**\n             * @param {  string   }    param0 description\n             */\n            export default function Foo(param0) { return <div className="sm:p-0 p-4"></div> }`,
           `/** @param {string} param0 Description */\nexport default function Foo(param0) {\n  return <div className="p-4 sm:p-0"></div>\n}`,
-        ],
-      ],
-    },
-  },
-  {
-    versions: [3],
-    plugins: ['prettier-plugin-jsdoc'],
-    tests: {
-      babel: [
-        [
-          `/**\n             * @param {  string   }    param0 description\n             */\n            export default function Foo(param0) { return <div className="sm:p-0 p-4"></div> }`,
-          `/**\n * @param {  string   }    param0 description\n */\nexport default function Foo(param0) {\n  return <div className="p-4 sm:p-0"></div>\n}`,
         ],
       ],
     },
@@ -209,8 +196,7 @@ let tests = [
     },
   },
   {
-    // TODO: This isn't working in Prettier v3
-    versions: [2],
+    versions: [2, 3],
     plugins: ['prettier-plugin-organize-attributes'],
     tests: {
       html: [
@@ -245,7 +231,7 @@ let tests = [
   },
   {
     // TODO: This isn't working in Prettier v3
-    versions: [2],
+    versions: [2, 3],
     plugins: ['prettier-plugin-marko'],
     tests: {
       marko: [

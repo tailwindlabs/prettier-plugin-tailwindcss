@@ -9,6 +9,17 @@ export function loadIfExists(name) {
   }
 }
 
+export async function loadIfExistsESM(name) {
+  try {
+    if (createRequire(import.meta.url).resolve(name)) {
+      return import(name)
+    }
+  } catch (e) {
+    console.log(e)
+    return null
+  }
+}
+
 // https://lihautan.com/manipulating-ast-with-javascript/
 export function visit(ast, callbackMap) {
   function _visit(node, parent, key, index, meta = {}) {

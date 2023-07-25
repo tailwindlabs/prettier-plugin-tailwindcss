@@ -1,4 +1,4 @@
-import { loadIfExists } from './utils.js'
+import { loadIfExistsESM } from '../utils.js'
 
 let compatiblePlugins = [
   '@prettier/plugin-pug',
@@ -23,12 +23,12 @@ let additionalPrinterPlugins = [
 let parserMap = new Map()
 let isTesting = process.env.NODE_ENV === 'test'
 
-export function getCompatibleParser(base, parserFormat, options) {
+export async function getCompatibleParser(base, parserFormat, options) {
   if (parserMap.has(parserFormat) && !isTesting) {
     return parserMap.get(parserFormat)
   }
 
-  let parser = getFreshCompatibleParser(base, parserFormat, options)
+  let parser = await getFreshCompatibleParser(base, parserFormat, options)
   parserMap.set(parserFormat, parser)
   return parser
 }
@@ -40,7 +40,7 @@ export function getCompatibleParser(base, parserFormat, options) {
  * @param {import('prettier').Options} options
  * @returns {import('prettier').Parser<any>}
  */
-function getFreshCompatibleParser(base, parserFormat, options) {
+async function getFreshCompatibleParser(base, parserFormat, options) {
   if (!options.plugins) {
     return base.parsers[parserFormat]
   }
@@ -51,7 +51,7 @@ function getFreshCompatibleParser(base, parserFormat, options) {
 
   // Now load parsers from plugins
   for (const name of compatiblePlugins) {
-    let plugin = findEnabledPlugin(options, name)
+    let plugin = await findEnabledPlugin(options, name)
 
     if (plugin) {
       Object.assign(parser, plugin.parsers[parserFormat])
@@ -64,11 +64,13 @@ function getFreshCompatibleParser(base, parserFormat, options) {
 /**
  * @returns {Record<string, import('prettier').Parser<any>>}
  */
-export function getAdditionalParsers() {
+export async function getAdditionalParsers() {
   let parsers = {}
 
   for (const pkg of additionalParserPlugins) {
-    Object.assign(parsers, loadIfExists(pkg)?.parsers ?? {})
+    let mod = await loadIfExistsESM(pkg)
+
+    Object.assign(parsers, mod?.parsers ?? {})
   }
 
   return parsers
@@ -77,11 +79,12 @@ export function getAdditionalParsers() {
 /**
  * @returns {Record<string, import('prettier').Printer<any>>}
  */
-export function getAdditionalPrinters() {
+export async function getAdditionalPrinters() {
   let printers = {}
 
   for (let { pkg, formats } of additionalPrinterPlugins) {
-    let pluginPrinters = loadIfExists(pkg)?.printers
+    let mod = await loadIfExistsESM(pkg)
+    let pluginPrinters = mod?.printers
     for (let format of formats) {
       if (pluginPrinters && format in pluginPrinters) {
         printers[format] = pluginPrinters[format]
@@ -98,7 +101,7 @@ export function getAdditionalPrinters() {
  * @param {string} name
  * @returns {import('prettier').Plugin<any> | null}
  */
-function findEnabledPlugin(options, name) {
+async function findEnabledPlugin(options, name) {
   let path = null
 
   try {
@@ -117,7 +120,7 @@ function findEnabledPlugin(options, name) {
   }
 
   // The plugin was loaded with require so we use object equality to find it
-  let mod = loadIfExists(path)
+  let mod = await loadIfExistsESM(path)
   if (mod && mod.parsers && options.plugins.includes(mod)) {
     return mod
   }

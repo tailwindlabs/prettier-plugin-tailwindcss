@@ -579,7 +579,10 @@ function transformAstro(ast, { env, changes }) {
         const { tokens } = parse(exprValue)
 
         tokens.forEach((token) => {
-          if (token.type === 'String') {
+          if (
+            token.type === 'String' ||
+            (token.type === 'Template' && token.value.match(/^`[^`]+`$/) !== null)
+          ) {
             const [rangeStart, rangeEnd] = token.range
             const sortedPart = sortClasses(exprValue.slice(rangeStart + 1, rangeEnd - 1), {
               env,

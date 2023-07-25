@@ -2,22 +2,17 @@ const prettier = require('prettier')
 const path = require('path')
 const fs = require('fs')
 const { exec } = require('child_process')
-const { t, yes, no, format } = require('./utils')
+const { t, yes, no, format, pluginPath } = require('./utils')
 const { promisify } = require('util')
 const execAsync = promisify(exec)
 
 async function formatFixture(name, extension) {
   let binPath = path.resolve(__dirname, '../node_modules/.bin/prettier')
   let filePath = path.resolve(__dirname, `fixtures/${name}/index.${extension}`)
-  let pluginPath = path.resolve(__dirname, '../dist/index.js')
 
-  let cmd
-
-  if (prettier.version.startsWith('2.')) {
-    cmd = `${binPath} ${filePath} --plugin-search-dir ${__dirname} --plugin ${pluginPath}`
-  } else {
-    cmd = `${binPath} ${filePath} --plugin ${pluginPath}`
-  }
+  let cmd = prettier.version.startsWith('2.')
+    ? `${binPath} ${filePath} --plugin-search-dir ${__dirname} --plugin ${pluginPath}`
+    : `${binPath} ${filePath} --plugin ${pluginPath}`
 
   return execAsync(cmd).then(({ stdout }) => stdout.trim())
 }

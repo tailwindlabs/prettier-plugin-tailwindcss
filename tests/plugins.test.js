@@ -1,6 +1,6 @@
 const prettier = require('prettier')
 const path = require('path')
-const { t, yes, no, format } = require('./utils')
+const { t, yes, no, format, pluginPath } = require('./utils')
 
 let tests = [
   {
@@ -361,7 +361,7 @@ for (const group of tests) {
     test(`parsing ${parser} works with: ${name}`, async () => {
       let plugins = [
         ...group.plugins.map((name) => require.resolve(name)),
-        path.resolve(__dirname, '../dist/index.js'),
+        pluginPath,
       ]
 
       for (const [input, expected] of group.tests[parser]) {

@@ -26,6 +26,12 @@ module.exports.t = function t(strings, ...values) {
   return [input, output]
 }
 
+let pluginPath = prettier.version.startsWith('2.')
+  ? path.resolve(__dirname, '../dist/index.js')
+  : path.resolve(__dirname, '../dist/index.mjs')
+
+module.exports.pluginPath = pluginPath
+
 module.exports.format = async function format(str, options = {}) {
   let result = await prettier.format(str, {
     pluginSearchDirs: [__dirname], // disable plugin autoload
@@ -36,7 +42,7 @@ module.exports.format = async function format(str, options = {}) {
     ...options,
     plugins: [
       ...options.plugins ?? [],
-      path.resolve(__dirname, '../dist/index.js')
+      pluginPath,
     ],
   })
 

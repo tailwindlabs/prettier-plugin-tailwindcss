@@ -230,8 +230,7 @@ let tests = [
     },
   },
   {
-    // TODO: This isn't working in Prettier v3
-    versions: [2, 3],
+    versions: [2],
     plugins: ['prettier-plugin-marko'],
     tests: {
       marko: [

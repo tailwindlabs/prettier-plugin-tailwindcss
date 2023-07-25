@@ -297,7 +297,6 @@ import Custom from '../components/Custom.astro'
     },
   },
   {
-    // TODO: This isn't working in Prettier v3
     versions: [2, 3],
     plugins: ['prettier-plugin-svelte'],
     tests: {
@@ -329,14 +328,8 @@ import Custom from '../components/Custom.astro'
           `<div class="p-0 sm:p-0 {someVar}sm:block flex md:inline" />`,
         ],
         ['<div class={`sm:p-0\np-0`} />', '<div\n  class={`p-0\nsm:p-0`}\n/>'],
-        [
-          `{#await promise()} <div class="sm:p-0 p-0"></div> {:then} <div class="sm:p-0 p-0"></div> {/await}`,
-          `{#await promise()} <div class="p-0 sm:p-0" /> {:then} <div class="p-0 sm:p-0" /> {/await}`,
-        ],
-        [
-          `{#await promise() then} <div class="sm:p-0 p-0"></div> {/await}`,
-          `{#await promise() then} <div class="p-0 sm:p-0" /> {/await}`,
-        ],
+        t`{#await promise()} <div class="${yes}" /> {:then} <div class="${yes}" /> {/await}`,
+        t`{#await promise() then} <div class="${yes}" /> {/await}`,
       ],
     },
   },

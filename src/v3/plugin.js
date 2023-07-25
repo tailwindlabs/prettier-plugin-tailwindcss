@@ -783,42 +783,52 @@ function transformSvelte(ast, { env, changes }) {
 
 export { options } from '../options.js'
 
-export const printers = {
-  ...(base.printers['svelte-ast']
-    ? {
-        'svelte-ast': {
-          ...base.printers['svelte-ast'],
-          print: (path, options, print) => {
-            if (!options.__mutatedOriginalText) {
-              options.__mutatedOriginalText = true
-              let changes = path.stack[0].changes
-              if (changes?.length) {
-                let finder = lineColumn(options.originalText)
+export const printers = (function () {
+  let printers = {}
 
-                for (let change of changes) {
-                  let start = finder.toIndex(
-                    change.loc.start.line,
-                    change.loc.start.column + 1,
-                  )
-                  let end = finder.toIndex(
-                    change.loc.end.line,
-                    change.loc.end.column + 1,
-                  )
-
-                  options.originalText =
-                    options.originalText.substring(0, start) +
-                    change.text +
-                    options.originalText.substring(end)
-                }
-              }
-            }
-
-            return base.printers['svelte-ast'].print(path, options, print)
-          },
-        },
+  if (base.printers['svelte-ast']) {
+    function mutateOriginalText(path, options) {
+      if (options.__mutatedOriginalText) {
+        return
       }
-    : {}),
-}
+
+      options.__mutatedOriginalText = true
+
+      let changes = path.stack[0].changes
+      if (changes?.length) {
+        let finder = lineColumn(options.originalText)
+
+        for (let change of changes) {
+          let start = finder.toIndex(
+            change.loc.start.line,
+            change.loc.start.column + 1,
+          )
+          let end = finder.toIndex(
+            change.loc.end.line,
+            change.loc.end.column + 1,
+          )
+
+          options.originalText =
+            options.originalText.substring(0, start) +
+            change.text +
+            options.originalText.substring(end)
+        }
+      }
+    }
+
+    let original = base.printers['svelte-ast']
+    printers['svelte-ast'] = {
+      ...original,
+      print: (path, options, print) => {
+        mutateOriginalText(path, options)
+
+        return base.printers['svelte-ast'].print(path, options, print)
+      },
+    }
+  }
+
+  return printers
+})()
 
 export const parsers = {
   html: createParser('html', transformHtml, {

@@ -22,7 +22,7 @@ import { getCustomizations } from '../options.js'
 import { sortClasses, sortClassList } from '../sorting.js'
 import { visit } from '../utils.js'
 
-let base = getBasePlugins()
+let base = await getBasePlugins()
 
 /** @typedef {import('../types.js').Customizations} Customizations */
 /** @typedef {import('../types.js').TransformerContext} TransformerContext */
@@ -43,11 +43,12 @@ function createParser(parserFormat, transform, meta = {}) {
 
   return {
     ...base.parsers[parserFormat],
-    preprocess(code, options) {
-      let original = getCompatibleParser(base, parserFormat, options)
 
-      return original.preprocess ? original.preprocess(code, options) : code
-    },
+    // preprocess(code, options) {
+    //   let original = await getCompatibleParser(base, parserFormat, options)
+
+    //   return original.preprocess ? original.preprocess(code, options) : code
+    // },
 
     /**
      *
@@ -59,7 +60,7 @@ function createParser(parserFormat, transform, meta = {}) {
     async parse(text, options = {}) {
       let { context, generateRules } = await getTailwindConfig(options)
 
-      let original = getCompatibleParser(base, parserFormat, options)
+      let original = await getCompatibleParser(base, parserFormat, options)
 
       if (original.astFormat in printers) {
         options.printer = printers[original.astFormat]
@@ -553,6 +554,8 @@ function transformCss(ast, { env }) {
  * @param {TransformerContext} param1
  */
 function transformAstro(ast, { env, changes }) {
+  console.log("ASTRO")
+
   let { staticAttrs } = env.customizations
 
   if (
@@ -899,6 +902,13 @@ export const parsers = {
         }),
       }
     : {}),
+  ...(base.parsers.astroExpressionParser
+    ? {
+        astroExpressionParser: createParser('astroExpressionParser', transformJavaScript, {
+          staticAttrs: ['class'],
+        }),
+      }
+    : {}),
   ...(base.parsers.marko
     ? {
         marko: createParser('marko', transformMarko, {
@@ -931,9 +941,9 @@ export const parsers = {
 
 /**
  *
- * @returns {{parsers: Record<string, import('prettier').Parser<any>>, printers: Record<string, import('prettier').Printer<any>>}}
+ * @returns {Promise<{parsers: Record<string, import('prettier').Parser<any>>, printers: Record<string, import('prettier').Printer<any>>}>}
  */
-function getBasePlugins() {
+async function getBasePlugins() {
   return {
     parsers: {
       html: prettierParserHTML.parsers.html,
@@ -953,10 +963,10 @@ function getBasePlugins() {
       meriyah: prettierParserMeriyah.parsers.meriyah,
       __js_expression: prettierParserBabel.parsers.__js_expression,
 
-      // ...getAdditionalParsers(),
+      ...(await getAdditionalParsers()),
     },
     printers: {
-      // ...getAdditionalPrinters(),
+      ...(await getAdditionalPrinters()),
     },
   }
 }

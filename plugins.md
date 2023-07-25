@@ -1,6 +1,6 @@
 # Plugin Support
 
-This plugin supports both Prettier v2 and v3. Here we detail the last known-working version when using third party plugins with v2 and v3.
+This plugin supports both Prettier v2 and v3. Here we detail known-working versions when using third party plugins with v2 and v3.
 
 | Plugin                                  | Prettier v2 | Prettier v3 |
 | --------------------------------------- | ----------- | ----------- |

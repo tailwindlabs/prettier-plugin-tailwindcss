@@ -14,6 +14,9 @@ import * as prettierParserTypescript from 'prettier/plugins/typescript'
  * @property {Record<string, import('prettier').Printer<any>>} printers
  */
 
+/**
+ * @returns {Promise<import('prettier').Plugin<any>>}
+ */
 async function loadIfExistsESM(name) {
   try {
     if (createRequire(import.meta.url).resolve(name)) {
@@ -133,7 +136,7 @@ async function loadBuiltinPlugins() {
  * @returns {Promise<PluginDetails}>}
  */
 async function loadThirdPartyPlugins() {
-  let plugins = await Promise.all([
+  let [astro, liquid, marko, melody, pug, svelte] = await Promise.all([
     loadIfExistsESM('prettier-plugin-astro'),
     loadIfExistsESM('@shopify/prettier-plugin-liquid'),
     loadIfExistsESM('prettier-plugin-marko'),
@@ -142,17 +145,18 @@ async function loadThirdPartyPlugins() {
     loadIfExistsESM('prettier-plugin-svelte'),
   ])
 
-  let parsers = {}
-  let printers = {}
-
-  for (let plugin of plugins) {
-    Object.assign(parsers, plugin.parsers ?? {})
-    Object.assign(parsers, plugin.printers ?? {})
-  }
-
   return {
-    parsers,
-    printers,
+    parsers: {
+      ...astro.parsers,
+      ...liquid.parsers,
+      ...marko.parsers,
+      ...melody.parsers,
+      ...pug.parsers,
+      ...svelte.parsers,
+    },
+    printers: {
+      ...svelte.printers,
+    },
   }
 }
 

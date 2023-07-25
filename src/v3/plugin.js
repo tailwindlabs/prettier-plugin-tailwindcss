@@ -542,8 +542,6 @@ function transformCss(ast, { env }) {
  * @param {TransformerContext} param1
  */
 function transformAstro(ast, { env, changes }) {
-  console.log('ASTRO')
-
   let { staticAttrs } = env.customizations
 
   if (

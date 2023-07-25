@@ -1,4 +1,4 @@
-import { ParserOptions, Printer } from 'prettier'
+import { Printer } from 'prettier'
 
 export interface TransformerMetadata {
   // Default customizations for a given transformer

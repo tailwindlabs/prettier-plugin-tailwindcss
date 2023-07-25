@@ -1,9 +1,11 @@
 // @ts-check
+// @ts-ignore
 import * as astTypes from 'ast-types'
 import jsesc from 'jsesc'
 import lineColumn from 'line-column'
 import * as prettierParserAngular from 'prettier/plugins/angular'
 import * as prettierParserBabel from 'prettier/plugins/babel'
+// @ts-ignore
 import * as recast from 'recast'
 import { getCustomizations } from '../options.js'
 import { sortClasses, sortClassList } from '../sorting.js'

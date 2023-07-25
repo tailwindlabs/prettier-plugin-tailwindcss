@@ -831,6 +831,12 @@ export const printers = (function () {
 
         return base.printers['svelte-ast'].print(path, options, print)
       },
+      embed: (path, options) => {
+        mutateOriginalText(path, options)
+
+        // @ts-ignore
+        return base.printers['svelte-ast'].embed(path, options)
+      },
     }
   }
 

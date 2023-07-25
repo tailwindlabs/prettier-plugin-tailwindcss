@@ -1,4 +1,5 @@
 // @ts-check
+// @ts-ignore
 import * as astTypes from 'ast-types'
 import jsesc from 'jsesc'
 import lineColumn from 'line-column'
@@ -11,16 +12,17 @@ import prettierParserHTML from 'prettier/parser-html'
 import prettierParserMeriyah from 'prettier/parser-meriyah'
 import prettierParserPostCSS from 'prettier/parser-postcss'
 import prettierParserTypescript from 'prettier/parser-typescript'
+// @ts-ignore
 import * as recast from 'recast'
+import { getCustomizations } from '../options.js'
+import { sortClasses, sortClassList } from '../sorting.js'
+import { visit } from '../utils.js'
 import {
   getCompatibleParser,
   getAdditionalParsers,
   getAdditionalPrinters,
 } from './compat.js'
 import { getTailwindConfig } from './config.js'
-import { getCustomizations } from '../options.js'
-import { sortClasses, sortClassList } from '../sorting.js'
-import { visit } from '../utils.js'
 
 let base = getBasePlugins()
 

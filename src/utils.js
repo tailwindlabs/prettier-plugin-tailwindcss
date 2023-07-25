@@ -9,33 +9,6 @@ export function loadIfExists(name) {
   }
 }
 
-export async function loadIfExistsESM(name) {
-  try {
-    if (createRequire(import.meta.url).resolve(name)) {
-      return import(name)
-    }
-  } catch (e) {
-    return {
-      parsers: {},
-      printers: {},
-    }
-  }
-}
-
-/**
- * @param {Record<string, string>} names
- * @returns {Promise<Record<string, any>>}
- */
-export async function loadAll(names) {
-  return Object.fromEntries(
-    await Promise.all(
-      Object.entries(names).map(async ([key, name]) => {
-        return [key, await loadIfExistsESM(name)]
-      }),
-    ),
-  )
-}
-
 // https://lihautan.com/manipulating-ast-with-javascript/
 export function visit(ast, callbackMap) {
   function _visit(node, parent, key, index, meta = {}) {

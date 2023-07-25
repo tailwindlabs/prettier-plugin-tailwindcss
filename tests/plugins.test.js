@@ -4,7 +4,7 @@ const { t, yes, no, format, pluginPath } = require('./utils')
 
 let tests = [
   {
-    versions: [2],
+    versions: [2, 3],
     plugins: ['@trivago/prettier-plugin-sort-imports'],
     options: {
       importOrder: ['^@one/(.*)$', '^@two/(.*)$', '^[./]'],
@@ -34,7 +34,7 @@ let tests = [
     },
   },
   {
-    versions: [2],
+    versions: [2, 3],
     plugins: ['@ianvs/prettier-plugin-sort-imports'],
     options: {
       importOrder: ['^@tailwindcss/(.*)$', '^@babel/(.*)$', '^[./]'],
@@ -64,6 +64,7 @@ let tests = [
     },
   },
   {
+    // TODO: Doesn't work in v3. Don't know why.
     versions: [2],
     plugins: ['prettier-plugin-organize-imports'],
     options: {},

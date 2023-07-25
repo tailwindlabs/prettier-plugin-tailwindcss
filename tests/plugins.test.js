@@ -296,6 +296,9 @@ import Custom from '../components/Custom.astro'
         t`<div>
   <span class:list={['${yes}', { '${yes}': '${yes}' }, new Set(['${yes}'])]}></span>
 </div>`,
+        t`<div>
+  <span class:list={[\`${yes}\`, \`\${'${yes}'}\`, \`\${\`${yes}\`}\`, \`\${\`\${'${yes}'}\`}\`]}></span>
+</div>`,
       ],
     },
   },

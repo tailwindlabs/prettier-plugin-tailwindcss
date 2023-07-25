@@ -81,7 +81,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const common = {
   bundle: true,
   platform: 'node',
-  target: 'node14.13.0',
+  target: 'node14.21.3',
   external: ['prettier'],
   minify: process.argv.includes('--minify'),
 }

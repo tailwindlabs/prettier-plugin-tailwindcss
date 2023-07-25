@@ -4,6 +4,7 @@
   "description": "A Prettier plugin for sorting Tailwind CSS classes.",
   "license": "MIT",
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "files": [
     "dist"
   ],

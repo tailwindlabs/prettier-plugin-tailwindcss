@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Added
+
+- Support sorting in Astro `class:list` ([#192](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/192))
 
 ## [0.4.1] - 2023-07-14
 

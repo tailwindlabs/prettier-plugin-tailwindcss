@@ -572,27 +572,10 @@ function transformAstro(ast, { env, changes }) {
       } else if (
         attr.name === 'class:list' &&
         attr.type === 'attribute' &&
-        attr.kind === 'expression'
+        attr.kind === 'expression' &&
+        typeof attr.value === 'string'
       ) {
-        let exprValue = attr.value
-        const { typescript: parse } = env.parsers
-        const { tokens } = parse(exprValue)
-
-        tokens.forEach((token) => {
-          if (
-            token.type === 'String' ||
-            (token.type === 'Template' && token.value.match(/^`[^`]+`$/) !== null)
-          ) {
-            const [rangeStart, rangeEnd] = token.range
-            const sortedPart = sortClasses(exprValue.slice(rangeStart + 1, rangeEnd - 1), {
-              env,
-            })
-
-            exprValue = `${exprValue.slice(0, rangeStart + 1)}${sortedPart}${exprValue.slice(rangeEnd - 1)}`
-          }
-        })
-
-        attr.value = exprValue
+        transformDynamicJsAttribute(attr, env)
       }
     }
   }

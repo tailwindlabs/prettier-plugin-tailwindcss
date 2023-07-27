@@ -26,9 +26,7 @@ module.exports.t = function t(strings, ...values) {
   return [input, output]
 }
 
-let pluginPath = prettier.version.startsWith('2.')
-  ? path.resolve(__dirname, '../dist/index.js')
-  : path.resolve(__dirname, '../dist/index.mjs')
+let pluginPath = path.resolve(__dirname, '../dist/index.mjs')
 
 module.exports.pluginPath = pluginPath
 
@@ -40,10 +38,7 @@ module.exports.format = async function format(str, options = {}) {
     printWidth: 9999,
     parser: 'html',
     ...options,
-    plugins: [
-      ...options.plugins ?? [],
-      pluginPath,
-    ],
+    plugins: [...(options.plugins ?? []), pluginPath],
   })
 
   return result.trim()

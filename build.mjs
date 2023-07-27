@@ -77,52 +77,26 @@ function copyTypes() {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-/** @type {Partial<import('esbuild').BuildOptions>} */
-const common = {
+let context = await esbuild.context({
   bundle: true,
   platform: 'node',
   target: 'node14.21.3',
   external: ['prettier'],
   minify: process.argv.includes('--minify'),
-}
+  entryPoints: [path.resolve(__dirname, './src/index.js')],
+  outfile: path.resolve(__dirname, './dist/index.mjs'),
+  format: "esm",
+  plugins: [
+    patchRecast(),
+    patchDynamicRequires(),
+    copyTypes(),
+  ],
+})
 
-let contexts = await Promise.all([
-  // Prettier v2
-  esbuild.context({
-    ...common,
-    entryPoints: [path.resolve(__dirname, './src/index.cjs')],
-    outfile: path.resolve(__dirname, './dist/index.js'),
-    format: "cjs",
-    define: {
-      __IS_PRETTIER_3__: 'false',
-    },
-    plugins: [
-      patchRecast(),
-      copyTypes(),
-    ],
-  }),
-
-  // Prettier v3
-  esbuild.context({
-    ...common,
-    entryPoints: [path.resolve(__dirname, './src/index.mjs')],
-    outfile: path.resolve(__dirname, './dist/index.mjs'),
-    format: "esm",
-    define: {
-      __IS_PRETTIER_3__: 'true',
-    },
-    plugins: [
-      patchRecast(),
-      patchDynamicRequires(),
-      copyTypes(),
-    ],
-  }),
-])
-
-await Promise.all(contexts.map(context => context.rebuild()))
+await context.rebuild()
 
 if (process.argv.includes('--watch')) {
-  await Promise.all(contexts.map(context => context.watch()))
+  await context.watch()
 }
 
-await Promise.all(contexts.map(context => context.dispose()))
+await context.dispose()

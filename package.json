@@ -3,16 +3,9 @@
   "version": "0.4.1",
   "description": "A Prettier plugin for sorting Tailwind CSS classes.",
   "license": "MIT",
-  "main": "dist/index.js",
+  "main": "dist/index.mjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
-    }
-  },
   "files": [
     "dist"
   ],
@@ -53,7 +46,7 @@
     "license-checker": "^25.0.1",
     "line-column": "^1.0.2",
     "object-hash": "^2.2.0",
-    "prettier": "^3.0",
+    "prettier": "3.0",
     "prettier-plugin-astro": "^0.11.0",
     "prettier-plugin-css-order": "^1.3.1",
     "prettier-plugin-import-sort": "^0.0.7",

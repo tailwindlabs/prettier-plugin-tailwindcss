@@ -7,4 +7,4 @@ if (prettier.version.startsWith('2.')) {
   )
 }
 
-export * from './v3/plugin.js'
+export * from './plugin.js'

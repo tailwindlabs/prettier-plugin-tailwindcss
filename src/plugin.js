@@ -3,32 +3,21 @@
 import * as astTypes from 'ast-types'
 import jsesc from 'jsesc'
 import lineColumn from 'line-column'
-import prettierParserAngular from 'prettier/parser-angular'
-import prettierParserBabel from 'prettier/parser-babel'
-import prettierParserEspree from 'prettier/parser-espree'
-import prettierParserFlow from 'prettier/parser-flow'
-import prettierParserGlimmer from 'prettier/parser-glimmer'
-import prettierParserHTML from 'prettier/parser-html'
-import prettierParserMeriyah from 'prettier/parser-meriyah'
-import prettierParserPostCSS from 'prettier/parser-postcss'
-import prettierParserTypescript from 'prettier/parser-typescript'
+import * as prettierParserAngular from 'prettier/plugins/angular'
+import * as prettierParserBabel from 'prettier/plugins/babel'
 // @ts-ignore
 import * as recast from 'recast'
-import { getCustomizations } from '../options.js'
-import { sortClasses, sortClassList } from '../sorting.js'
-import { visit } from '../utils.js'
-import {
-  getCompatibleParser,
-  getAdditionalParsers,
-  getAdditionalPrinters,
-} from './compat.js'
+import { getCustomizations } from './options.js'
+import { sortClasses, sortClassList } from './sorting.js'
+import { visit } from './utils.js'
 import { getTailwindConfig } from './config.js'
+import { loadPlugins } from './plugins.js'
 
-let base = getBasePlugins()
+let base = await loadPlugins()
 
-/** @typedef {import('../types.js').Customizations} Customizations */
-/** @typedef {import('../types.js').TransformerContext} TransformerContext */
-/** @typedef {import('../types.js').TransformerMetadata} TransformerMetadata */
+/** @typedef {import('./types.js').Customizations} Customizations */
+/** @typedef {import('./types.js').TransformerContext} TransformerContext */
+/** @typedef {import('./types.js').TransformerMetadata} TransformerMetadata */
 
 /**
  * @param {string} parserFormat
@@ -45,8 +34,9 @@ function createParser(parserFormat, transform, meta = {}) {
 
   return {
     ...base.parsers[parserFormat],
+
     preprocess(code, options) {
-      let original = getCompatibleParser(base, parserFormat, options)
+      let original = base.originalParser(parserFormat, options)
 
       return original.preprocess ? original.preprocess(code, options) : code
     },
@@ -54,20 +44,19 @@ function createParser(parserFormat, transform, meta = {}) {
     /**
      *
      * @param {string} text
-     * @param {any} parsers
      * @param {import('prettier').ParserOptions} options
      * @returns
      */
-    parse(text, parsers, options = {}) {
-      let { context, generateRules } = getTailwindConfig(options)
+    async parse(text, options) {
+      let { context, generateRules } = await getTailwindConfig(options)
 
-      let original = getCompatibleParser(base, parserFormat, options)
+      let original = base.originalParser(parserFormat, options)
 
       if (original.astFormat in printers) {
         options.printer = printers[original.astFormat]
       }
 
-      let ast = original.parse(text, parsers, options)
+      let ast = await original.parse(text, options)
 
       let customizations = getCustomizations(
         options,
@@ -78,7 +67,7 @@ function createParser(parserFormat, transform, meta = {}) {
       let changes = []
 
       transform(ast, {
-        env: { context, customizations, generateRules, parsers, options },
+        env: { context, customizations, generateRules, parsers: {}, options },
         changes,
       })
 
@@ -801,44 +790,60 @@ function transformSvelte(ast, { env, changes }) {
   }
 }
 
-export { options } from '../options.js'
+export { options } from './options.js'
 
-export const printers = {
-  ...(base.printers['svelte-ast']
-    ? {
-        'svelte-ast': {
-          ...base.printers['svelte-ast'],
-          print: (path, options, print) => {
-            if (!options.__mutatedOriginalText) {
-              options.__mutatedOriginalText = true
-              let changes = path.stack[0].changes
-              if (changes?.length) {
-                let finder = lineColumn(options.originalText)
+export const printers = (function () {
+  let printers = {}
 
-                for (let change of changes) {
-                  let start = finder.toIndex(
-                    change.loc.start.line,
-                    change.loc.start.column + 1,
-                  )
-                  let end = finder.toIndex(
-                    change.loc.end.line,
-                    change.loc.end.column + 1,
-                  )
-
-                  options.originalText =
-                    options.originalText.substring(0, start) +
-                    change.text +
-                    options.originalText.substring(end)
-                }
-              }
-            }
-
-            return base.printers['svelte-ast'].print(path, options, print)
-          },
-        },
+  if (base.printers['svelte-ast']) {
+    function mutateOriginalText(path, options) {
+      if (options.__mutatedOriginalText) {
+        return
       }
-    : {}),
-}
+
+      options.__mutatedOriginalText = true
+
+      let changes = path.stack[0].changes
+      if (changes?.length) {
+        let finder = lineColumn(options.originalText)
+
+        for (let change of changes) {
+          let start = finder.toIndex(
+            change.loc.start.line,
+            change.loc.start.column + 1,
+          )
+          let end = finder.toIndex(
+            change.loc.end.line,
+            change.loc.end.column + 1,
+          )
+
+          options.originalText =
+            options.originalText.substring(0, start) +
+            change.text +
+            options.originalText.substring(end)
+        }
+      }
+    }
+
+    let original = base.printers['svelte-ast']
+    printers['svelte-ast'] = {
+      ...original,
+      print: (path, options, print) => {
+        mutateOriginalText(path, options)
+
+        return base.printers['svelte-ast'].print(path, options, print)
+      },
+      embed: (path, options) => {
+        mutateOriginalText(path, options)
+
+        // @ts-ignore
+        return base.printers['svelte-ast'].embed(path, options)
+      },
+    }
+  }
+
+  return printers
+})()
 
 export const parsers = {
   html: createParser('html', transformHtml, {
@@ -882,7 +887,7 @@ export const parsers = {
     staticAttrs: ['class', 'className'],
   }),
 
-  espree: createParser('espree', transformJavaScript, {
+  acorn: createParser('acorn', transformJavaScript, {
     staticAttrs: ['class', 'className'],
   }),
 
@@ -907,6 +912,18 @@ export const parsers = {
           staticAttrs: ['class'],
           dynamicAttrs: ['class:list'],
         }),
+      }
+    : {}),
+  ...(base.parsers.astroExpressionParser
+    ? {
+        astroExpressionParser: createParser(
+          'astroExpressionParser',
+          transformJavaScript,
+          {
+            staticAttrs: ['class'],
+            dynamicAttrs: ['class:list'],
+          },
+        ),
       }
     : {}),
   ...(base.parsers.marko
@@ -937,36 +954,4 @@ export const parsers = {
         }),
       }
     : {}),
-}
-
-/**
- *
- * @returns {{parsers: Record<string, import('prettier').Parser<any>>, printers: Record<string, import('prettier').Printer<any>>}}
- */
-function getBasePlugins() {
-  return {
-    parsers: {
-      html: prettierParserHTML.parsers.html,
-      glimmer: prettierParserGlimmer.parsers.glimmer,
-      lwc: prettierParserHTML.parsers.lwc,
-      angular: prettierParserHTML.parsers.angular,
-      vue: prettierParserHTML.parsers.vue,
-      css: prettierParserPostCSS.parsers.css,
-      scss: prettierParserPostCSS.parsers.scss,
-      less: prettierParserPostCSS.parsers.less,
-      babel: prettierParserBabel.parsers.babel,
-      'babel-flow': prettierParserBabel.parsers['babel-flow'],
-      flow: prettierParserFlow.parsers.flow,
-      typescript: prettierParserTypescript.parsers.typescript,
-      'babel-ts': prettierParserBabel.parsers['babel-ts'],
-      espree: prettierParserEspree.parsers.espree,
-      meriyah: prettierParserMeriyah.parsers.meriyah,
-      __js_expression: prettierParserBabel.parsers.__js_expression,
-
-      ...getAdditionalParsers(),
-    },
-    printers: {
-      ...getAdditionalPrinters(),
-    },
-  }
 }

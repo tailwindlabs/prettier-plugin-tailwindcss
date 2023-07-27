@@ -10,9 +10,7 @@ async function formatFixture(name, extension) {
   let binPath = path.resolve(__dirname, '../node_modules/.bin/prettier')
   let filePath = path.resolve(__dirname, `fixtures/${name}/index.${extension}`)
 
-  let cmd = prettier.version.startsWith('2.')
-    ? `${binPath} ${filePath} --plugin-search-dir ${__dirname} --plugin ${pluginPath}`
-    : `${binPath} ${filePath} --plugin ${pluginPath}`
+  let cmd = `${binPath} ${filePath} --plugin ${pluginPath}`
 
   return execAsync(cmd).then(({ stdout }) => stdout.trim())
 }
@@ -155,12 +153,7 @@ let tests = {
     t`<div [ngClass]="[someVar ?? '${yes}']"></div>`,
     t`<div [ngClass]="{ '${yes}': true }"></div>`,
     t`<div [ngClass]="clsx('${yes}')"></div>`,
-    prettier.version.startsWith('2.')
-    ? [
-      `<div [ngClass]="{ 'sm:p-0 p-0': (some.thing | urlPipe: { option: true } | async), 'sm:p-0 p-0': true }"></div>`,
-      `<div [ngClass]="{ 'p-0 sm:p-0': (some.thing | urlPipe : { option: true } | async), 'p-0 sm:p-0': true }"></div>`,
-    ]
-    : t`<div [ngClass]="{ '${yes}': (some.thing | urlPipe: { option: true } | async), '${yes}': true }"></div>`,
+    t`<div [ngClass]="{ '${yes}': (some.thing | urlPipe: { option: true } | async), '${yes}': true }"></div>`,
     t`<div [ngClass]="{ '${yes}': foo && bar?.['baz'] }" class="${yes}"></div>`,
 
     // TODO: Enable this test — it causes console noise but not a failure
@@ -174,11 +167,7 @@ let tests = {
   'babel-ts': javascript,
   flow: javascript,
   'babel-flow': javascript,
-  ...(
-    prettier.version.startsWith('2.')
-      ? { espree: javascript }
-      : { acorn: javascript }
-  ),
+  acorn: javascript,
   meriyah: javascript,
   mdx: javascript
     .filter((test) => !test.find((t) => /^\/\*/.test(t)))
@@ -288,7 +277,9 @@ describe('other', () => {
 
   test('parasite utilities', async () => {
     expect(
-      await format('<div class="group peer unknown-class p-0 container"></div>'),
+      await format(
+        '<div class="group peer unknown-class p-0 container"></div>',
+      ),
     ).toEqual('<div class="unknown-class group peer container p-0"></div>')
   })
 

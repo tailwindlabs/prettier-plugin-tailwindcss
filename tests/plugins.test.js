@@ -348,9 +348,7 @@ pug.logger.level = 'off'
 for (const group of tests) {
   let name = group.plugins.join(', ')
 
-  let canRun = prettier.version.startsWith('2.')
-    ? group.versions.includes(2)
-    : group.versions.includes(3)
+  let canRun = group.versions.includes(3)
 
   for (let parser in group.tests) {
     if (!canRun) {

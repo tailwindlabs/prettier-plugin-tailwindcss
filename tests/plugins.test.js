@@ -115,7 +115,7 @@ let tests = [
     },
   },
   {
-    versions: [2],
+    versions: [2, 3],
     plugins: ['@prettier/plugin-pug'],
     tests: {
       pug: [
@@ -341,10 +341,6 @@ import Custom from '../components/Custom.astro'
   },
 ]
 
-// Disable pug printer -- it produces noisy test output
-let pug = require('@prettier/plugin-pug')
-pug.logger.level = 'off'
-
 for (const group of tests) {
   let name = group.plugins.join(', ')
 
@@ -357,6 +353,13 @@ for (const group of tests) {
     }
 
     test(`parsing ${parser} works with: ${name}`, async () => {
+      // This segaults node
+      // I guess the noise is fine for now
+      // if (parser === 'pug') {
+      //   let pug = await import('@prettier/plugin-pug')
+      //   pug.logger.level = 'off'
+      // }
+
       let plugins = [
         ...group.plugins.map((name) => require.resolve(name)),
         pluginPath,

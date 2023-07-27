@@ -33,7 +33,7 @@
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.1.0",
     "@marko/translator-default": "^5.25.7",
-    "@prettier/plugin-pug": "^2.5.2",
+    "@prettier/plugin-pug": "^3.0",
     "@shopify/prettier-plugin-liquid": "^1.2.2",
     "@trivago/prettier-plugin-sort-imports": "^4.2.0",
     "clear-module": "^4.1.2",

@@ -293,6 +293,12 @@ import Custom from '../components/Custom.astro'
   <my-element class="${yes}"></my-element>
   <Custom class="${yes}" />
 </Layout>`,
+        t`<div>
+  <span class:list={['${yes}', { '${yes}': '${yes}' }, new Set(['${yes}'])]}></span>
+</div>`,
+        t`<div>
+  <span class:list={[\`${yes}\`, \`\${'${yes}'}\`, \`\${\`${yes}\`}\`, \`\${\`\${'${yes}'}\`}\`]}></span>
+</div>`,
       ],
     },
   },

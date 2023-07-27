@@ -553,7 +553,7 @@ function transformCss(ast, { env }) {
  * @param {TransformerContext} param1
  */
 function transformAstro(ast, { env, changes }) {
-  let { staticAttrs } = env.customizations
+  let { staticAttrs, dynamicAttrs } = env.customizations
 
   if (
     ast.type === 'element' ||
@@ -570,7 +570,7 @@ function transformAstro(ast, { env, changes }) {
           env,
         })
       } else if (
-        attr.name === 'class:list' &&
+        dynamicAttrs.has(attr.name) &&
         attr.type === 'attribute' &&
         attr.kind === 'expression' &&
         typeof attr.value === 'string'
@@ -903,6 +903,7 @@ export const parsers = {
     ? {
         astro: createParser('astro', transformAstro, {
           staticAttrs: ['class'],
+          dynamicAttrs: ['class:list'],
         }),
       }
     : {}),

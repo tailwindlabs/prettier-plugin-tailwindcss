@@ -41,7 +41,6 @@ function createVisitor(transform, meta = {}) {
 
       transform(ast, {
         env: { context, customizations, generateRules, parsers: {}, options },
-        changes: [],
       })
 
       return ast

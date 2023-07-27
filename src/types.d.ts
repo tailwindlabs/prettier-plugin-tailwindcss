@@ -17,7 +17,7 @@ export interface Customizations {
 
 export interface TransformerContext {
   env: TransformerEnv
-  changes: { text: string; loc: any }[]
+  changes?: { text: string; loc: any }[]
 }
 
 export interface TransformerEnv {

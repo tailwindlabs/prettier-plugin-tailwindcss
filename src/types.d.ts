@@ -2,6 +2,8 @@ import { Printer } from 'prettier'
 
 export interface TransformerMetadata {
   // Default customizations for a given transformer
+  parser?: string
+  parentParser?: string
   staticAttrs?: string[]
   dynamicAttrs?: string[]
   functions?: string[]

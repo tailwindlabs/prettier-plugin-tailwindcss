@@ -88,24 +88,24 @@ const common = {
 
 let contexts = await Promise.all([
   // Prettier v2
-  esbuild.context({
-    ...common,
-    entryPoints: [path.resolve(__dirname, './src/index.cjs')],
-    outfile: path.resolve(__dirname, './dist/index.js'),
-    format: "cjs",
-    define: {
-      __IS_PRETTIER_3__: 'false',
-    },
-    plugins: [
-      patchRecast(),
-      copyTypes(),
-    ],
-  }),
+  // esbuild.context({
+  //   ...common,
+  //   entryPoints: [path.resolve(__dirname, './src/index.cjs')],
+  //   outfile: path.resolve(__dirname, './dist/index.js'),
+  //   format: "cjs",
+  //   define: {
+  //     __IS_PRETTIER_3__: 'false',
+  //   },
+  //   plugins: [
+  //     patchRecast(),
+  //     copyTypes(),
+  //   ],
+  // }),
 
   // Prettier v3
   esbuild.context({
     ...common,
-    entryPoints: [path.resolve(__dirname, './src/index.mjs')],
+    entryPoints: [path.resolve(__dirname, './src/index.js')],
     outfile: path.resolve(__dirname, './dist/index.mjs'),
     format: "esm",
     define: {

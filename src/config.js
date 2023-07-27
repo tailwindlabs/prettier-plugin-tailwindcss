@@ -10,15 +10,15 @@ import { generateRules as generateRulesFallback } from 'tailwindcss/lib/lib/gene
 import { createContext as createContextFallback } from 'tailwindcss/lib/lib/setupContextUtils'
 import loadConfigFallback from 'tailwindcss/loadConfig'
 import resolveConfigFallback from 'tailwindcss/resolveConfig'
-import { expiringMap } from '../expiring-map.js'
+import { expiringMap } from './expiring-map.js'
 
 /** @typedef {import('prettier').ParserOptions} ParserOptions **/
-/** @typedef {import('../types.js').ContextContainer} ContextContainer **/
+/** @typedef {import('./types.js').ContextContainer} ContextContainer **/
 
 /**
  * @template K
  * @template V
- * @typedef {import('../expiring-map.js').ExpiringMap<K,V>} ExpiringMap
+ * @typedef {import('./expiring-map.js').ExpiringMap<K,V>} ExpiringMap
  **/
 
 /** @type {Map<string, string | null>} */
@@ -32,11 +32,11 @@ let prettierConfigCache = expiringMap(10_000)
 
 /**
  * @param {ParserOptions} options
- * @returns {ContextContainer}
+ * @returns {Promise<ContextContainer>}
  */
-export function getTailwindConfig(options) {
+export async function getTailwindConfig(options) {
   let key = `${options.filepath}:${options.tailwindConfig ?? ''}`
-  let baseDir = getBaseDir(options)
+  let baseDir = await getBaseDir(options)
 
   // Map the source file to it's associated Tailwind config file
   let configPath = sourceToPathMap.get(key)
@@ -62,16 +62,16 @@ export function getTailwindConfig(options) {
 /**
  *
  * @param {ParserOptions} options
- * @returns {string | null}
+ * @returns {Promise<string | null>}
  */
-function getPrettierConfigPath(options) {
+async function getPrettierConfigPath(options) {
   // Locating the config file can be mildly expensive so we cache it temporarily
   let existingPath = prettierConfigCache.get(options.filepath)
   if (existingPath !== undefined) {
     return existingPath
   }
 
-  let path = prettier.resolveConfigFile.sync(options.filepath)
+  let path = await prettier.resolveConfigFile(options.filepath)
   prettierConfigCache.set(options.filepath, path)
 
   return path
@@ -79,10 +79,10 @@ function getPrettierConfigPath(options) {
 
 /**
  * @param {ParserOptions} options
- * @returns {string}
+ * @returns {Promise<string>}
  */
-function getBaseDir(options) {
-  let prettierConfigPath = getPrettierConfigPath(options)
+async function getBaseDir(options) {
+  let prettierConfigPath = await getPrettierConfigPath(options)
 
   if (options.tailwindConfig) {
     return prettierConfigPath ? path.dirname(prettierConfigPath) : process.cwd()

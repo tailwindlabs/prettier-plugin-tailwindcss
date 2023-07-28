@@ -145,9 +145,11 @@ This plugin uses Prettier APIs that can only be used by one plugin at a time, ma
 - `prettier-plugin-svelte`
 - `prettier-plugin-twig-melody`
 
-One limitation with this approach is that `prettier-plugin-tailwindcss` *must* be loaded last. Additionally, when using Prettier v2 (but not v3), auto-loading must be disabled as it may result in plugins loading after `prettier-plugin-tailwindcss`. When using Prettier v3 no other changes are necessary as it does not have autoloading and always requires plugins to be explicitly listed.
+One limitation with this approach is that `prettier-plugin-tailwindcss` *must* be loaded last.
 
-You can do this by setting the `pluginSearchDirs` option to `false` and then listing each of your Prettier plugins in the `plugins` array:
+Additionally, if you're using Prettier v2 (but not v3), auto-loading must be disabled by setting the `pluginSearchDirs` option to `false`. This is because auto-loading can result in plugins being loaded after `prettier-plugin-tailwindcss` which breaks our compatability. When using Prettier v3 this is not necessary as it no longer supports autoloading.
+
+For Prettier v2, list each of your Prettier plugins in the `plugins` array and set `pluginSearchDirs` to `false`:
 
 ```json5
 // .prettierrc
@@ -159,5 +161,19 @@ You can do this by setting the `pluginSearchDirs` option to `false` and then lis
     "prettier-plugin-tailwindcss" // MUST come last
   ],
   "pluginSearchDirs": false // Prettier v2.x only
+}
+```
+
+For Prettier v3+, list each of your Prettier plugins in the `plugins` array:
+
+```json5
+// .prettierrc
+{
+  // ..
+  "plugins": [
+    "prettier-plugin-svelte",
+    "prettier-plugin-organize-imports",
+    "prettier-plugin-tailwindcss" // MUST come last
+  ],
 }
 ```

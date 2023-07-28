@@ -127,6 +127,8 @@ function MyScreen() {
 
 ## Compatibility with other Prettier plugins
 
+**Note: when using Prettier v3.0 compatability with external plugins does not currently work. We're actively working to rectify this situation.**
+
 This plugin uses Prettier APIs that can only be used by one plugin at a time, making it incompatible with other Prettier plugins implemented the same way. To solve this we've added explicit per-plugin workarounds that enable compatibility with the following Prettier plugins:
 
 - `@prettier/plugin-pug`
@@ -143,7 +145,9 @@ This plugin uses Prettier APIs that can only be used by one plugin at a time, ma
 - `prettier-plugin-svelte`
 - `prettier-plugin-twig-melody`
 
-One limitation with this approach is that `prettier-plugin-tailwindcss` *must* be loaded last, meaning Prettier auto-loading needs to be disabled. You can do this by setting the `pluginSearchDirs` option to `false` and then listing each of your Prettier plugins in the `plugins` array:
+One limitation with this approach is that `prettier-plugin-tailwindcss` *must* be loaded last. Additionally, when using Prettier v2 (but not v3), auto-loading must be disabled as it may result in plugins loading after `prettier-plugin-tailwindcss`. When using Prettier v3 no other changes are necessary as it does not have autoloading and always requires plugins to be explicitly listed.
+
+You can do this by setting the `pluginSearchDirs` option to `false` and then listing each of your Prettier plugins in the `plugins` array:
 
 ```json5
 // .prettierrc
@@ -154,6 +158,6 @@ One limitation with this approach is that `prettier-plugin-tailwindcss` *must* b
     "prettier-plugin-organize-imports",
     "prettier-plugin-tailwindcss" // MUST come last
   ],
-  "pluginSearchDirs": false
+  "pluginSearchDirs": false // Prettier v2.x only
 }
 ```

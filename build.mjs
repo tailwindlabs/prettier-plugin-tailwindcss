@@ -46,9 +46,16 @@ function patchDynamicRequires() {
         content = `import {createRequire} from 'module';\n${content}`
 
         // Replace dynamic require error with createRequire
+        // unminified version
         content = content.replace(
           `throw Error('Dynamic require of "' + x + '" is not supported');`,
           `return createRequire(import.meta.url).apply(this, arguments);`,
+        )
+
+        // minified version
+        content = content.replace(
+          `throw Error('Dynamic require of "'+e+'" is not supported')`,
+          `return createRequire(import.meta.url).apply(this,arguments)`,
         )
 
         fs.promises.writeFile(outfile, content)

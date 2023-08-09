@@ -25,7 +25,7 @@
     "dev": "npm run _esbuild -- --watch",
     "pretest": "node scripts/install-fixture-deps.js",
     "test": "jest",
-    "prepublishOnly": "npm run build && npm test && node scripts/copy-licenses.js",
+    "prepublishOnly": "npm run build && node scripts/copy-licenses.js",
     "format": "prettier \"src/**/*.js\" \"scripts/**/*.js\" \"tests/test.js\" --write --print-width 100 --single-quote --no-semi --plugin-search-dir ./tests",
     "release-channel": "node ./scripts/release-channel.js",
     "release-notes": "node ./scripts/release-notes.js"

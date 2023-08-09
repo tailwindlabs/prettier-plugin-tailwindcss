@@ -22,10 +22,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        prettier-version: ['2', '3']
-
     steps:
       - uses: actions/checkout@v3
 
@@ -42,14 +38,6 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-${{ env.NODE_VERSION }}-${{ env.CACHE_PREFIX }}-node_modules-${{ hashFiles('**/package-lock.json') }}
 
-      - name: Set up Prettier v2
-        if: matrix.prettier-version == '2'
-        run: |
-          mv package.json package.v3.json
-          mv package.v2.json package.json
-          mv package-lock.json package-lock.v3.json
-          mv package-lock.v2.json package-lock.json
-
       - name: Install dependencies
         run: npm install --force
 
@@ -57,6 +45,6 @@ jobs:
         run: |
           npm run build
 
-      - name: Test against Prettier v${{ matrix.prettier-version }}
+      - name: Test against Prettier v3
         run: |
           NODE_OPTIONS=--experimental-vm-modules npm run test

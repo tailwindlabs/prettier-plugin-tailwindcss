@@ -1,10 +1,10 @@
 const prettier = require('prettier')
 const path = require('path')
-const { t, yes, no, format } = require('./utils')
+const { t, yes, no, format, pluginPath } = require('./utils')
 
 let tests = [
   {
-    versions: [2],
+    versions: [2, 3],
     plugins: ['@trivago/prettier-plugin-sort-imports'],
     options: {
       importOrder: ['^@one/(.*)$', '^@two/(.*)$', '^[./]'],
@@ -34,7 +34,7 @@ let tests = [
     },
   },
   {
-    versions: [2],
+    versions: [2, 3],
     plugins: ['@ianvs/prettier-plugin-sort-imports'],
     options: {
       importOrder: ['^@tailwindcss/(.*)$', '^@babel/(.*)$', '^[./]'],
@@ -64,7 +64,7 @@ let tests = [
     },
   },
   {
-    versions: [2],
+    versions: [2, 3],
     plugins: ['prettier-plugin-organize-imports'],
     options: {},
     tests: {
@@ -89,6 +89,7 @@ let tests = [
     },
   },
   {
+    // TODO: If this ever gets updated to Prettier v3 update this test
     versions: [2],
     plugins: ['prettier-plugin-twig-melody'],
     options: {
@@ -115,7 +116,7 @@ let tests = [
     },
   },
   {
-    versions: [2],
+    versions: [2, 3],
     plugins: ['@prettier/plugin-pug'],
     tests: {
       pug: [
@@ -143,7 +144,8 @@ let tests = [
     },
   },
   {
-    versions: [2],
+    // NOTE: This plugin doesn't officially support Prettier v3 but it seems to work fine
+    versions: [2, 3],
     plugins: ['prettier-plugin-import-sort'],
     tests: {
       babel: [
@@ -160,7 +162,7 @@ let tests = [
     },
   },
   {
-    versions: [2],
+    versions: [2, 3],
     plugins: ['prettier-plugin-jsdoc'],
     tests: {
       babel: [
@@ -172,7 +174,7 @@ let tests = [
     },
   },
   {
-    versions: [2],
+    versions: [2, 3],
     plugins: ['prettier-plugin-css-order'],
     tests: {
       css: [
@@ -184,7 +186,8 @@ let tests = [
     },
   },
   {
-    versions: [2],
+    // NOTE: This plugin doesn't officially support Prettier v3 but it appears to work
+    versions: [2, 3],
     plugins: ['prettier-plugin-style-order'],
     tests: {
       css: [
@@ -196,7 +199,7 @@ let tests = [
     },
   },
   {
-    versions: [2],
+    versions: [2, 3],
     plugins: ['prettier-plugin-organize-attributes'],
     tests: {
       html: [
@@ -208,7 +211,7 @@ let tests = [
     },
   },
   {
-    versions: [2],
+    versions: [2, 3],
     plugins: ['@shopify/prettier-plugin-liquid'],
     tests: {
       'liquid-html': [
@@ -262,7 +265,7 @@ let tests = [
     },
   },
   {
-    versions: [2],
+    versions: [2, 3],
     plugins: ['prettier-plugin-astro'],
     tests: {
       astro: [
@@ -303,7 +306,7 @@ import Custom from '../components/Custom.astro'
     },
   },
   {
-    versions: [2],
+    versions: [2, 3],
     plugins: ['prettier-plugin-svelte'],
     tests: {
       svelte: [
@@ -334,29 +337,17 @@ import Custom from '../components/Custom.astro'
           `<div class="p-0 sm:p-0 {someVar}sm:block flex md:inline" />`,
         ],
         ['<div class={`sm:p-0\np-0`} />', '<div\n  class={`p-0\nsm:p-0`}\n/>'],
-        [
-          `{#await promise()} <div class="sm:p-0 p-0"></div> {:then} <div class="sm:p-0 p-0"></div> {/await}`,
-          `{#await promise()} <div class="p-0 sm:p-0" /> {:then} <div class="p-0 sm:p-0" /> {/await}`,
-        ],
-        [
-          `{#await promise() then} <div class="sm:p-0 p-0"></div> {/await}`,
-          `{#await promise() then} <div class="p-0 sm:p-0" /> {/await}`,
-        ],
+        t`{#await promise()} <div class="${yes}" /> {:then} <div class="${yes}" /> {/await}`,
+        t`{#await promise() then} <div class="${yes}" /> {/await}`,
       ],
     },
   },
 ]
 
-// Disable pug printer -- it produces noisy test output
-let pug = require('@prettier/plugin-pug')
-pug.logger.level = 'off'
-
 for (const group of tests) {
   let name = group.plugins.join(', ')
 
-  let canRun = prettier.version.startsWith('2.')
-    ? group.versions.includes(2)
-    : group.versions.includes(3)
+  let canRun = group.versions.includes(3)
 
   for (let parser in group.tests) {
     if (!canRun) {
@@ -365,9 +356,16 @@ for (const group of tests) {
     }
 
     test(`parsing ${parser} works with: ${name}`, async () => {
+      // This segaults node
+      // I guess the noise is fine for now
+      // if (parser === 'pug') {
+      //   let pug = await import('@prettier/plugin-pug')
+      //   pug.logger.level = 'off'
+      // }
+
       let plugins = [
         ...group.plugins.map((name) => require.resolve(name)),
-        path.resolve(__dirname, '../dist/index.js'),
+        pluginPath,
       ]
 
       for (const [input, expected] of group.tests[parser]) {

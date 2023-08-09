@@ -1,6 +1,6 @@
 <img src="https://raw.githubusercontent.com/tailwindlabs/prettier-plugin-tailwindcss/main/.github/banner.jpg" alt="prettier-plugin-tailwindcss" />
 
-A [Prettier](https://prettier.io/) plugin for Tailwind CSS v3.0+ that automatically sorts classes based on [our recommended class order](https://tailwindcss.com/blog/automatic-class-sorting-with-prettier#how-classes-are-sorted).
+A [Prettier v3+](https://prettier.io/) plugin for Tailwind CSS v3.0+ that automatically sorts classes based on [our recommended class order](https://tailwindcss.com/blog/automatic-class-sorting-with-prettier#how-classes-are-sorted).
 
 ## Installation
 
@@ -127,13 +127,11 @@ function MyScreen() {
 
 ## Compatibility with other Prettier plugins
 
-**Note: when using Prettier v3.0 compatability with external plugins does not currently work. We're actively working to rectify this situation.**
-
 This plugin uses Prettier APIs that can only be used by one plugin at a time, making it incompatible with other Prettier plugins implemented the same way. To solve this we've added explicit per-plugin workarounds that enable compatibility with the following Prettier plugins:
 
+- `@ianvs/prettier-plugin-sort-imports`
 - `@prettier/plugin-pug`
 - `@shopify/prettier-plugin-liquid`
-- `@ianvs/prettier-plugin-sort-imports`
 - `@trivago/prettier-plugin-sort-imports`
 - `prettier-plugin-astro`
 - `prettier-plugin-css-order`
@@ -143,14 +141,9 @@ This plugin uses Prettier APIs that can only be used by one plugin at a time, ma
 - `prettier-plugin-organize-imports`
 - `prettier-plugin-style-order`
 - `prettier-plugin-svelte`
-- `prettier-plugin-twig-melody`
 
 One limitation with this approach is that `prettier-plugin-tailwindcss` *must* be loaded last.
 
-Additionally, if you're using Prettier v2 (but not v3), auto-loading must be disabled by setting the `pluginSearchDirs` option to `false`. This is because auto-loading can result in plugins being loaded after `prettier-plugin-tailwindcss` which breaks our compatability. When using Prettier v3 this is not necessary as it no longer supports autoloading.
-
-For Prettier v2, list each of your Prettier plugins in the `plugins` array and set `pluginSearchDirs` to `false`:
-
 ```json5
 // .prettierrc
 {
@@ -159,21 +152,6 @@ For Prettier v2, list each of your Prettier plugins in the `plugins` array and s
     "prettier-plugin-svelte",
     "prettier-plugin-organize-imports",
     "prettier-plugin-tailwindcss" // MUST come last
-  ],
-  "pluginSearchDirs": false // Prettier v2.x only
-}
-```
-
-For Prettier v3+, list each of your Prettier plugins in the `plugins` array:
-
-```json5
-// .prettierrc
-{
-  // ..
-  "plugins": [
-    "prettier-plugin-svelte",
-    "prettier-plugin-organize-imports",
-    "prettier-plugin-tailwindcss" // MUST come last
-  ],
+  ]
 }
 ```

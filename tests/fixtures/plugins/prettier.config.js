@@ -1,3 +1,5 @@
+const prettier = require("prettier")
+
 module.exports = {
-  plugins: ['../../../dist/index.js'],
+  plugins: ['../../../dist/index.mjs'],
 }

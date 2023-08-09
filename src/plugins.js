@@ -167,11 +167,11 @@ async function loadCompatiblePlugins() {
     '@ianvs/prettier-plugin-sort-imports',
     '@trivago/prettier-plugin-sort-imports',
     'prettier-plugin-organize-imports',
-    // 'prettier-plugin-css-order',
-    // 'prettier-plugin-import-sort',
+    'prettier-plugin-css-order',
+    'prettier-plugin-import-sort',
     'prettier-plugin-jsdoc',
     'prettier-plugin-organize-attributes',
-    // 'prettier-plugin-style-order',
+    'prettier-plugin-style-order',
   ]
 
   // Load all the available compatible plugins up front

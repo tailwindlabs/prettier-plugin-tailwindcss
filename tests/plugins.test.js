@@ -89,6 +89,7 @@ let tests = [
     },
   },
   {
+    // TODO: If this ever gets updated to Prettier v3 update this test
     versions: [2],
     plugins: ['prettier-plugin-twig-melody'],
     options: {
@@ -143,7 +144,8 @@ let tests = [
     },
   },
   {
-    versions: [2],
+    // NOTE: This plugin doesn't officially support Prettier v3 but it seems to work fine
+    versions: [2, 3],
     plugins: ['prettier-plugin-import-sort'],
     tests: {
       babel: [
@@ -172,7 +174,7 @@ let tests = [
     },
   },
   {
-    versions: [2],
+    versions: [2, 3],
     plugins: ['prettier-plugin-css-order'],
     tests: {
       css: [
@@ -184,7 +186,8 @@ let tests = [
     },
   },
   {
-    versions: [2],
+    // NOTE: This plugin doesn't officially support Prettier v3 but it appears to work
+    versions: [2, 3],
     plugins: ['prettier-plugin-style-order'],
     tests: {
       css: [

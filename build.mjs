@@ -1,7 +1,7 @@
-import esbuild from 'esbuild'
-import path from 'path'
 import fs from 'fs'
+import path from 'path'
 import { fileURLToPath } from 'url'
+import esbuild from 'esbuild'
 
 /**
  * @returns {import('esbuild').Plugin}
@@ -33,9 +33,9 @@ function patchRecast() {
 /**
  * @returns {import('esbuild').Plugin}
  */
-function patchDynamicRequires() {
-  return     {
-    name: 'patch-dynamic-requires',
+function patchCjsInterop() {
+  return {
+    name: 'patch-cjs-interop',
     setup(build) {
       build.onEnd(async () => {
         let outfile = './dist/index.mjs'
@@ -43,20 +43,17 @@ function patchDynamicRequires() {
         let content = await fs.promises.readFile(outfile)
 
         // Prepend `createRequire`
-        content = `import {createRequire} from 'module';\n${content}`
+        let code = [
+          `import {createRequire} from 'module'`,
+          `import {dirname as __global__dirname__} from 'path'`,
 
-        // Replace dynamic require error with createRequire
-        // unminified version
-        content = content.replace(
-          `throw Error('Dynamic require of "' + x + '" is not supported');`,
-          `return createRequire(import.meta.url).apply(this, arguments);`,
-        )
+          // CJS interop fixes
+          `const require=createRequire(import.meta.url)`,
+          `const __filename=new URL(import.meta.url).pathname`,
+          `const __dirname=__global__dirname__(__filename)`,
+        ]
 
-        // minified version
-        content = content.replace(
-          `throw Error('Dynamic require of "'+e+'" is not supported')`,
-          `return createRequire(import.meta.url).apply(this,arguments)`,
-        )
+        content = `${code.join('\n')}\n${content}`
 
         fs.promises.writeFile(outfile, content)
       })
@@ -81,7 +78,6 @@ function copyTypes() {
   }
 }
 
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 let context = await esbuild.context({
@@ -92,12 +88,8 @@ let context = await esbuild.context({
   minify: process.argv.includes('--minify'),
   entryPoints: [path.resolve(__dirname, './src/index.js')],
   outfile: path.resolve(__dirname, './dist/index.mjs'),
-  format: "esm",
-  plugins: [
-    patchRecast(),
-    patchDynamicRequires(),
-    copyTypes(),
-  ],
+  format: 'esm',
+  plugins: [patchRecast(), patchCjsInterop(), copyTypes()],
 })
 
 await context.rebuild()

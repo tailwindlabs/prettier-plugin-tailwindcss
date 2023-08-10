@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Fixed
+
+- Fix intertop with bundled CJS dependencies ([#199](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/199))
 
 ## [0.5.1] - 2023-08-10
 

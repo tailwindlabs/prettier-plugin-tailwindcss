@@ -45,6 +45,9 @@ function patchDynamicRequires() {
         // Prepend `createRequire`
         let code = [
           `import {createRequire} from 'module'`,
+          `import {dirname as __workaround__dirname__} from 'path'`,
+          `const __filename=new URL(import.meta.url).pathname`,
+          `const __dirname=__workaround__dirname__(__filename)`,
         ]
 
         content = `${code.join('\n')}\n${content}`

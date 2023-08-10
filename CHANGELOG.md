@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Fixed
+
+- Updated Prettier peer dependency ([#197](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/197))
 
 ## [0.5.0] - 2023-08-10
 

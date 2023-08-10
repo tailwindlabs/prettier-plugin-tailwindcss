@@ -1,7 +1,7 @@
-import esbuild from 'esbuild'
-import path from 'path'
 import fs from 'fs'
+import path from 'path'
 import { fileURLToPath } from 'url'
+import esbuild from 'esbuild'
 
 /**
  * @returns {import('esbuild').Plugin}
@@ -34,7 +34,7 @@ function patchRecast() {
  * @returns {import('esbuild').Plugin}
  */
 function patchDynamicRequires() {
-  return     {
+  return {
     name: 'patch-dynamic-requires',
     setup(build) {
       build.onEnd(async () => {
@@ -43,7 +43,11 @@ function patchDynamicRequires() {
         let content = await fs.promises.readFile(outfile)
 
         // Prepend `createRequire`
-        content = `import {createRequire} from 'module';\n${content}`
+        let code = [
+          `import {createRequire} from 'module'`,
+        ]
+
+        content = `${code.join('\n')}\n${content}`
 
         // Replace dynamic require error with createRequire
         // unminified version
@@ -81,7 +85,6 @@ function copyTypes() {
   }
 }
 
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 let context = await esbuild.context({
@@ -92,7 +95,7 @@ let context = await esbuild.context({
   minify: process.argv.includes('--minify'),
   entryPoints: [path.resolve(__dirname, './src/index.js')],
   outfile: path.resolve(__dirname, './dist/index.mjs'),
-  format: "esm",
+  format: 'esm',
   plugins: [
     patchRecast(),
     patchDynamicRequires(),

@@ -55,19 +55,6 @@ function patchDynamicRequires() {
 
         content = `${code.join('\n')}\n${content}`
 
-        // Replace dynamic require error with createRequire
-        // unminified version
-        content = content.replace(
-          `throw Error('Dynamic require of "' + x + '" is not supported');`,
-          `return require.apply(this, arguments);`,
-        )
-
-        // minified version
-        content = content.replace(
-          `throw Error('Dynamic require of "'+e+'" is not supported')`,
-          `return require.apply(this,arguments)`,
-        )
-
         fs.promises.writeFile(outfile, content)
       })
     },

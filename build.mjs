@@ -45,9 +45,12 @@ function patchDynamicRequires() {
         // Prepend `createRequire`
         let code = [
           `import {createRequire} from 'module'`,
-          `import {dirname as __workaround__dirname__} from 'path'`,
+          `import {dirname as __global__dirname__} from 'path'`,
+
+          // CJS interop fixes
+          `const require=createRequire(import.meta.url)`,
           `const __filename=new URL(import.meta.url).pathname`,
-          `const __dirname=__workaround__dirname__(__filename)`,
+          `const __dirname=__global__dirname__(__filename)`,
         ]
 
         content = `${code.join('\n')}\n${content}`
@@ -56,13 +59,13 @@ function patchDynamicRequires() {
         // unminified version
         content = content.replace(
           `throw Error('Dynamic require of "' + x + '" is not supported');`,
-          `return createRequire(import.meta.url).apply(this, arguments);`,
+          `return require.apply(this, arguments);`,
         )
 
         // minified version
         content = content.replace(
           `throw Error('Dynamic require of "'+e+'" is not supported')`,
-          `return createRequire(import.meta.url).apply(this,arguments)`,
+          `return require.apply(this,arguments)`,
         )
 
         fs.promises.writeFile(outfile, content)

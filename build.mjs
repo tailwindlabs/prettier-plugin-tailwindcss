@@ -89,11 +89,7 @@ let context = await esbuild.context({
   entryPoints: [path.resolve(__dirname, './src/index.js')],
   outfile: path.resolve(__dirname, './dist/index.mjs'),
   format: 'esm',
-  plugins: [
-    patchRecast(),
-    patchDynamicRequires(),
-    copyTypes(),
-  ],
+  plugins: [patchRecast(), patchDynamicRequires(), copyTypes()],
 })
 
 await context.rebuild()

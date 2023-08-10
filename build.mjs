@@ -33,9 +33,9 @@ function patchRecast() {
 /**
  * @returns {import('esbuild').Plugin}
  */
-function patchDynamicRequires() {
+function patchCjsInterop() {
   return {
-    name: 'patch-dynamic-requires',
+    name: 'patch-cjs-interop',
     setup(build) {
       build.onEnd(async () => {
         let outfile = './dist/index.mjs'
@@ -89,7 +89,7 @@ let context = await esbuild.context({
   entryPoints: [path.resolve(__dirname, './src/index.js')],
   outfile: path.resolve(__dirname, './dist/index.mjs'),
   format: 'esm',
-  plugins: [patchRecast(), patchDynamicRequires(), copyTypes()],
+  plugins: [patchRecast(), patchCjsInterop(), copyTypes()],
 })
 
 await context.rebuild()

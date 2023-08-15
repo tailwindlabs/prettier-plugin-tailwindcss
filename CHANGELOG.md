@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fix `__dirname` intertop on Windows ([#204](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/204))
+- Fix CJS `__dirname` interop on Windows ([#204](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/204))
 
 ## [0.5.2] - 2023-08-11
 

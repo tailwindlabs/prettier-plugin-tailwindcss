@@ -9,12 +9,12 @@ export interface PluginOptions {
   /**
    * List of custom function and tag names that contain classes.
    */
-  tailwindFunctions: string[]
+  tailwindFunctions?: string[]
 
   /**
    * List of custom attributes that contain classes.
    */
-  tailwindAttributes: string[]
+  tailwindAttributes?: string[]
 }
 
 declare module 'prettier' {

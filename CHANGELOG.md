@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Fixed
+
+- Type `tailwindFunctions` and `tailwindAttributes` as optional ([#206](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/206))
 
 ## [0.5.3] - 2023-08-15
 

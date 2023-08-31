@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Type `tailwindFunctions` and `tailwindAttributes` as optional ([#206](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/206))
+- Don’t break `@apply … #{'!important'}` sorting ([#212](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/212))
 
 ## [0.5.3] - 2023-08-15
 

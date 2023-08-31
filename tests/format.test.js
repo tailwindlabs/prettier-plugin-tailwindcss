@@ -145,7 +145,18 @@ let tests = {
     // t`<div [ngClass]="{ '${no}': foo && definitely&a:syntax*error }" class="${yes}"></div>`,
   ],
   css: [...css, t`@apply ${yes} !important;`],
-  scss: [...css, t`@apply ${yes} #{!important};`],
+  scss: [
+    ...css,
+    t`@apply ${yes} #{!important};`,
+    t`@apply ${yes} #{'!important'};`,
+    t`@apply ${yes} #{"!important"};`,
+
+    // These shouldn't ever be used but they are valid
+    // syntax so we might as well not break them
+    t`@apply ${yes} #{""!important""};`,
+    t`@apply ${yes} #{'''!important'''};`,
+    t`@apply ${yes} #{"'"'"!important"'"'"};`,
+  ],
   less: [...css, t`@apply ${yes} !important;`],
   babel: javascript,
   typescript: javascript,

@@ -533,7 +533,9 @@ function transformCss(ast, { env }) {
     if (node.type === 'css-atrule' && node.name === 'apply') {
       node.params = sortClasses(node.params, {
         env,
-        ignoreLast: /\s+(?:!important|#{!important})\s*$/.test(node.params),
+        ignoreLast: /\s+(?:!important|#{(['"]*)!important\1})\s*$/.test(
+          node.params,
+        ),
       })
     }
   })

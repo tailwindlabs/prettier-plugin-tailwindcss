@@ -7,11 +7,11 @@ import * as prettierParserAngular from 'prettier/plugins/angular'
 import * as prettierParserBabel from 'prettier/plugins/babel'
 // @ts-ignore
 import * as recast from 'recast'
+import { getTailwindConfig } from './config.js'
 import { getCustomizations } from './options.js'
+import { loadPlugins } from './plugins.js'
 import { sortClasses, sortClassList } from './sorting.js'
 import { visit } from './utils.js'
-import { getTailwindConfig } from './config.js'
-import { loadPlugins } from './plugins.js'
 
 let base = await loadPlugins()
 

@@ -1,6 +1,6 @@
 <img src="https://raw.githubusercontent.com/tailwindlabs/prettier-plugin-tailwindcss/main/.github/banner.jpg" alt="prettier-plugin-tailwindcss" />
 
-A [Prettier](https://prettier.io/) plugin for Tailwind CSS v3.0+ that automatically sorts classes based on [our recommended class order](https://tailwindcss.com/blog/automatic-class-sorting-with-prettier#how-classes-are-sorted).
+A [Prettier v3+](https://prettier.io/) plugin for Tailwind CSS v3.0+ that automatically sorts classes based on [our recommended class order](https://tailwindcss.com/blog/automatic-class-sorting-with-prettier#how-classes-are-sorted).
 
 ## Installation
 
@@ -18,6 +18,10 @@ module.exports = {
   plugins: ['prettier-plugin-tailwindcss'],
 }
 ```
+
+## Upgrading to v0.5.x
+
+As of v0.5.x, this plugin now requires Prettier v3 and is ESM-only. This means it cannot be loaded via `require()`. For more information see our [upgrade guide](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/issues/207#issuecomment-1698071122).
 
 ## Options
 
@@ -129,9 +133,9 @@ function MyScreen() {
 
 This plugin uses Prettier APIs that can only be used by one plugin at a time, making it incompatible with other Prettier plugins implemented the same way. To solve this we've added explicit per-plugin workarounds that enable compatibility with the following Prettier plugins:
 
+- `@ianvs/prettier-plugin-sort-imports`
 - `@prettier/plugin-pug`
 - `@shopify/prettier-plugin-liquid`
-- `@ianvs/prettier-plugin-sort-imports`
 - `@trivago/prettier-plugin-sort-imports`
 - `prettier-plugin-astro`
 - `prettier-plugin-css-order`
@@ -141,9 +145,8 @@ This plugin uses Prettier APIs that can only be used by one plugin at a time, ma
 - `prettier-plugin-organize-imports`
 - `prettier-plugin-style-order`
 - `prettier-plugin-svelte`
-- `prettier-plugin-twig-melody`
 
-One limitation with this approach is that `prettier-plugin-tailwindcss` *must* be loaded last, meaning Prettier auto-loading needs to be disabled. You can do this by setting the `pluginSearchDirs` option to `false` and then listing each of your Prettier plugins in the `plugins` array:
+One limitation with this approach is that `prettier-plugin-tailwindcss` *must* be loaded last.
 
 ```json5
 // .prettierrc
@@ -153,7 +156,6 @@ One limitation with this approach is that `prettier-plugin-tailwindcss` *must* b
     "prettier-plugin-svelte",
     "prettier-plugin-organize-imports",
     "prettier-plugin-tailwindcss" // MUST come last
-  ],
-  "pluginSearchDirs": false
+  ]
 }
 ```

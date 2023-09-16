@@ -9,6 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Nothing yet!
 
+## [0.5.4] - 2023-08-31
+
+### Fixed
+
+- Type `tailwindFunctions` and `tailwindAttributes` as optional ([#206](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/206))
+- Don’t break `@apply … #{'!important'}` sorting in SCSS ([#212](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/212))
+
+## [0.5.3] - 2023-08-15
+
+### Fixed
+
+- Fix CJS `__dirname` interop on Windows ([#204](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/204))
+
+## [0.5.2] - 2023-08-11
+
+### Fixed
+
+- Fix intertop with bundled CJS dependencies ([#199](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/199))
+
+## [0.5.1] - 2023-08-10
+
+### Fixed
+
+- Updated Prettier peer dependency ([#197](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/197))
+
+## [0.5.0] - 2023-08-10
+
+### Added
+
+- Sort expressions in Astro's `class:list` attribute ([#192](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/192))
+- Re-enabled support for plugins when using Prettier v3+ ([#195](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/195))
+
 ## [0.4.1] - 2023-07-14
 
 ### Fixed
@@ -190,7 +222,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.4.1...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.4...HEAD
+[0.5.4]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.3...v0.5.4
+[0.5.3]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.2...v0.5.3
+[0.5.2]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.1...v0.5.2
+[0.5.1]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.2.8...v0.3.0

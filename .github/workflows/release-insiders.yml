@@ -46,7 +46,7 @@ jobs:
 
       - name: Test
         run: |
-          npm run test
+          NODE_OPTIONS=--experimental-vm-modules npm run test
 
       - name: Resolve version
         id: vars

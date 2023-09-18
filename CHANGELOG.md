@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Fixed
+
+- Sort classes inside `className` in Astro ([#215](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/215))
 
 ## [0.5.4] - 2023-08-31
 

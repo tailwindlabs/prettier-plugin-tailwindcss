@@ -911,8 +911,8 @@ export const parsers = {
   ...(base.parsers.astro
     ? {
         astro: createParser('astro', transformAstro, {
-          staticAttrs: ['class'],
-          dynamicAttrs: ['class:list'],
+          staticAttrs: ['class', 'className'],
+          dynamicAttrs: ['class:list', 'className'],
         }),
       }
     : {}),

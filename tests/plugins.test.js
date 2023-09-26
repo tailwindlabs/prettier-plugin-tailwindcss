@@ -302,6 +302,8 @@ import Custom from '../components/Custom.astro'
         t`<div>
   <span class:list={[\`${yes}\`, \`\${'${yes}'}\`, \`\${\`${yes}\`}\`, \`\${\`\${'${yes}'}\`}\`]}></span>
 </div>`,
+        t`<MyReactComponent className="${yes}" />`,
+        t`<MyReactComponent className={'${yes}'} />`,
       ],
     },
   },

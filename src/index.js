@@ -475,6 +475,19 @@ function isSortableCallExpression(node, functions) {
     return functions.has(node.callee.name)
   }
 
+  if (node.callee.type === 'MemberExpression') {
+    let expr = node.callee.object
+
+    // If the tag is a MemberExpression we should traverse all MemberExpression's until we find the leading Identifier
+    while (expr.type === 'MemberExpression') {
+      expr = expr.object
+    }
+
+    if (expr.type === 'Identifier') {
+      return functions.has(expr.name)
+    }
+  }
+
   return false
 }
 

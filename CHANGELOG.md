@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Sort classes inside `className` in Astro ([#215](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/215))
+- Support member access on function calls ([#218](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/218))
 
 ## [0.5.4] - 2023-08-31
 

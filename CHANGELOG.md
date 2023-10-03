@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Nothing yet!
+
+## [0.5.5] - 2023-10-03
+
 ### Fixed
 
 - Sort classes inside `className` in Astro ([#215](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/215))
@@ -225,7 +229,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.4...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.5...HEAD
+[0.5.5]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.1...v0.5.2

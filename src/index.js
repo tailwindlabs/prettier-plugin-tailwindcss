@@ -461,6 +461,37 @@ function isSortableTemplateExpression(node, functions) {
 }
 
 /**
+ *
+ * @param {import('@babel/types').CallExpression | import('ast-types').namedTypes.CallExpression} node
+ * @param {Set<string>} functions
+ * @returns {boolean}
+ */
+function isSortableCallExpression(node, functions) {
+  if (!node.arguments?.length) {
+    return false
+  }
+
+  if (node.callee.type === 'Identifier') {
+    return functions.has(node.callee.name)
+  }
+
+  if (node.callee.type === 'MemberExpression') {
+    let expr = node.callee.object
+
+    // If the tag is a MemberExpression we should traverse all MemberExpression's until we find the leading Identifier
+    while (expr.type === 'MemberExpression') {
+      expr = expr.object
+    }
+
+    if (expr.type === 'Identifier') {
+      return functions.has(expr.name)
+    }
+  }
+
+  return false
+}
+
+/**
  * @param {import('@babel/types').Node} ast
  * @param {TransformerContext} param1
  */
@@ -502,11 +533,7 @@ function transformJavaScript(ast, { env }) {
 
     /** @param {import('@babel/types').CallExpression} node */
     CallExpression(node) {
-      if (!node.arguments?.length) {
-        return
-      }
-
-      if (!functions.has(node.callee?.name ?? '')) {
+      if (!isSortableCallExpression(node, functions)) {
         return
       }
 

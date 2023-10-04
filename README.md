@@ -129,6 +129,20 @@ function MyScreen() {
 }
 ```
 
+### Sorting classes in arbitrary strings
+
+You can use this to sort classes in arbitrary strings. The following tag function returns the template string unchanged:
+
+```js
+const tw = (strings, ...values) => String.raw({ raw: strings }, ...values)
+```
+
+Register it as explained above. Then wrap your strings into the function and classes in them will be automatically sorted:
+
+```js
+const mySortedClasses = tw`bg-white p-4 dark:bg-black`
+```
+
 ## Compatibility with other Prettier plugins
 
 This plugin uses Prettier APIs that can only be used by one plugin at a time, making it incompatible with other Prettier plugins implemented the same way. To solve this we've added explicit per-plugin workarounds that enable compatibility with the following Prettier plugins:

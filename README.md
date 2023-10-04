@@ -129,15 +129,15 @@ function MyScreen() {
 }
 ```
 
-### Sorting classes in arbitrary strings
+#### Sorting classes in arbitrary strings
 
-You can use this to sort classes in arbitrary strings. The following tag function returns the template string unchanged:
+This feature may also be used to sort classes in any arbitrary string by defining this "identity" function:
 
 ```js
 const tw = (strings, ...values) => String.raw({ raw: strings }, ...values)
 ```
 
-Register it as explained above. Then wrap your strings into the function and classes in them will be automatically sorted:
+Make sure you register this `tw` function via `tailwindFunctions` as explained above and have defined this function in your project. Once you've done so you may tag your strings with the function and the plugin will sort them:
 
 ```js
 const mySortedClasses = tw`bg-white p-4 dark:bg-black`

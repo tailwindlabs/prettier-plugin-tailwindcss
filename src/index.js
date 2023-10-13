@@ -305,7 +305,8 @@ function transformLiquid(ast, { env }) {
           value: node.value,
         })
       } else if (
-        node.type === 'LiquidDrop' &&
+        // @ts-ignore: `LiquidDrop` is for older versions of the liquid plugin (1.2.x)
+        (node.type === 'LiquidDrop' || node.type === 'LiquidVariableOutput') &&
         typeof node.markup === 'object' &&
         node.markup.type === 'LiquidVariable'
       ) {

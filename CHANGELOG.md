@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Fixed
+
+- Fix sorting inside `{{ … }}` expressions when using `@shopify/prettier-plugin-liquid` v1.3+ ([#222](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/222))
 
 ## [0.5.5] - 2023-10-03
 

@@ -129,6 +129,18 @@ function MyScreen() {
 }
 ```
 
+This feature can be used with third-party libraries like `twrnc` or you can create your own tagged template by defining this "identity" function:
+
+```js
+const tw = (strings, ...values) => String.raw({ raw: strings }, ...values)
+```
+
+Once added, tag your strings with the function and the plugin will sort them:
+
+```js
+const mySortedClasses = tw`bg-white p-4 dark:bg-black`
+```
+
 ## Compatibility with other Prettier plugins
 
 This plugin uses Prettier APIs that can only be used by one plugin at a time, making it incompatible with other Prettier plugins implemented the same way. To solve this we've added explicit per-plugin workarounds that enable compatibility with the following Prettier plugins:

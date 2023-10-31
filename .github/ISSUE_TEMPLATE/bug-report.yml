@@ -1,0 +1,43 @@
+name: 🐛 Bug report
+description: If you've already asked for help with a problem and confirmed something is broken with prettier-plugin-tailwindcss itself, create a bug report.
+body:
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Describe the bug
+      description: A clear description the bug. If you want to contribute to fix this issue, tell us in the description.
+      placeholder: Description
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Environment
+      description: |
+        examples:
+          - **prettier-plugin-tailwindcss**: v0.1.7
+          - **Prettier** (prettier --version): v3.0.3
+          - **Tailwind CSS**: v3.0.22
+          - **Node.js**: (node --version): v12.0.0
+          - **Package manager**: npm
+      value: |
+        - prettier-plugin-tailwindcss:
+        - Prettier version:
+        - Tailwind CSS:
+        - Node.js:
+        - Package manager:
+      render: markdown
+    validations:
+      required: false
+  - type: textarea
+    id: prettier-config
+    attributes:
+      label: Prettier configuration
+      render: markdown
+      placeholder: Paste the your prettier configuration here
+    validations:
+      required: true
+  - type: input
+    id: reproduction-url
+    attributes:
+      label: Reproduction URL
+      description: A public GitHub repo that includes a minimal reproduction of the bug. **Please do not link to your actual project**, what we need instead is a _minimal_ reproduction in a fresh project without any unnecessary code. This means it doesn't matter if your real project is private/confidential, since we want a link to a separate, isolated reproduction anyways. Unfortunately we can't provide support without a reproduction, and your issue will be closed with no comment if this is not provided.

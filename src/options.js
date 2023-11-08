@@ -67,10 +67,10 @@ export function getCustomizations(options, parser, defaults) {
   // Generate a list of dynamic attributes
   for (let attr of staticAttrs) {
     if (parser === 'vue') {
-      dynamicAttrs.add(`:${attr.name}`)
-      dynamicAttrs.add(`v-bind:${attr.name}`)
+      dynamicAttrs.add(`:${attr}`)
+      dynamicAttrs.add(`v-bind:${attr}`)
     } else if (parser === 'angular') {
-      dynamicAttrs.add(`[${attr.name}]`)
+      dynamicAttrs.add(`[${attr}]`)
     }
   }
 

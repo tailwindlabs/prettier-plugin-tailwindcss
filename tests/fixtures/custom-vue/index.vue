@@ -8,4 +8,5 @@
 <template>
   <div class="sm:p-1 p-2" sortMe="sm:p-1 p-2" dontSortMe="sm:p-1 p-2"></div>
   <div :class="{'sm:p-1 p-2': true}"></div>
+  <div :sortMe="{'sm:p-1 p-2': true}"></div>
 </template>

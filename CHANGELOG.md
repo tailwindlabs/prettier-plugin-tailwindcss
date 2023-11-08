@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Fixed
+
+- Fix sorting inside dynamic custom attributes ([#225](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/225))
 
 ## [0.5.6] - 2023-10-12
 

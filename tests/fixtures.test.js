@@ -98,6 +98,7 @@ let e = dontSortMeTemplate\`sm:p-1 p-2\`;
 <template>
   <div class="p-2 sm:p-1" sortMe="p-2 sm:p-1" dontSortMe="sm:p-1 p-2"></div>
   <div :class="{ 'p-2 sm:p-1': true }"></div>
+  <div :sortMe="{ 'p-2 sm:p-1': true }"></div>
 </template>`,
   },
 ]

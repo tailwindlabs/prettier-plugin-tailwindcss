@@ -233,7 +233,7 @@ let tests = [
     },
   },
   {
-    versions: [2],
+    versions: [3],
     plugins: ['prettier-plugin-marko'],
     tests: {
       marko: [

@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Fixed
+
+- Fixed location of embedded preflight CSS file ([#231](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/231))
 
 ## [0.5.8] - 2023-12-05
 

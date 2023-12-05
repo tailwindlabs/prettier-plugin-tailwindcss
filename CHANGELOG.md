@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Nothing yet!
+
+## [0.5.8] - 2023-12-05
+
 ### Added
 
 - Re-enable support for `prettier-plugin-marko` ([#229](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/229))
-
 
 ## [0.5.7] - 2023-11-08
 
@@ -244,7 +247,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.7...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.8...HEAD
+[0.5.8]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.7...v0.5.8
 [0.5.7]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.6...v0.5.7
 [0.5.6]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.5...v0.5.6
 [0.5.5]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.4...v0.5.5

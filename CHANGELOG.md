@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Changed
+
+- Bumped bundled version of Tailwind CSS to v3.4.1 ([#240](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/240))
 
 ## [0.5.10] - 2023-12-28
 

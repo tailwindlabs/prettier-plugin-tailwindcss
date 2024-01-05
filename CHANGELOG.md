@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Nothing yet!
+
+## [0.5.11] - 2024-01-05
+
 ### Changed
 
 - Bumped bundled version of Tailwind CSS to v3.4.1 ([#240](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/240))
@@ -261,7 +265,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.10...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.11...HEAD
+[0.5.11]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.10...v0.5.11
 [0.5.10]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.9...v0.5.10
 [0.5.9]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.8...v0.5.9
 [0.5.8]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.7...v0.5.8

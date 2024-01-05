@@ -11,7 +11,8 @@ npm install -D prettier prettier-plugin-tailwindcss
 ```
 
 Then add the plugin to your Prettier config:
-
+>[!NOTE]
+>You need to name prettier config file as  `prettier.config.cjs`, if you have `"type":"module"` in your package.json
 ```js
 // prettier.config.js
 module.exports = {

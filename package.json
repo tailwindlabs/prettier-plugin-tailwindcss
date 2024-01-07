@@ -1,6 +1,6 @@
 {
   "name": "prettier-plugin-tailwindcss",
-  "version": "0.5.10",
+  "version": "0.5.11",
   "description": "A Prettier plugin for sorting Tailwind CSS classes.",
   "license": "MIT",
   "main": "dist/index.mjs",
@@ -59,7 +59,7 @@
     "resolve-from": "^5.0.0",
     "rimraf": "^5.0.5",
     "svelte": "^4.2.8",
-    "tailwindcss": "^3.4.0"
+    "tailwindcss": "^3.4.1"
   },
   "peerDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "*",

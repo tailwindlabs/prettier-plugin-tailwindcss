@@ -10,7 +10,7 @@ To get started, install `prettier-plugin-tailwindcss` as a dev-dependency:
 npm install -D prettier prettier-plugin-tailwindcss
 ```
 
-Then add the plugin to your Prettier config:
+Then add the plugin to your [Prettier config](https://prettier.io/docs/en/configuration.html):
 
 ```js
 // prettier.config.js

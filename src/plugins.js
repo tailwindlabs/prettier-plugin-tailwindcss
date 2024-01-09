@@ -171,6 +171,7 @@ async function loadCompatiblePlugins() {
     'prettier-plugin-jsdoc',
     'prettier-plugin-organize-attributes',
     'prettier-plugin-style-order',
+    'prettier-plugin-sort-imports',
   ]
 
   // Load all the available compatible plugins up front

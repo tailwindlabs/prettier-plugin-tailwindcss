@@ -157,6 +157,7 @@ This plugin uses Prettier APIs that can only be used by one plugin at a time, ma
 - `prettier-plugin-organize-imports`
 - `prettier-plugin-style-order`
 - `prettier-plugin-svelte`
+- `prettier-plugin-sort-imports`
 
 One limitation with this approach is that `prettier-plugin-tailwindcss` *must* be loaded last.
 

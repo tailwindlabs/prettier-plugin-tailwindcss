@@ -45,7 +45,7 @@
     "license-checker": "^25.0.1",
     "line-column": "^1.0.2",
     "marko": "^5.31.18",
-    "prettier": "^3.1",
+    "prettier": "^3.2",
     "prettier-plugin-astro": "^0.12.2",
     "prettier-plugin-css-order": "^2.0.0",
     "prettier-plugin-import-sort": "^0.0.7",
@@ -53,6 +53,7 @@
     "prettier-plugin-marko": "^3.1.1",
     "prettier-plugin-organize-attributes": "^1.0.0",
     "prettier-plugin-organize-imports": "^3.2.4",
+    "prettier-plugin-sort-imports": "^1.8.1",
     "prettier-plugin-style-order": "^0.2.2",
     "prettier-plugin-svelte": "^3.1.2",
     "recast": "0.20.5",
@@ -74,6 +75,7 @@
     "prettier-plugin-marko": "*",
     "prettier-plugin-organize-attributes": "*",
     "prettier-plugin-organize-imports": "*",
+    "prettier-plugin-sort-imports": "*",
     "prettier-plugin-style-order": "*",
     "prettier-plugin-svelte": "*"
   },
@@ -109,6 +111,9 @@
       "optional": true
     },
     "prettier-plugin-organize-imports": {
+      "optional": true
+    },
+    "prettier-plugin-sort-imports": {
       "optional": true
     },
     "prettier-plugin-style-order": {

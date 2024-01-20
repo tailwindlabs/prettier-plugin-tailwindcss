@@ -137,20 +137,19 @@ async function loadBuiltinPlugins() {
  */
 async function loadThirdPartyPlugins() {
   // Commented out plugins do not currently work with Prettier v3.0
-  let [astro, liquid, pug, svelte] = await Promise.all([
+  let [astro, liquid, marko, pug, svelte] = await Promise.all([
     loadIfExistsESM('prettier-plugin-astro'),
     loadIfExistsESM('@shopify/prettier-plugin-liquid'),
-    // loadIfExistsESM('prettier-plugin-marko'),
+    loadIfExistsESM('prettier-plugin-marko'),
     // loadIfExistsESM('prettier-plugin-twig-melody'),
     loadIfExistsESM('@prettier/plugin-pug'),
     loadIfExistsESM('prettier-plugin-svelte'),
   ])
-
   return {
     parsers: {
       ...astro.parsers,
       ...liquid.parsers,
-      // ...marko.parsers,
+      ...marko.parsers,
       // ...melody.parsers,
       ...pug.parsers,
       ...svelte.parsers,
@@ -172,6 +171,7 @@ async function loadCompatiblePlugins() {
     'prettier-plugin-jsdoc',
     'prettier-plugin-organize-attributes',
     'prettier-plugin-style-order',
+    'prettier-plugin-sort-imports',
   ]
 
   // Load all the available compatible plugins up front

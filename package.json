@@ -45,6 +45,8 @@
     "license-checker": "^25.0.1",
     "line-column": "^1.0.2",
     "marko": "^5.31.18",
+    "postcss": "^8.4.35",
+    "postcss-import": "^16.0.1",
     "prettier": "^3.2",
     "prettier-plugin-astro": "^0.12.2",
     "prettier-plugin-css-order": "^2.0.0",

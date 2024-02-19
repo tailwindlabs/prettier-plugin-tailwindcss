@@ -52,7 +52,7 @@ export async function getTailwindConfig(options) {
   }
 
   // By this point we know we need to load the Tailwind config file
-  let result = loadTailwindConfig(baseDir, configPath)
+  let result = await loadTailwindConfig(baseDir, configPath)
 
   pathToContextMap.set(configPath, result)
 
@@ -91,17 +91,17 @@ async function getBaseDir(options) {
   return prettierConfigPath
     ? path.dirname(prettierConfigPath)
     : options.filepath
-    ? path.dirname(options.filepath)
-    : process.cwd()
+      ? path.dirname(options.filepath)
+      : process.cwd()
 }
 
 /**
  *
  * @param {string} baseDir
  * @param {string | null} tailwindConfigPath
- * @returns {ContextContainer}
+ * @returns {Promise<ContextContainer>}
  */
-function loadTailwindConfig(baseDir, tailwindConfigPath) {
+async function loadTailwindConfig(baseDir, tailwindConfigPath) {
   let createContext = createContextFallback
   let generateRules = generateRulesFallback
   let resolveConfig = resolveConfigFallback
@@ -109,17 +109,16 @@ function loadTailwindConfig(baseDir, tailwindConfigPath) {
   let tailwindConfig = {}
 
   try {
-    let pkgDir = path.dirname(resolveFrom(baseDir, 'tailwindcss/package.json'))
+    let pkgFile = resolveFrom(baseDir, 'tailwindcss/package.json')
+    let pkgDir = path.dirname(pkgFile)
 
     resolveConfig = require(path.join(pkgDir, 'resolveConfig'))
-    createContext = require(path.join(
-      pkgDir,
-      'lib/lib/setupContextUtils',
-    )).createContext
-    generateRules = require(path.join(
-      pkgDir,
-      'lib/lib/generateRules',
-    )).generateRules
+    createContext = require(
+      path.join(pkgDir, 'lib/lib/setupContextUtils'),
+    ).createContext
+    generateRules = require(
+      path.join(pkgDir, 'lib/lib/generateRules'),
+    ).generateRules
 
     // Prior to `tailwindcss@3.3.0` this won't exist so we load it last
     loadConfig = require(path.join(pkgDir, 'loadConfig'))
@@ -139,7 +138,6 @@ function loadTailwindConfig(baseDir, tailwindConfigPath) {
 
   return {
     context,
-    tailwindConfig,
     generateRules,
   }
 }

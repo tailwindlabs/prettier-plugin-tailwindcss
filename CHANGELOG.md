@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add support for `prettier-plugin-sort-imports` ([#241](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/241))
+- Add support for Tailwind CSS v4.0 ([#249](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/249))
 
 ## [0.5.11] - 2024-01-05
 

@@ -29,7 +29,6 @@ export interface TransformerEnv {
 export interface ContextContainer {
   context: any
   generateRules: () => any
-  tailwindConfig: any
 }
 
 export interface InternalOptions {

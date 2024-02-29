@@ -1,10 +1,15 @@
-import { Parser, Printer, SupportOption } from 'prettier';
+import { Parser, Printer, SupportOption } from 'prettier'
 
 export interface PluginOptions {
   /**
    * Path to the Tailwind config file.
    */
   tailwindConfig?: string
+
+  /**
+   * Path to the Tailwind entry point (v4+)
+   */
+  tailwindEntryPoint?: string
 
   /**
    * List of custom function and tag names that contain classes.

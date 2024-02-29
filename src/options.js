@@ -6,6 +6,12 @@ export const options = {
     category: 'Tailwind CSS',
     description: 'Path to Tailwind configuration file',
   },
+  tailwindEntryPoint: {
+    since: '0.0.0',
+    type: 'string',
+    category: 'Tailwind CSS',
+    description: 'Path to the CSS entrypoint in your Tailwind project (v4+)',
+  },
   tailwindAttributes: {
     since: '0.3.0',
     type: 'string',

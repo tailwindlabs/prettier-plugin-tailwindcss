@@ -185,7 +185,7 @@ async function loadV4(baseDir, pkgDir, entryPoint) {
   let tw = await import(pkgPath)
 
   // This is not Tailwind v4
-  if (!tw.loadDesignSystem) {
+  if (!tw.__unstable__loadDesignSystem) {
     return null
   }
 
@@ -199,7 +199,7 @@ async function loadV4(baseDir, pkgDir, entryPoint) {
 
   // Load the design system and set up a compatible context object that is
   // usable by the rest of the plugin
-  let design = tw.loadDesignSystem(result.css)
+  let design = tw.__unstable__loadDesignSystem(result.css)
 
   return {
     context: {

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Nothing yet!
+
+## [0.5.12] - 2024-03-06
+
 ### Added
 
 - Add support for `prettier-plugin-sort-imports` ([#241](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/241))
@@ -268,7 +272,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.11...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.12...HEAD
+[0.5.12]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.11...v0.5.12
 [0.5.11]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.10...v0.5.11
 [0.5.10]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.9...v0.5.10
 [0.5.9]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.8...v0.5.9

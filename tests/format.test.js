@@ -19,6 +19,7 @@ let css = [
 
 let javascript = [
   t`;<div class="${yes}" />`,
+  t`;<div ns:class="${no}" />`,
   t`/* <div class="${no}" /> */`,
   t`// <div class="${no}" />`,
   t`;<div not-class="${no}" />`,

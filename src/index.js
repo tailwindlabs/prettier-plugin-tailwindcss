@@ -521,6 +521,12 @@ function transformJavaScript(ast, { env }) {
         return
       }
 
+      // We don't want to support namespaced attributes (e.g. `somens:class`)
+      // React doesn't support them and most tools don't either
+      if (typeof node.name.name !== 'string') {
+        return
+      }
+
       if (!staticAttrs.has(node.name.name)) {
         return
       }

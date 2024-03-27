@@ -118,9 +118,8 @@ let tests = [
     },
   },
   {
-    // TODO: If this ever gets updated to Prettier v3 update this test
-    versions: [2],
-    plugins: ['prettier-plugin-twig-melody'],
+    versions: [3],
+    plugins: ['@zackad/prettier-plugin-twig-melody'],
     options: {
       twigAlwaysBreakObjects: false,
     },

@@ -56,7 +56,8 @@ function createParser(parserFormat, transform, meta = {}) {
         options.printer = printers[original.astFormat]
       }
 
-      let ast = await original.parse(text, options)
+      // @ts-ignore: We pass three options in the case of plugins that support Prettier 2 _and_ 3.
+      let ast = await original.parse(text, options, options)
 
       let customizations = getCustomizations(
         options,

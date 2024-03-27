@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Nothing yet!
+
+## [0.5.13] - 2024-03-27
+
 ### Added
 
 - Add support for `@zackad/prettier-plugin-twig-melody` ([#255](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/255))
@@ -274,7 +278,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.12...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.13...HEAD
+[0.5.13]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.12...v0.5.13
 [0.5.12]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.11...v0.5.12
 [0.5.11]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.10...v0.5.11
 [0.5.10]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.9...v0.5.10

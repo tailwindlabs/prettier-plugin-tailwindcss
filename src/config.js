@@ -226,7 +226,7 @@ function getConfigPath(options, baseDir) {
 
   let configPath
   try {
-    configPath = escalade(baseDir, (_dir, names) => {
+    configPath = escalade(options.filepath ?? baseDir, (_dir, names) => {
       if (names.includes('tailwind.config.js')) {
         return 'tailwind.config.js'
       }

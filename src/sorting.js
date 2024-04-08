@@ -54,7 +54,7 @@ export function sortClasses(
   }
 
   let result = ''
-  let parts = classStr.split(/([\t\r\f\n ]+)/)
+  let parts = classStr.split(/([\t\r\f\n ]+(?![^(]*\)))/)
   let classes = parts.filter((_, i) => i % 2 === 0)
   let whitespace = parts.filter((_, i) => i % 2 !== 0)
 
@@ -72,9 +72,52 @@ export function sortClasses(
     suffix = `${whitespace.pop() ?? ''}${classes.pop() ?? ''}`
   }
 
+  // sort inner classes of variant groups ex. hover:(class1 class2)
+  let classGroups = classes
+    .filter((c) => c.includes(':('))
+    .map((group) => {
+      const [modifier, innerClasses] = group.split(':(')
+
+      return {
+        modifier,
+        innerClasses: sortClasses(innerClasses.slice(0, -1), { env }),
+      }
+    })
+
+  if (classStr.includes(':(')) {
+    // change variant groups to single valid classes
+    classes = classes.map((c) => {
+      if (c.includes(':(')) {
+        const [modifier, innerClasses] = c.split(':(')
+
+        let firstInnerClass = innerClasses.split(/([\t\r\f\n ]+)/)[0]
+
+        if (firstInnerClass.endsWith(')')) {
+          firstInnerClass = firstInnerClass.slice(0, -1)
+        }
+
+        return `${modifier}:${firstInnerClass}`
+      }
+
+      return c
+    })
+  }
+
   classes = sortClassList(classes, { env })
 
   for (let i = 0; i < classes.length; i++) {
+    // reattach inner classes to variant groups
+    if (classes[i].includes(':')) {
+      const modifier = classes[i].split(':')[0]
+      const classGroup = classGroups.find(
+        (group) => group.modifier === modifier,
+      )
+      if (classGroup) {
+        result += `${modifier}:(${classGroup.innerClasses})${whitespace[i] ?? ''}`
+        continue
+      }
+    }
+
     result += `${classes[i]}${whitespace[i] ?? ''}`
   }
 

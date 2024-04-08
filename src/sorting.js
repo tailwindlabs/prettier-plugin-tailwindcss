@@ -72,35 +72,31 @@ export function sortClasses(
     suffix = `${whitespace.pop() ?? ''}${classes.pop() ?? ''}`
   }
 
-  // sort inner classes of variant groups ex. hover:(class1 class2)
-  let classGroups = classes
-    .filter((c) => c.includes(':('))
-    .map((group) => {
-      const [modifier, innerClasses] = group.split(':(')
-
-      return {
-        modifier,
-        innerClasses: sortClasses(innerClasses.slice(0, -1), { env }),
-      }
-    })
+  let variantGroups = []
 
   if (classStr.includes(':(')) {
-    // change variant groups to single valid classes
-    classes = classes.map((c) => {
-      if (c.includes(':(')) {
+    variantGroups = classes
+      .map((c, i) => {
         const [modifier, innerClasses] = c.split(':(')
 
-        let firstInnerClass = innerClasses.split(/([\t\r\f\n ]+)/)[0]
+        if (!innerClasses) return null
 
-        if (firstInnerClass.endsWith(')')) {
-          firstInnerClass = firstInnerClass.slice(0, -1)
+        // in the original array replace the variant group with a single valid class that can be sorted
+        let simplifiedClass = `${modifier}:${innerClasses.slice(
+          0,
+          innerClasses.indexOf(/([\t\r\f\n ]+)/),
+        )}`
+
+        classes[i] = simplifiedClass
+
+        return {
+          modifier,
+          // sort inner classes of variant groups ex. hover:(class1 class2)
+          innerClasses: sortClasses(innerClasses.slice(0, -1), { env }),
+          simplifiedClass,
         }
-
-        return `${modifier}:${firstInnerClass}`
-      }
-
-      return c
-    })
+      })
+      .filter(Boolean)
   }
 
   classes = sortClassList(classes, { env })
@@ -108,12 +104,12 @@ export function sortClasses(
   for (let i = 0; i < classes.length; i++) {
     // reattach inner classes to variant groups
     if (classes[i].includes(':')) {
-      const modifier = classes[i].split(':')[0]
-      const classGroup = classGroups.find(
-        (group) => group.modifier === modifier,
+      const classGroup = variantGroups.find(
+        ({ simplifiedClass }) => simplifiedClass === classes[i],
       )
+
       if (classGroup) {
-        result += `${modifier}:(${classGroup.innerClasses})${whitespace[i] ?? ''}`
+        result += `${classGroup.modifier}:(${classGroup.innerClasses})${whitespace[i] ?? ''}`
         continue
       }
     }

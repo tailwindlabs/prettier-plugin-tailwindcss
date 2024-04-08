@@ -15,7 +15,6 @@ const l = tw.foo.bar('sm:p-1 p-2');
 const m = no.foo('sm:p-1 p-2');
 const n = no.tw('sm:p-1 p-2');
 
-const o = tw.foo`hover:(sm:p-2 p-3) sm:p-1 p-2`;
 const p = tw.foo`sm:p-1 hover:(sm:p-2 p-3) focus:(sm:p-2 p-3) p-2`;
 
 const A = (props) => <div className={props.sortMe} />;

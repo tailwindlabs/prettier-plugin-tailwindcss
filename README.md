@@ -12,7 +12,8 @@ npm install -D prettier prettier-plugin-tailwindcss
 
 Then add the plugin to your [Prettier configuration](https://prettier.io/docs/en/configuration.html):
 
-```json
+```json5
+// .prettierrc
 {
   "plugins": ["prettier-plugin-tailwindcss"]
 }
@@ -32,10 +33,10 @@ By default the plugin will look for this file in the same directory as your Pret
 
 Note that paths are resolved relative to the Prettier configuration file.
 
-```js
-// prettier.config.js
-module.exports = {
-  tailwindConfig: './styles/tailwind.config.js',
+```json5
+// .prettierrc
+{
+  "tailwindConfig": "./styles/tailwind.config.js"
 }
 ```
 
@@ -47,10 +48,10 @@ By default this plugin only sorts classes in the `class` attribute as well as an
 
 You can sort additional attributes using the `tailwindAttributes` option, which takes an array of attribute names:
 
-```js
-// prettier.config.js
-module.exports = {
-  tailwindAttributes: ['myClassList'],
+```json5
+// .prettierrc
+{
+  "tailwindAttributes": ["myClassList"]
 }
 ```
 
@@ -72,10 +73,10 @@ In addition to sorting classes in attributes, you can also sort classes in strin
 
 You can sort classes in function calls using the `tailwindFunctions` option, which takes a list of function names:
 
-```js
-// prettier.config.js
-module.exports = {
-  tailwindFunctions: ['clsx'],
+```json5
+// .prettierrc
+{
+  "tailwindFunctions": ["clsx"]
 }
 ```
 
@@ -106,10 +107,10 @@ This plugin also enables sorting of classes in tagged template literals.
 
 You can sort classes in template literals using the `tailwindFunctions` option, which takes a list of function names:
 
-```js
-// prettier.config.js
-module.exports = {
-  tailwindFunctions: ['tw'],
+```json5
+// .prettierrc
+{
+  "tailwindFunctions": ["tw"],
 }
 ```
 

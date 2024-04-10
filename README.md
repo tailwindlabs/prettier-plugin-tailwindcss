@@ -19,6 +19,14 @@ module.exports = {
 }
 ```
 
+Or in an ESM prettier config (with `"type": "module"` in `package.json`, like Vite)
+```js
+// prettier.config.js
+export default {
+  plugins: ['prettier-plugin-tailwindcss'],
+}
+```
+
 ## Upgrading to v0.5.x
 
 As of v0.5.x, this plugin now requires Prettier v3 and is ESM-only. This means it cannot be loaded via `require()`. For more information see our [upgrade guide](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/issues/207#issuecomment-1698071122).

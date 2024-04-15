@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Nothing yet!
+
+## [0.5.14] - 2024-04-15
+
 ### Fixed
 
 - Fix detection of v4 projects on Windows ([#265](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/265))
@@ -280,7 +284,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.13...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.14...HEAD
+[0.5.14]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.13...v0.5.14
 [0.5.13]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.12...v0.5.13
 [0.5.12]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.11...v0.5.12
 [0.5.11]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.10...v0.5.11

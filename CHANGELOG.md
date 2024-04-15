@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Fixed
+
+- Fix detection of v4 projects on Windows ([#265](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/265))
 
 ## [0.5.13] - 2024-03-27
 

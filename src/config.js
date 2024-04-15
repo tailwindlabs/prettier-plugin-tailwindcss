@@ -2,6 +2,7 @@
 import * as fs from 'fs/promises'
 import { createRequire } from 'module'
 import * as path from 'path'
+import { pathToFileURL } from 'url'
 import clearModule from 'clear-module'
 import escalade from 'escalade/sync'
 import postcss from 'postcss'
@@ -181,8 +182,7 @@ async function loadV4(baseDir, pkgDir, entryPoint) {
   let pkgPath = localRequire.resolve('tailwindcss', {
     paths: [baseDir],
   })
-
-  let tw = await import(pkgPath)
+  let tw = await import(pathToFileURL(pkgPath).toString())
 
   // This is not Tailwind v4
   if (!tw.__unstable__loadDesignSystem) {

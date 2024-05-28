@@ -39,6 +39,14 @@ function getClassOrderPolyfill(classes, { env }) {
   return classNamesWithOrder
 }
 
+/**
+ * @param {string} classStr
+ * @param {object} opts
+ * @param {any} opts.env
+ * @param {boolean} [opts.ignoreFirst]
+ * @param {boolean} [opts.ignoreLast]
+ * @returns {string}
+ */
 export function sortClasses(
   classStr,
   { env, ignoreFirst = false, ignoreLast = false },

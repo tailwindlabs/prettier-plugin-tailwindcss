@@ -56,7 +56,7 @@ export function sortClasses(
   }
 
   // Ignore class attributes containing `{{`, to match Prettier behaviour:
-  // https://github.com/prettier/prettier/blob/main/src/language-html/embed.js#L83-L88
+  // https://github.com/prettier/prettier/blob/8a88cdce6d4605f206305ebb9204a0cabf96a070/src/language-html/embed/class-names.js#L9
   if (classStr.includes('{{')) {
     return classStr
   }
@@ -97,8 +97,6 @@ export function sortClassList(classList, { env }) {
   return classNamesWithOrder
     .sort(([, a], [, z]) => {
       if (a === z) return 0
-      // if (a === null) return options.unknownClassPosition === 'start' ? -1 : 1
-      // if (z === null) return options.unknownClassPosition === 'start' ? 1 : -1
       if (a === null) return -1
       if (z === null) return 1
       return bigSign(a - z)

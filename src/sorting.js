@@ -45,11 +45,19 @@ function getClassOrderPolyfill(classes, { env }) {
  * @param {any} opts.env
  * @param {boolean} [opts.ignoreFirst]
  * @param {boolean} [opts.ignoreLast]
+ * @param {object} [opts.collapseWhitespace]
+ * @param {boolean} [opts.collapseWhitespace.start]
+ * @param {boolean} [opts.collapseWhitespace.end]
  * @returns {string}
  */
 export function sortClasses(
   classStr,
-  { env, ignoreFirst = false, ignoreLast = false },
+  {
+    env,
+    ignoreFirst = false,
+    ignoreLast = false,
+    collapseWhitespace = { start: true, end: true },
+  },
 ) {
   if (typeof classStr !== 'string' || classStr === '') {
     return classStr
@@ -61,6 +69,10 @@ export function sortClasses(
     return classStr
   }
 
+  if (!env.options.tailwindCollapseWhitespace) {
+    collapseWhitespace = false
+  }
+
   let result = ''
   let parts = classStr.split(/([\t\r\f\n ]+)/)
   let classes = parts.filter((_, i) => i % 2 === 0)
@@ -68,6 +80,10 @@ export function sortClasses(
 
   if (classes[classes.length - 1] === '') {
     classes.pop()
+  }
+
+  if (collapseWhitespace) {
+    whitespace = whitespace.map(() => ' ')
   }
 
   let prefix = ''
@@ -95,6 +111,15 @@ export function sortClasses(
 
   for (let i = 0; i < classes.length; i++) {
     result += `${classes[i]}${whitespace[i] ?? ''}`
+  }
+
+  if (collapseWhitespace) {
+    prefix = prefix.replace(/\s+$/g, ' ')
+    suffix = suffix.replace(/^\s+/g, ' ')
+
+    result = result
+      .replace(/^\s+/, collapseWhitespace.start ? '' : ' ')
+      .replace(/\s+$/, collapseWhitespace.end ? '' : ' ')
   }
 
   return prefix + result + suffix

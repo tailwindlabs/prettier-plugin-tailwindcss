@@ -83,6 +83,22 @@ let javascript = [
     ';<div class={`flex flex${someVar}block block`} />',
     { tailwindCollapseWhitespace: true },
   ],
+  [
+    // This happens because we we look at class lists individually but
+    // a future improvement could be to dectect this case and not
+    // remove the space after flex.
+    ';<div class={`flex ` + `text-red-500`} />',
+    ';<div class={`flex` + `text-red-500`} />',
+    { tailwindCollapseWhitespace: true },
+  ],
+  [
+    // This happens because we we look at class lists individually but
+    // a future improvement could be to dectect this case and not
+    // remove the space after flex.
+    ';<div class={`flex` + `  ` + `text-red-500`} />',
+    ';<div class={`flex` + ` ` + `text-red-500`} />',
+    { tailwindCollapseWhitespace: true },
+  ],
 ]
 javascript = javascript.concat(
   javascript.map((test) => [

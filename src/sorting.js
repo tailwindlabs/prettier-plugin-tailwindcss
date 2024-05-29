@@ -73,6 +73,12 @@ export function sortClasses(
     collapseWhitespace = false
   }
 
+  // This class list is purely whitespace
+  // Collapse it to a single space if the option is enabled
+  if (/^[\t\r\f\n ]+$/.test(classStr) && collapseWhitespace) {
+    return ' '
+  }
+
   let result = ''
   let parts = classStr.split(/([\t\r\f\n ]+)/)
   let classes = parts.filter((_, i) => i % 2 === 0)

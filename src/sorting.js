@@ -39,18 +39,44 @@ function getClassOrderPolyfill(classes, { env }) {
   return classNamesWithOrder
 }
 
+/**
+ * @param {string} classStr
+ * @param {object} opts
+ * @param {any} opts.env
+ * @param {boolean} [opts.ignoreFirst]
+ * @param {boolean} [opts.ignoreLast]
+ * @param {object} [opts.collapseWhitespace]
+ * @param {boolean} [opts.collapseWhitespace.start]
+ * @param {boolean} [opts.collapseWhitespace.end]
+ * @returns {string}
+ */
 export function sortClasses(
   classStr,
-  { env, ignoreFirst = false, ignoreLast = false },
+  {
+    env,
+    ignoreFirst = false,
+    ignoreLast = false,
+    collapseWhitespace = { start: true, end: true },
+  },
 ) {
   if (typeof classStr !== 'string' || classStr === '') {
     return classStr
   }
 
   // Ignore class attributes containing `{{`, to match Prettier behaviour:
-  // https://github.com/prettier/prettier/blob/main/src/language-html/embed.js#L83-L88
+  // https://github.com/prettier/prettier/blob/8a88cdce6d4605f206305ebb9204a0cabf96a070/src/language-html/embed/class-names.js#L9
   if (classStr.includes('{{')) {
     return classStr
+  }
+
+  if (env.options.tailwindPreserveWhitespace) {
+    collapseWhitespace = false
+  }
+
+  // This class list is purely whitespace
+  // Collapse it to a single space if the option is enabled
+  if (/^[\t\r\f\n ]+$/.test(classStr) && collapseWhitespace) {
+    return ' '
   }
 
   let result = ''
@@ -60,6 +86,10 @@ export function sortClasses(
 
   if (classes[classes.length - 1] === '') {
     classes.pop()
+  }
+
+  if (collapseWhitespace) {
+    whitespace = whitespace.map(() => ' ')
   }
 
   let prefix = ''
@@ -72,10 +102,30 @@ export function sortClasses(
     suffix = `${whitespace.pop() ?? ''}${classes.pop() ?? ''}`
   }
 
+  // Remove duplicates
+  classes = classes.filter((cls, index, arr) => {
+    if (arr.indexOf(cls) === index) {
+      return true
+    }
+
+    whitespace.splice(index - 1, 1)
+
+    return false
+  })
+
   classes = sortClassList(classes, { env })
 
   for (let i = 0; i < classes.length; i++) {
     result += `${classes[i]}${whitespace[i] ?? ''}`
+  }
+
+  if (collapseWhitespace) {
+    prefix = prefix.replace(/\s+$/g, ' ')
+    suffix = suffix.replace(/^\s+/g, ' ')
+
+    result = result
+      .replace(/^\s+/, collapseWhitespace.start ? '' : ' ')
+      .replace(/\s+$/, collapseWhitespace.end ? '' : ' ')
   }
 
   return prefix + result + suffix
@@ -89,8 +139,6 @@ export function sortClassList(classList, { env }) {
   return classNamesWithOrder
     .sort(([, a], [, z]) => {
       if (a === z) return 0
-      // if (a === null) return options.unknownClassPosition === 'start' ? -1 : 1
-      // if (z === null) return options.unknownClassPosition === 'start' ? 1 : -1
       if (a === null) return -1
       if (z === null) return 1
       return bigSign(a - z)

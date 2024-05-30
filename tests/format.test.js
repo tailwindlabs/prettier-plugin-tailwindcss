@@ -8,13 +8,19 @@ let html = [
   ['<div class="  sm:p-0   p-0 "></div>', '<div class="p-0 sm:p-0"></div>'],
   t`<div class></div>`,
   t`<div class=""></div>`,
+  // Ensure duplicate classes are removed
+  ['<div class="sm:p-0 p-0 p-0"></div>', '<div class="p-0 sm:p-0"></div>'],
 ]
 
 let css = [
   t`@apply ${yes};`,
   t`/* @apply ${no}; */`,
   t`@not-apply ${no};`,
-  ['@apply sm:p-0\n   p-0;', '@apply p-0\n   sm:p-0;'],
+  [
+    '@apply sm:p-0\n   p-0;',
+    '@apply p-0\n   sm:p-0;',
+    { tailwindPreserveWhitespace: true },
+  ],
 ]
 
 let javascript = [
@@ -49,9 +55,44 @@ let javascript = [
     `;<div class="block px-1\u3000py-2" />`,
     `;<div class="px-1\u3000py-2 block" />`,
   ],
+
+  // Whitespace is normalized and duplicates are removed
+  [
+    ';<div class="   m-0  sm:p-0  p-0   " />',
+    ';<div class="m-0 p-0 sm:p-0" />',
+  ],
+  [
+    ";<div class={'   m-0  sm:p-0  p-0   '} />",
+    ";<div class={'m-0 p-0 sm:p-0'} />",
+  ],
+  [';<div class={` sm:p-0\n  p-0   `} />', ';<div class={`p-0 sm:p-0`} />'],
+  [';<div class="flex flex" />', ';<div class="flex" />'],
+  [';<div class={`   flex  flex `} />', ';<div class={`flex`} />'],
+  [
+    ';<div class={`   flex  flex flex${someVar}block block`} />',
+    ';<div class={`flex flex${someVar}block block`} />',
+  ],
+  [
+    // This happens because we we look at class lists individually but
+    // a future improvement could be to dectect this case and not
+    // remove the space after flex.
+    ';<div class={`flex ` + `text-red-500`} />',
+    ';<div class={`flex` + `text-red-500`} />',
+  ],
+  [
+    // This happens because we we look at class lists individually but
+    // a future improvement could be to dectect this case and not
+    // remove the space after flex.
+    ';<div class={`flex` + `  ` + `text-red-500`} />',
+    ';<div class={`flex` + ` ` + `text-red-500`} />',
+  ],
 ]
 javascript = javascript.concat(
-  javascript.map((test) => test.map((t) => t.replace(/class/g, 'className'))),
+  javascript.map((test) => [
+    test[0].replace(/class/g, 'className'),
+    test[1].replace(/class/g, 'className'),
+    test[2],
+  ]),
 )
 
 let vue = [
@@ -82,6 +123,9 @@ let vue = [
     `<div :class="\`sm:p-0 p-0 \${someVar}sm:block md:inline flex\`"></div>`,
     `<div :class="\`p-0 sm:p-0 \${someVar}sm:block flex md:inline\`"></div>`,
   ],
+
+  [`<div :class="'   flex  flex '"></div>`, `<div :class="'flex'"></div>`],
+  [`<div :class="\`   flex  flex \`"></div>`, `<div :class="\`flex\`"></div>`],
 ]
 
 let glimmer = [
@@ -116,6 +160,13 @@ let glimmer = [
   [
     `<div class='{{if @isTrue (nope "border-l-4 border-" @borderColor)}}'></div>`,
     `<div class='{{if @isTrue (nope "border- border-l-4" @borderColor)}}'></div>`,
+  ],
+
+  [`<div class='flex  flex '></div>`, `<div class='flex'></div>`],
+
+  [
+    `<div class='sm:p-0   p-0  p-0 {{someVar}}sm:block flex md:inline   flex '></div>`,
+    `<div class='p-0 sm:p-0 {{someVar}}sm:block flex md:inline'></div>`,
   ],
 ]
 
@@ -167,15 +218,21 @@ let tests = {
   acorn: javascript,
   meriyah: javascript,
   mdx: javascript
-    .filter((test) => !test.find((t) => /^\/\*/.test(t)))
-    .map((test) => test.map((t) => t.replace(/^;/, ''))),
+    .filter((test) => {
+      return !/^\/\*/.test(test[0]) && !/^\/\*/.test(test[1])
+    })
+    .map((test) => [
+      test[0].replace(/^;/, ''),
+      test[1].replace(/^;/, ''),
+      test[2],
+    ]),
 }
 
 describe('parsers', () => {
   for (let parser in tests) {
     test(parser, async () => {
-      for (let [input, expected] of tests[parser]) {
-        expect(await format(input, { parser })).toEqual(expected)
+      for (let [input, expected, options] of tests[parser]) {
+        expect(await format(input, { ...options, parser })).toEqual(expected)
       }
     })
   }
@@ -194,5 +251,51 @@ describe('other', () => {
         '<div class="group peer unknown-class p-0 container"></div>',
       ),
     ).toEqual('<div class="unknown-class group peer container p-0"></div>')
+  })
+})
+
+describe('whitespace', () => {
+  test('class lists containing interpolation are ignored', async () => {
+    let result = await format('<div class="{{ this is ignored }}"></div>')
+    expect(result).toEqual('<div class="{{ this is ignored }}"></div>')
+  })
+
+  test('whitespace can be preserved around classes', async () => {
+    let result = await format(
+      `;<div className={' underline text-red-500  flex '}></div>`,
+      {
+        parser: 'babel',
+        tailwindPreserveWhitespace: true,
+      },
+    )
+    expect(result).toEqual(
+      `;<div className={' flex text-red-500  underline '}></div>`,
+    )
+  })
+
+  test('whitespace can be collapsed around classes', async () => {
+    let result = await format(
+      '<div class=" underline text-red-500  flex "></div>',
+    )
+    expect(result).toEqual('<div class="flex text-red-500 underline"></div>')
+  })
+
+  test('whitespace is collapsed but not trimmed when ignored', async () => {
+    let result = await format(
+      ';<div className={`underline text-red-500 ${foo}-bar flex`}></div>',
+      {
+        parser: 'babel',
+      },
+    )
+    expect(result).toEqual(
+      ';<div className={`text-red-500 underline ${foo}-bar flex`}></div>',
+    )
+  })
+
+  test('duplicate classes are dropped', async () => {
+    let result = await format(
+      '<div class="underline line-through underline flex"></div>',
+    )
+    expect(result).toEqual('<div class="flex underline line-through"></div>')
   })
 })

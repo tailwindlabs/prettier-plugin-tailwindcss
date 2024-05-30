@@ -23,7 +23,7 @@ module.exports.t = function t(strings, ...values) {
     output += string + value
   })
 
-  return [input, output]
+  return [input, output, { tailwindPreserveWhitespace: true }]
 }
 
 let pluginPath = path.resolve(__dirname, '../dist/index.mjs')

@@ -30,6 +30,13 @@ export const options = {
     description:
       'List of functions and tagged templates that contain sortable Tailwind classes',
   },
+  tailwindPreserveWhitespace: {
+    since: '0.6.0',
+    type: 'boolean',
+    default: [{ value: false }],
+    category: 'Tailwind CSS',
+    description: 'Preserve whitespace around Tailwind classes when sorting',
+  },
 }
 
 /** @typedef {import('prettier').RequiredOptions} RequiredOptions */

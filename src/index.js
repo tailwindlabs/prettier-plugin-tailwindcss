@@ -234,6 +234,10 @@ function transformGlimmer(ast, { env }) {
         env,
         ignoreFirst: siblings?.prev && !/^\s/.test(node.chars),
         ignoreLast: siblings?.next && !/\s$/.test(node.chars),
+        collapseWhitespace: {
+          start: !siblings?.prev,
+          end: !siblings?.next,
+        },
       })
     },
 
@@ -248,6 +252,10 @@ function transformGlimmer(ast, { env }) {
       node.value = sortClasses(node.value, {
         env,
         ignoreLast: isConcat && !/[^\S\r\n]$/.test(node.value),
+        collapseWhitespace: {
+          start: false,
+          end: !isConcat,
+        },
       })
     },
   })
@@ -299,6 +307,10 @@ function transformLiquid(ast, { env }) {
           env,
           ignoreFirst: i > 0 && !/^\s/.test(node.value),
           ignoreLast: i < attr.value.length - 1 && !/\s$/.test(node.value),
+          collapseWhitespace: {
+            start: i === 0,
+            end: i >= attr.value.length - 1,
+          },
         })
 
         changes.push({
@@ -411,8 +423,17 @@ function sortTemplateLiteral(node, { env }) {
 
     quasi.value.raw = sortClasses(quasi.value.raw, {
       env,
+      // Is not the first "item" and does not start with a space
       ignoreFirst: i > 0 && !/^\s/.test(quasi.value.raw),
+
+      // Is between two expressions
+      // And does not end with a space
       ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.raw),
+
+      collapseWhitespace: {
+        start: i === 0,
+        end: i >= node.expressions.length,
+      },
     })
 
     quasi.value.cooked = same
@@ -422,6 +443,10 @@ function sortTemplateLiteral(node, { env }) {
           ignoreFirst: i > 0 && !/^\s/.test(quasi.value.cooked),
           ignoreLast:
             i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
+          collapseWhitespace: {
+            start: i === 0,
+            end: i >= node.expressions.length,
+          },
         })
 
     if (
@@ -566,11 +591,17 @@ function transformJavaScript(ast, { env }) {
 function transformCss(ast, { env }) {
   ast.walk((node) => {
     if (node.type === 'css-atrule' && node.name === 'apply') {
+      let isImportant = /\s+(?:!important|#{(['"]*)!important\1})\s*$/.test(
+        node.params,
+      )
+
       node.params = sortClasses(node.params, {
         env,
-        ignoreLast: /\s+(?:!important|#{(['"]*)!important\1})\s*$/.test(
-          node.params,
-        ),
+        ignoreLast: isImportant,
+        collapseWhitespace: {
+          start: false,
+          end: !isImportant,
+        },
       })
     }
   })
@@ -690,6 +721,10 @@ function transformMelody(ast, { env, changes }) {
           isConcat && _key === 'right' && !/^[^\S\r\n]/.test(node.value),
         ignoreLast:
           isConcat && _key === 'left' && !/[^\S\r\n]$/.test(node.value),
+        collapseWhitespace: {
+          start: !(isConcat && _key === 'right'),
+          end: !(isConcat && _key === 'left'),
+        },
       })
     },
   })
@@ -775,6 +810,10 @@ function transformSvelte(ast, { env, changes }) {
           env,
           ignoreFirst: i > 0 && !/^\s/.test(value.raw),
           ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.raw),
+          collapseWhitespace: {
+            start: i === 0,
+            end: i >= attr.value.length - 1,
+          },
         })
         value.data = same
           ? value.raw
@@ -782,6 +821,10 @@ function transformSvelte(ast, { env, changes }) {
               env,
               ignoreFirst: i > 0 && !/^\s/.test(value.data),
               ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.data),
+              collapseWhitespace: {
+                start: i === 0,
+                end: i >= attr.value.length - 1,
+              },
             })
       } else if (value.type === 'MustacheTag') {
         visit(value.expression, {

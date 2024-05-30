@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Changed
+
+- Remove duplicate classes ([#272](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/272))
+- Remove extra whitespace around classes ([#272](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/272))
 
 ## [0.5.14] - 2024-04-15
 

@@ -33,6 +33,7 @@ export const options = {
   tailwindCollapseWhitespace: {
     since: '0.5.12',
     type: 'boolean',
+    default: [{ value: true }],
     category: 'Tailwind CSS',
     description: 'Collapse whitespace after sorting Tailwind classes',
   },

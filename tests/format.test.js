@@ -16,7 +16,11 @@ let css = [
   t`@apply ${yes};`,
   t`/* @apply ${no}; */`,
   t`@not-apply ${no};`,
-  ['@apply sm:p-0\n   p-0;', '@apply p-0\n   sm:p-0;'],
+  [
+    '@apply sm:p-0\n   p-0;',
+    '@apply p-0\n   sm:p-0;',
+    { tailwindCollapseWhitespace: false },
+  ],
 ]
 
 let javascript = [
@@ -286,11 +290,12 @@ describe('whitespace', () => {
     expect(result).toEqual('<div class="{{ this is ignored }}"></div>')
   })
 
-  test('whitespace is preserved around classes', async () => {
+  test('whitespace can be preserved around classes', async () => {
     let result = await format(
       `;<div className={' underline text-red-500  flex '}></div>`,
       {
         parser: 'babel',
+        tailwindCollapseWhitespace: false,
       },
     )
     expect(result).toEqual(

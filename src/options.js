@@ -30,12 +30,12 @@ export const options = {
     description:
       'List of functions and tagged templates that contain sortable Tailwind classes',
   },
-  tailwindCollapseWhitespace: {
-    since: '0.5.12',
+  tailwindPreserveWhitespace: {
+    since: '0.6.0',
     type: 'boolean',
-    default: [{ value: true }],
+    default: [{ value: false }],
     category: 'Tailwind CSS',
-    description: 'Collapse whitespace after sorting Tailwind classes',
+    description: 'Preserve whitespace around Tailwind classes when sorting',
   },
 }
 

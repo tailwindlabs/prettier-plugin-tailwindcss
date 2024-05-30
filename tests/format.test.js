@@ -19,7 +19,7 @@ let css = [
   [
     '@apply sm:p-0\n   p-0;',
     '@apply p-0\n   sm:p-0;',
-    { tailwindCollapseWhitespace: false },
+    { tailwindPreserveWhitespace: true },
   ],
 ]
 
@@ -60,32 +60,17 @@ let javascript = [
   [
     ';<div class="   m-0  sm:p-0  p-0   " />',
     ';<div class="m-0 p-0 sm:p-0" />',
-    { tailwindCollapseWhitespace: true },
   ],
   [
     ";<div class={'   m-0  sm:p-0  p-0   '} />",
     ";<div class={'m-0 p-0 sm:p-0'} />",
-    { tailwindCollapseWhitespace: true },
   ],
-  [
-    ';<div class={` sm:p-0\n  p-0   `} />',
-    ';<div class={`p-0 sm:p-0`} />',
-    { tailwindCollapseWhitespace: true },
-  ],
-  [
-    ';<div class="flex flex" />',
-    ';<div class="flex" />',
-    { tailwindCollapseWhitespace: true },
-  ],
-  [
-    ';<div class={`   flex  flex `} />',
-    ';<div class={`flex`} />',
-    { tailwindCollapseWhitespace: true },
-  ],
+  [';<div class={` sm:p-0\n  p-0   `} />', ';<div class={`p-0 sm:p-0`} />'],
+  [';<div class="flex flex" />', ';<div class="flex" />'],
+  [';<div class={`   flex  flex `} />', ';<div class={`flex`} />'],
   [
     ';<div class={`   flex  flex flex${someVar}block block`} />',
     ';<div class={`flex flex${someVar}block block`} />',
-    { tailwindCollapseWhitespace: true },
   ],
   [
     // This happens because we we look at class lists individually but
@@ -93,7 +78,6 @@ let javascript = [
     // remove the space after flex.
     ';<div class={`flex ` + `text-red-500`} />',
     ';<div class={`flex` + `text-red-500`} />',
-    { tailwindCollapseWhitespace: true },
   ],
   [
     // This happens because we we look at class lists individually but
@@ -101,7 +85,6 @@ let javascript = [
     // remove the space after flex.
     ';<div class={`flex` + `  ` + `text-red-500`} />',
     ';<div class={`flex` + ` ` + `text-red-500`} />',
-    { tailwindCollapseWhitespace: true },
   ],
 ]
 javascript = javascript.concat(
@@ -141,16 +124,8 @@ let vue = [
     `<div :class="\`p-0 sm:p-0 \${someVar}sm:block flex md:inline\`"></div>`,
   ],
 
-  [
-    `<div :class="'   flex  flex '"></div>`,
-    `<div :class="'flex'"></div>`,
-    { tailwindCollapseWhitespace: true },
-  ],
-  [
-    `<div :class="\`   flex  flex \`"></div>`,
-    `<div :class="\`flex\`"></div>`,
-    { tailwindCollapseWhitespace: true },
-  ],
+  [`<div :class="'   flex  flex '"></div>`, `<div :class="'flex'"></div>`],
+  [`<div :class="\`   flex  flex \`"></div>`, `<div :class="\`flex\`"></div>`],
 ]
 
 let glimmer = [
@@ -187,16 +162,11 @@ let glimmer = [
     `<div class='{{if @isTrue (nope "border- border-l-4" @borderColor)}}'></div>`,
   ],
 
-  [
-    `<div class='flex  flex '></div>`,
-    `<div class='flex'></div>`,
-    { tailwindCollapseWhitespace: true },
-  ],
+  [`<div class='flex  flex '></div>`, `<div class='flex'></div>`],
 
   [
     `<div class='sm:p-0   p-0  p-0 {{someVar}}sm:block flex md:inline   flex '></div>`,
     `<div class='p-0 sm:p-0 {{someVar}}sm:block flex md:inline'></div>`,
-    { tailwindCollapseWhitespace: true },
   ],
 ]
 
@@ -295,7 +265,7 @@ describe('whitespace', () => {
       `;<div className={' underline text-red-500  flex '}></div>`,
       {
         parser: 'babel',
-        tailwindCollapseWhitespace: false,
+        tailwindPreserveWhitespace: true,
       },
     )
     expect(result).toEqual(
@@ -306,9 +276,6 @@ describe('whitespace', () => {
   test('whitespace can be collapsed around classes', async () => {
     let result = await format(
       '<div class=" underline text-red-500  flex "></div>',
-      {
-        tailwindCollapseWhitespace: true,
-      },
     )
     expect(result).toEqual('<div class="flex text-red-500 underline"></div>')
   })
@@ -318,7 +285,6 @@ describe('whitespace', () => {
       ';<div className={`underline text-red-500 ${foo}-bar flex`}></div>',
       {
         parser: 'babel',
-        tailwindCollapseWhitespace: true,
       },
     )
     expect(result).toEqual(

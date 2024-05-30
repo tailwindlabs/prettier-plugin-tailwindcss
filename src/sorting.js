@@ -69,7 +69,7 @@ export function sortClasses(
     return classStr
   }
 
-  if (!env.options.tailwindCollapseWhitespace) {
+  if (env.options.tailwindPreserveWhitespace) {
     collapseWhitespace = false
   }
 

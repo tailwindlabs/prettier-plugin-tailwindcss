@@ -141,9 +141,9 @@ Once added, tag your strings with the function and the plugin will sort them:
 const mySortedClasses = tw`bg-white p-4 dark:bg-black`
 ```
 
-## Preserving Whitespace
+## Preserving whitespace
 
-This plugin removes whitespace between classes to ensure consistent formatting. If you prefer to preserve whitespace between classes, you can use the `tailwindPreserveWhitespace` option:
+This plugin automatically removes unnecessary whitespace between classes to ensure consistent formatting. If you prefer to preserve whitespace, you can use the `tailwindPreserveWhitespace` option:
 
 ```json5
 // .prettierrc
@@ -166,11 +166,11 @@ function MyButton({ isHovering, children }) {
 }
 ```
 
-## Preserving Duplicate Classes
+## Preserving duplicate classes
 
-This plugin removes duplicate classes which can be useful for long class lists. However, in some templating languages like FLuid, what we perceive as duplicate classes might actually be a combination of classes, variables, and templating language syntax.
+This plugin automatically removes duplicate classes from your class lists. However, this can cause issues in some templating languages, like Fluid or Blade, where we can't distinguish between classes and the templating syntax.
 
-If removing duplicate classes is causing issues in your project, you can use the `tailwindPreserveDuplicates` option to ensure they're kept:
+If removing duplicate classes is causing issues in your project, you can use the `tailwindPreserveDuplicates` option to disable this behavior:
 
 ```json5
 // .prettierrc

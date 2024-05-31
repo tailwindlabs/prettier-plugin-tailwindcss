@@ -193,6 +193,11 @@ let tests = {
     t`<div [ngClass]="{ '${yes}': (some.thing | urlPipe: { option: true } | async), '${yes}': true }"></div>`,
     t`<div [ngClass]="{ '${yes}': foo && bar?.['baz'] }" class="${yes}"></div>`,
 
+    [
+      `<div [ngClass]="' flex ' + ' underline ' + ' block '"></div>`,
+      `<div [ngClass]="'flex ' + ' underline' + ' block'"></div>`,
+    ],
+
     // TODO: Enable this test — it causes console noise but not a failure
     // t`<div [ngClass]="{ '${no}': foo && definitely&a:syntax*error }" class="${yes}"></div>`,
   ],

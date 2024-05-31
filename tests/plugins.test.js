@@ -140,6 +140,15 @@ let tests = [
         t`<section class="${yes} {{ i }}text-center"></section>`,
         t`<section class="text-center{{ i }} ${yes}"></section>`,
         t`<section class="{{ i }}text-center ${yes}"></section>`,
+
+        [
+          `<div class=" sm:flex   underline  block"></div>`,
+          `<div class="block underline sm:flex"></div>`,
+        ],
+        [
+          `<div class="{{ ' flex ' + ' underline ' + ' block ' }}"></div>`,
+          `<div class="{{ 'flex ' + ' underline' + ' block' }}"></div>`,
+        ],
       ],
     },
   },
@@ -154,6 +163,11 @@ let tests = [
         ],
         [
           `a.p-4.bg-blue-600(class='sm:p-0 md:p-4', href='//example.com') Example`,
+          `a.bg-blue-600.p-4(class='sm:p-0 md:p-4', href='//example.com') Example`,
+        ],
+
+        [
+          `a.p-4.bg-blue-600(class=' sm:p-0     md:p-4 ', href='//example.com') Example`,
           `a.bg-blue-600.p-4(class='sm:p-0 md:p-4', href='//example.com') Example`,
         ],
 
@@ -257,6 +271,18 @@ let tests = [
         t`<div class='${yes} {% include 'foo', bar: true %}'></div>`,
         t`<div class='${yes} foo--{{ id }}'></div>`,
         t`<div class='${yes} {{ id }}'></div>`,
+
+        // Whitespace removal is disabled for Liquid
+        // due to the way Liquid prints the AST
+        // (the length of the output MUST NOT change)
+        [
+          `<div class=' sm:flex   underline  block'></div>`,
+          `<div class=' block   underline  sm:flex'></div>`,
+        ],
+        [
+          `<div class='{{ ' flex ' + ' underline ' + ' block ' }}'></div>`,
+          `<div class='{{ ' flex ' + ' underline ' + ' block ' }}'></div>`,
+        ],
       ],
     },
   },
@@ -289,6 +315,18 @@ let tests = [
   '${yes}',
 ]/>`,
         t`<div class=['${yes}', 'underline', someVariable]/>`,
+
+        [
+          `<div class=' sm:flex   underline  block'/>`,
+          `<div class='block underline sm:flex'/>`,
+        ],
+
+        // TODO: An improvement to the plugin would be to remove the whitespace
+        // in this scenario:
+        [
+          `<div class=[' flex ' + ' underline ' + ' block ']/>`,
+          `<div class=[' flex ' + ' underline ' + ' block ']/>`,
+        ],
       ],
     },
   },
@@ -332,6 +370,15 @@ import Custom from '../components/Custom.astro'
 </div>`,
         t`<MyReactComponent className="${yes}" />`,
         t`<MyReactComponent className={'${yes}'} />`,
+
+        [
+          `<div class=" sm:flex   underline  block"></div>`,
+          `<div class="block underline sm:flex"></div>`,
+        ],
+        [
+          `<div class:list={[' flex ' + ' underline ' + ' block ']}></div>`,
+          `<div class:list={['flex ' + ' underline' + ' block']}></div>`,
+        ],
       ],
     },
   },
@@ -369,6 +416,20 @@ import Custom from '../components/Custom.astro'
         ['<div class={`sm:p-0\np-0`} />', '<div class={`p-0 sm:p-0`} />'],
         t`{#await promise()} <div class="${yes}" /> {:then} <div class="${yes}" /> {/await}`,
         t`{#await promise() then} <div class="${yes}" /> {/await}`,
+
+        // Whitespace removal is applied by Svelte itself
+        [
+          `<div class=" sm:flex   underline  block"></div>`,
+          `<div class=" block underline sm:flex"></div>`,
+        ],
+
+        // Whitespace removal does not work in Svelte
+        // due to how Svelte's parser and printer work
+        // (the length of the text MUST NOT change)
+        [
+          `<div class={' flex ' + ' underline ' + ' block '}></div>`,
+          `<div class={' flex ' + ' underline ' + ' block '}></div>`,
+        ],
       ],
     },
   },

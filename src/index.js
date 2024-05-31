@@ -11,13 +11,14 @@ import { getTailwindConfig } from './config.js'
 import { getCustomizations } from './options.js'
 import { loadPlugins } from './plugins.js'
 import { sortClasses, sortClassList } from './sorting.js'
-import { visit } from './utils.js'
+import { spliceChangesIntoString, visit } from './utils.js'
 
 let base = await loadPlugins()
 
 /** @typedef {import('./types.js').Customizations} Customizations */
 /** @typedef {import('./types.js').TransformerContext} TransformerContext */
 /** @typedef {import('./types.js').TransformerMetadata} TransformerMetadata */
+/** @typedef {import('./types.js').StringChange} StringChange */
 
 /**
  * @param {string} parserFormat
@@ -113,6 +114,8 @@ function transformDynamicAngularAttribute(attr, env) {
     return
   }
 
+  let changes = []
+
   visit(directiveAst, {
     StringLiteral(node, parent, key) {
       if (!node.value) return
@@ -120,18 +123,22 @@ function transformDynamicAngularAttribute(attr, env) {
       let isConcat =
         parent.type === 'BinaryExpression' && parent.operator === '+'
 
-      attr.value =
-        attr.value.slice(0, node.start + 1) +
-        sortClasses(node.value, {
+      changes.push({
+        start: node.start + 1,
+        end: node.end - 1,
+        before: node.value,
+        after: sortClasses(node.value, {
           env,
           collapseWhitespace: {
             start: !(isConcat && key === 'right'),
             end: !(isConcat && key === 'left'),
           },
-        }) +
-        attr.value.slice(node.end - 1)
+        }),
+      })
     },
   })
+
+  attr.value = spliceChangesIntoString(attr.value, changes)
 }
 
 function transformDynamicJsAttribute(attr, env) {
@@ -340,7 +347,7 @@ function transformLiquid(ast, { env }) {
   /** @type {{type: string, source: string}[]} */
   let sources = []
 
-  /** @type {{pos: {start: number, end: number}, value: string}[]} */
+  /** @type {StringChange[]} */
   let changes = []
 
   /** @typedef {import('@shopify/prettier-plugin-liquid/dist/types.js').AttrSingleQuoted} AttrSingleQuoted */
@@ -353,7 +360,7 @@ function transformLiquid(ast, { env }) {
     for (let i = 0; i < attr.value.length; i++) {
       let node = attr.value[i]
       if (node.type === 'TextNode') {
-        node.value = sortClasses(node.value, {
+        let after = sortClasses(node.value, {
           env,
           ignoreFirst: i > 0 && !/^\s/.test(node.value),
           ignoreLast: i < attr.value.length - 1 && !/\s$/.test(node.value),
@@ -364,8 +371,10 @@ function transformLiquid(ast, { env }) {
         })
 
         changes.push({
-          pos: node.position,
-          value: node.value,
+          start: node.position.start,
+          end: node.position.end,
+          before: node.value,
+          after,
         })
       } else if (
         // @ts-ignore: `LiquidDrop` is for older versions of the liquid plugin (1.2.x)
@@ -384,11 +393,13 @@ function transformLiquid(ast, { env }) {
               pos.end -= 1
             }
 
-            node.value = sortClasses(node.value, { env })
+            let after = sortClasses(node.value, { env })
 
             changes.push({
-              pos,
-              value: node.value,
+              start: pos.start,
+              end: pos.end,
+              before: node.value,
+              after,
             })
           },
         })
@@ -420,18 +431,8 @@ function transformLiquid(ast, { env }) {
     },
   })
 
-  // Sort so all changes occur in order
-  changes = changes.sort((a, b) => {
-    return a.pos.start - b.pos.start || a.pos.end - b.pos.end
-  })
-
-  for (let change of changes) {
-    for (let node of sources) {
-      node.source =
-        node.source.slice(0, change.pos.start) +
-        change.value +
-        node.source.slice(change.pos.end)
-    }
+  for (let node of sources) {
+    node.source = spliceChangesIntoString(node.source, changes)
   }
 }
 
@@ -939,7 +940,12 @@ function transformSvelte(ast, { env, changes }) {
               })
 
               if (sorted) {
-                changes.push({ text: node.raw, loc: node.loc })
+                changes.push({
+                  before,
+                  after: node.raw,
+                  start: node.loc.start,
+                  end: node.loc.end,
+                })
               }
             }
           },
@@ -956,8 +962,13 @@ function transformSvelte(ast, { env, changes }) {
             })
 
             if (sorted) {
-              for (let quasi of node.quasis) {
-                changes.push({ text: quasi.value.raw, loc: quasi.loc })
+              for (let [idx, quasi] of node.quasis.entries()) {
+                changes.push({
+                  before: before[idx],
+                  after: quasi.value.raw,
+                  start: quasi.loc.start,
+                  end: quasi.loc.end,
+                })
               }
             }
           },
@@ -1003,24 +1014,22 @@ export const printers = (function () {
       options.__mutatedOriginalText = true
 
       let changes = path.stack[0].changes
+
       if (changes?.length) {
         let finder = lineColumn(options.originalText)
 
-        for (let change of changes) {
-          let start = finder.toIndex(
-            change.loc.start.line,
-            change.loc.start.column + 1,
-          )
-          let end = finder.toIndex(
-            change.loc.end.line,
-            change.loc.end.column + 1,
-          )
+        changes = changes.map((change) => {
+          return {
+            ...change,
+            start: finder.toIndex(change.start.line, change.start.column + 1),
+            end: finder.toIndex(change.end.line, change.end.column + 1),
+          }
+        })
 
-          options.originalText =
-            options.originalText.substring(0, start) +
-            change.text +
-            options.originalText.substring(end)
-        }
+        options.originalText = spliceChangesIntoString(
+          options.originalText,
+          changes,
+        )
       }
     }
 

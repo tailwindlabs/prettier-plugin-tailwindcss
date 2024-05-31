@@ -1,3 +1,5 @@
+/** @typedef {import('./types.js').StringChange} StringChange */
+
 // For loading prettier plugins only if they exist
 export function loadIfExists(name) {
   try {
@@ -37,4 +39,26 @@ export function visit(ast, callbackMap) {
     }
   }
   _visit(ast)
+}
+
+/**
+ * Apply the changes to the string such that a change in the length
+ * of the string does not break the indexes of the subsequent changes.
+ * @param {string} str
+ * @param {StringChange[]} changes
+ */
+export function spliceChangesIntoString(str, changes) {
+  // Sort all changes in reverse order so we apply them from the end of the string
+  // to the beginning. This way, the indexes for the changes after the current one
+  // will still be correct after applying the current one.
+  changes.sort((a, b) => {
+    return b.end - a.end || b.start - a.start
+  })
+
+  // Splice in each change to the string
+  for (let change of changes) {
+    str = str.slice(0, change.start) + change.after + str.slice(change.end)
+  }
+
+  return str
 }

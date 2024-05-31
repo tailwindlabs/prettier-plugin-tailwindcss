@@ -15,7 +15,7 @@ export interface Customizations {
 
 export interface TransformerContext {
   env: TransformerEnv
-  changes: { text: string; loc: any }[]
+  changes: StringChange[]
 }
 
 export interface TransformerEnv {
@@ -38,4 +38,11 @@ export interface InternalOptions {
 declare module 'prettier' {
   interface RequiredOptions extends InternalOptions {}
   interface ParserOptions extends InternalOptions {}
+}
+
+export interface StringChange {
+  start: number
+  end: number
+  before: string
+  after: string
 }

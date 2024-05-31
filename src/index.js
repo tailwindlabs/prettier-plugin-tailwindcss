@@ -114,11 +114,21 @@ function transformDynamicAngularAttribute(attr, env) {
   }
 
   visit(directiveAst, {
-    StringLiteral(node) {
+    StringLiteral(node, parent, key) {
       if (!node.value) return
+
+      let isConcat =
+        parent.type === 'BinaryExpression' && parent.operator === '+'
+
       attr.value =
         attr.value.slice(0, node.start + 1) +
-        sortClasses(node.value, { env }) +
+        sortClasses(node.value, {
+          env,
+          collapseWhitespace: {
+            start: !(isConcat && key === 'right'),
+            end: !(isConcat && key === 'left'),
+          },
+        }) +
         attr.value.slice(node.end - 1)
     },
   })
@@ -135,8 +145,21 @@ function transformDynamicJsAttribute(attr, env) {
 
   astTypes.visit(ast, {
     visitLiteral(path) {
+      let isConcat =
+        path.parent.value.type === 'BinaryExpression' &&
+        path.parent.value.operator === '+'
+      let key = path.name
+
       if (isStringLiteral(path.node)) {
-        if (sortStringLiteral(path.node, { env })) {
+        let sorted = sortStringLiteral(path.node, {
+          env,
+          collapseWhitespace: {
+            start: !(isConcat && key === 'right'),
+            end: !(isConcat && key === 'left'),
+          },
+        })
+
+        if (sorted) {
           didChange = true
 
           // https://github.com/benjamn/recast/issues/171#issuecomment-224996336
@@ -153,18 +176,45 @@ function transformDynamicJsAttribute(attr, env) {
     },
 
     visitTemplateLiteral(path) {
-      if (sortTemplateLiteral(path.node, { env })) {
+      let isConcat =
+        path.parent.value.type === 'BinaryExpression' &&
+        path.parent.value.operator === '+'
+      let key = path.name
+      let sorted = sortTemplateLiteral(path.node, {
+        env,
+        collapseWhitespace: {
+          start: !(isConcat && key === 'right'),
+          end: !(isConcat && key === 'left'),
+        },
+      })
+
+      if (sorted) {
         didChange = true
       }
+
       this.traverse(path)
     },
 
     visitTaggedTemplateExpression(path) {
+      let isConcat =
+        path.parent.value.type === 'BinaryExpression' &&
+        path.parent.value.operator === '+'
+      let key = path.name
+
       if (isSortableTemplateExpression(path.node, functions)) {
-        if (sortTemplateLiteral(path.node.quasi, { env })) {
+        let sorted = sortTemplateLiteral(path.node.quasi, {
+          env,
+          collapseWhitespace: {
+            start: !(isConcat && key === 'right'),
+            end: !(isConcat && key === 'left'),
+          },
+        })
+
+        if (sorted) {
           didChange = true
         }
       }
+
       this.traverse(path)
     },
   })
@@ -385,8 +435,14 @@ function transformLiquid(ast, { env }) {
   }
 }
 
-function sortStringLiteral(node, { env }) {
-  let result = sortClasses(node.value, { env })
+function sortStringLiteral(
+  node,
+  { env, collapseWhitespace = { start: true, end: true } },
+) {
+  let result = sortClasses(node.value, {
+    env,
+    collapseWhitespace,
+  })
   let didChange = result !== node.value
   node.value = result
   if (node.extra) {
@@ -412,7 +468,10 @@ function isStringLiteral(node) {
   )
 }
 
-function sortTemplateLiteral(node, { env }) {
+function sortTemplateLiteral(
+  node,
+  { env, collapseWhitespace = { start: true, end: true } },
+) {
   let didChange = false
 
   for (let i = 0; i < node.quasis.length; i++) {
@@ -431,8 +490,11 @@ function sortTemplateLiteral(node, { env }) {
       ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.raw),
 
       collapseWhitespace: {
-        start: i === 0,
-        end: i >= node.expressions.length,
+        start: collapseWhitespace && collapseWhitespace.start && i === 0,
+        end:
+          collapseWhitespace &&
+          collapseWhitespace.end &&
+          i >= node.expressions.length,
       },
     })
 
@@ -444,8 +506,11 @@ function sortTemplateLiteral(node, { env }) {
           ignoreLast:
             i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
           collapseWhitespace: {
-            start: i === 0,
-            end: i >= node.expressions.length,
+            start: collapseWhitespace && collapseWhitespace.start && i === 0,
+            end:
+              collapseWhitespace &&
+              collapseWhitespace.end &&
+              i >= node.expressions.length,
           },
         })
 
@@ -527,14 +592,35 @@ function transformJavaScript(ast, { env }) {
 
   /** @param {import('@babel/types').Node} ast */
   function sortInside(ast) {
-    visit(ast, (node) => {
+    visit(ast, (node, parent, key) => {
+      let isConcat =
+        parent?.type === 'BinaryExpression' && parent?.operator === '+'
+
       if (isStringLiteral(node)) {
-        sortStringLiteral(node, { env })
+        sortStringLiteral(node, {
+          env,
+          collapseWhitespace: {
+            start: !(isConcat && key === 'right'),
+            end: !(isConcat && key === 'left'),
+          },
+        })
       } else if (node.type === 'TemplateLiteral') {
-        sortTemplateLiteral(node, { env })
+        sortTemplateLiteral(node, {
+          env,
+          collapseWhitespace: {
+            start: !(isConcat && key === 'right'),
+            end: !(isConcat && key === 'left'),
+          },
+        })
       } else if (node.type === 'TaggedTemplateExpression') {
         if (isSortableTemplateExpression(node, functions)) {
-          sortTemplateLiteral(node.quasi, { env })
+          sortTemplateLiteral(node.quasi, {
+            env,
+            collapseWhitespace: {
+              start: !(isConcat && key === 'right'),
+              end: !(isConcat && key === 'left'),
+            },
+          })
         }
       }
     })
@@ -574,12 +660,21 @@ function transformJavaScript(ast, { env }) {
     },
 
     /** @param {import('@babel/types').TaggedTemplateExpression} node */
-    TaggedTemplateExpression(node) {
+    TaggedTemplateExpression(node, parent, key) {
       if (!isSortableTemplateExpression(node, functions)) {
         return
       }
 
-      sortTemplateLiteral(node.quasi, { env })
+      let isConcat =
+        parent?.type === 'BinaryExpression' && parent?.operator === '+'
+
+      sortTemplateLiteral(node.quasi, {
+        env,
+        collapseWhitespace: {
+          start: !(isConcat && key === 'right'),
+          end: !(isConcat && key === 'left'),
+        },
+      })
     },
   })
 }
@@ -828,15 +923,37 @@ function transformSvelte(ast, { env, changes }) {
             })
       } else if (value.type === 'MustacheTag') {
         visit(value.expression, {
-          Literal(node) {
+          Literal(node, parent, key) {
+            let isConcat =
+              parent?.type === 'BinaryExpression' && parent?.operator === '+'
+
             if (isStringLiteral(node)) {
-              if (sortStringLiteral(node, { env })) {
+              let sorted = sortStringLiteral(node, {
+                env,
+                collapseWhitespace: {
+                  start: !(isConcat && key === 'right'),
+                  end: !(isConcat && key === 'left'),
+                },
+              })
+
+              if (sorted) {
                 changes.push({ text: node.raw, loc: node.loc })
               }
             }
           },
-          TemplateLiteral(node) {
-            if (sortTemplateLiteral(node, { env })) {
+          TemplateLiteral(node, parent, key) {
+            let isConcat =
+              parent?.type === 'BinaryExpression' && parent?.operator === '+'
+
+            let sorted = sortTemplateLiteral(node, {
+              env,
+              collapseWhitespace: {
+                start: !(isConcat && key === 'right'),
+                end: !(isConcat && key === 'left'),
+              },
+            })
+
+            if (sorted) {
               for (let quasi of node.quasis) {
                 changes.push({ text: quasi.value.raw, loc: quasi.loc })
               }

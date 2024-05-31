@@ -10,6 +10,14 @@ let html = [
   t`<div class=""></div>`,
   // Ensure duplicate classes are removed
   ['<div class="sm:p-0 p-0 p-0"></div>', '<div class="p-0 sm:p-0"></div>'],
+  // Ensure duplicate can be kept
+  [
+    '<div class="sm:p-0 p-0 p-0"></div>',
+    '<div class="p-0 p-0 sm:p-0"></div>',
+    {
+      tailwindPreserveDuplicates: true,
+    },
+  ],
 ]
 
 let css = [
@@ -73,18 +81,12 @@ let javascript = [
     ';<div class={`flex flex${someVar}block block`} />',
   ],
   [
-    // This happens because we we look at class lists individually but
-    // a future improvement could be to dectect this case and not
-    // remove the space after flex.
     ';<div class={`flex ` + `text-red-500`} />',
-    ';<div class={`flex` + `text-red-500`} />',
+    ';<div class={`flex ` + `text-red-500`} />',
   ],
   [
-    // This happens because we we look at class lists individually but
-    // a future improvement could be to dectect this case and not
-    // remove the space after flex.
-    ';<div class={`flex` + `  ` + `text-red-500`} />',
-    ';<div class={`flex` + ` ` + `text-red-500`} />',
+    ';<div class={`flex ` + `  ` + `text-red-500`} />',
+    ';<div class={`flex ` + ` ` + `text-red-500`} />',
   ],
 ]
 javascript = javascript.concat(
@@ -126,6 +128,14 @@ let vue = [
 
   [`<div :class="'   flex  flex '"></div>`, `<div :class="'flex'"></div>`],
   [`<div :class="\`   flex  flex \`"></div>`, `<div :class="\`flex\`"></div>`],
+  [
+    `<div :class="' flex ' + ' underline '"></div>`,
+    `<div :class="'flex ' + ' underline'"></div>`,
+  ],
+  [
+    `<div :class="' sm:p-5 ' + ' flex ' + ' underline ' + ' sm:m-5 '"></div>`,
+    `<div :class="'sm:p-5 ' + ' flex' + ' underline' + ' sm:m-5'"></div>`,
+  ],
 ]
 
 let glimmer = [
@@ -192,6 +202,11 @@ let tests = {
     t`<div [ngClass]="clsx('${yes}')"></div>`,
     t`<div [ngClass]="{ '${yes}': (some.thing | urlPipe: { option: true } | async), '${yes}': true }"></div>`,
     t`<div [ngClass]="{ '${yes}': foo && bar?.['baz'] }" class="${yes}"></div>`,
+
+    [
+      `<div [ngClass]="' flex ' + ' underline ' + ' block '"></div>`,
+      `<div [ngClass]="'flex ' + ' underline' + ' block'"></div>`,
+    ],
 
     // TODO: Enable this test — it causes console noise but not a failure
     // t`<div [ngClass]="{ '${no}': foo && definitely&a:syntax*error }" class="${yes}"></div>`,

@@ -45,6 +45,7 @@ function getClassOrderPolyfill(classes, { env }) {
  * @param {any} opts.env
  * @param {boolean} [opts.ignoreFirst]
  * @param {boolean} [opts.ignoreLast]
+ * @param {boolean} [opts.removeDuplicates]
  * @param {object} [opts.collapseWhitespace]
  * @param {boolean} [opts.collapseWhitespace.start]
  * @param {boolean} [opts.collapseWhitespace.end]
@@ -56,6 +57,7 @@ export function sortClasses(
     env,
     ignoreFirst = false,
     ignoreLast = false,
+    removeDuplicates = true,
     collapseWhitespace = { start: true, end: true },
   },
 ) {
@@ -71,6 +73,10 @@ export function sortClasses(
 
   if (env.options.tailwindPreserveWhitespace) {
     collapseWhitespace = false
+  }
+
+  if (env.options.tailwindPreserveDuplicates) {
+    removeDuplicates = false
   }
 
   // This class list is purely whitespace
@@ -102,16 +108,17 @@ export function sortClasses(
     suffix = `${whitespace.pop() ?? ''}${classes.pop() ?? ''}`
   }
 
-  // Remove duplicates
-  classes = classes.filter((cls, index, arr) => {
-    if (arr.indexOf(cls) === index) {
-      return true
-    }
+  if (removeDuplicates) {
+    classes = classes.filter((cls, index, arr) => {
+      if (arr.indexOf(cls) === index) {
+        return true
+      }
 
-    whitespace.splice(index - 1, 1)
+      whitespace.splice(index - 1, 1)
 
-    return false
-  })
+      return false
+    })
+  }
 
   classes = sortClassList(classes, { env })
 

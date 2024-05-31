@@ -11,13 +11,14 @@ import { getTailwindConfig } from './config.js'
 import { getCustomizations } from './options.js'
 import { loadPlugins } from './plugins.js'
 import { sortClasses, sortClassList } from './sorting.js'
-import { visit } from './utils.js'
+import { spliceChangesIntoString, visit } from './utils.js'
 
 let base = await loadPlugins()
 
 /** @typedef {import('./types.js').Customizations} Customizations */
 /** @typedef {import('./types.js').TransformerContext} TransformerContext */
 /** @typedef {import('./types.js').TransformerMetadata} TransformerMetadata */
+/** @typedef {import('./types.js').StringChange} StringChange */
 
 /**
  * @param {string} parserFormat
@@ -113,15 +114,31 @@ function transformDynamicAngularAttribute(attr, env) {
     return
   }
 
+  let changes = []
+
   visit(directiveAst, {
-    StringLiteral(node) {
+    StringLiteral(node, parent, key) {
       if (!node.value) return
-      attr.value =
-        attr.value.slice(0, node.start + 1) +
-        sortClasses(node.value, { env }) +
-        attr.value.slice(node.end - 1)
+
+      let isConcat =
+        parent.type === 'BinaryExpression' && parent.operator === '+'
+
+      changes.push({
+        start: node.start + 1,
+        end: node.end - 1,
+        before: node.value,
+        after: sortClasses(node.value, {
+          env,
+          collapseWhitespace: {
+            start: !(isConcat && key === 'right'),
+            end: !(isConcat && key === 'left'),
+          },
+        }),
+      })
     },
   })
+
+  attr.value = spliceChangesIntoString(attr.value, changes)
 }
 
 function transformDynamicJsAttribute(attr, env) {
@@ -135,8 +152,21 @@ function transformDynamicJsAttribute(attr, env) {
 
   astTypes.visit(ast, {
     visitLiteral(path) {
+      let isConcat =
+        path.parent.value.type === 'BinaryExpression' &&
+        path.parent.value.operator === '+'
+      let key = path.name
+
       if (isStringLiteral(path.node)) {
-        if (sortStringLiteral(path.node, { env })) {
+        let sorted = sortStringLiteral(path.node, {
+          env,
+          collapseWhitespace: {
+            start: !(isConcat && key === 'right'),
+            end: !(isConcat && key === 'left'),
+          },
+        })
+
+        if (sorted) {
           didChange = true
 
           // https://github.com/benjamn/recast/issues/171#issuecomment-224996336
@@ -153,18 +183,45 @@ function transformDynamicJsAttribute(attr, env) {
     },
 
     visitTemplateLiteral(path) {
-      if (sortTemplateLiteral(path.node, { env })) {
+      let isConcat =
+        path.parent.value.type === 'BinaryExpression' &&
+        path.parent.value.operator === '+'
+      let key = path.name
+      let sorted = sortTemplateLiteral(path.node, {
+        env,
+        collapseWhitespace: {
+          start: !(isConcat && key === 'right'),
+          end: !(isConcat && key === 'left'),
+        },
+      })
+
+      if (sorted) {
         didChange = true
       }
+
       this.traverse(path)
     },
 
     visitTaggedTemplateExpression(path) {
+      let isConcat =
+        path.parent.value.type === 'BinaryExpression' &&
+        path.parent.value.operator === '+'
+      let key = path.name
+
       if (isSortableTemplateExpression(path.node, functions)) {
-        if (sortTemplateLiteral(path.node.quasi, { env })) {
+        let sorted = sortTemplateLiteral(path.node.quasi, {
+          env,
+          collapseWhitespace: {
+            start: !(isConcat && key === 'right'),
+            end: !(isConcat && key === 'left'),
+          },
+        })
+
+        if (sorted) {
           didChange = true
         }
       }
+
       this.traverse(path)
     },
   })
@@ -290,7 +347,7 @@ function transformLiquid(ast, { env }) {
   /** @type {{type: string, source: string}[]} */
   let sources = []
 
-  /** @type {{pos: {start: number, end: number}, value: string}[]} */
+  /** @type {StringChange[]} */
   let changes = []
 
   /** @typedef {import('@shopify/prettier-plugin-liquid/dist/types.js').AttrSingleQuoted} AttrSingleQuoted */
@@ -303,19 +360,19 @@ function transformLiquid(ast, { env }) {
     for (let i = 0; i < attr.value.length; i++) {
       let node = attr.value[i]
       if (node.type === 'TextNode') {
-        node.value = sortClasses(node.value, {
+        let after = sortClasses(node.value, {
           env,
           ignoreFirst: i > 0 && !/^\s/.test(node.value),
           ignoreLast: i < attr.value.length - 1 && !/\s$/.test(node.value),
-          collapseWhitespace: {
-            start: i === 0,
-            end: i >= attr.value.length - 1,
-          },
+          removeDuplicates: false,
+          collapseWhitespace: false,
         })
 
         changes.push({
-          pos: node.position,
-          value: node.value,
+          start: node.position.start,
+          end: node.position.end,
+          before: node.value,
+          after,
         })
       } else if (
         // @ts-ignore: `LiquidDrop` is for older versions of the liquid plugin (1.2.x)
@@ -334,11 +391,13 @@ function transformLiquid(ast, { env }) {
               pos.end -= 1
             }
 
-            node.value = sortClasses(node.value, { env })
+            let after = sortClasses(node.value, { env })
 
             changes.push({
-              pos,
-              value: node.value,
+              start: pos.start,
+              end: pos.end,
+              before: node.value,
+              after,
             })
           },
         })
@@ -370,23 +429,19 @@ function transformLiquid(ast, { env }) {
     },
   })
 
-  // Sort so all changes occur in order
-  changes = changes.sort((a, b) => {
-    return a.pos.start - b.pos.start || a.pos.end - b.pos.end
-  })
-
-  for (let change of changes) {
-    for (let node of sources) {
-      node.source =
-        node.source.slice(0, change.pos.start) +
-        change.value +
-        node.source.slice(change.pos.end)
-    }
+  for (let node of sources) {
+    node.source = spliceChangesIntoString(node.source, changes)
   }
 }
 
-function sortStringLiteral(node, { env }) {
-  let result = sortClasses(node.value, { env })
+function sortStringLiteral(
+  node,
+  { env, collapseWhitespace = { start: true, end: true } },
+) {
+  let result = sortClasses(node.value, {
+    env,
+    collapseWhitespace,
+  })
   let didChange = result !== node.value
   node.value = result
   if (node.extra) {
@@ -412,7 +467,10 @@ function isStringLiteral(node) {
   )
 }
 
-function sortTemplateLiteral(node, { env }) {
+function sortTemplateLiteral(
+  node,
+  { env, collapseWhitespace = { start: true, end: true } },
+) {
   let didChange = false
 
   for (let i = 0; i < node.quasis.length; i++) {
@@ -431,8 +489,11 @@ function sortTemplateLiteral(node, { env }) {
       ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.raw),
 
       collapseWhitespace: {
-        start: i === 0,
-        end: i >= node.expressions.length,
+        start: collapseWhitespace && collapseWhitespace.start && i === 0,
+        end:
+          collapseWhitespace &&
+          collapseWhitespace.end &&
+          i >= node.expressions.length,
       },
     })
 
@@ -444,8 +505,11 @@ function sortTemplateLiteral(node, { env }) {
           ignoreLast:
             i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
           collapseWhitespace: {
-            start: i === 0,
-            end: i >= node.expressions.length,
+            start: collapseWhitespace && collapseWhitespace.start && i === 0,
+            end:
+              collapseWhitespace &&
+              collapseWhitespace.end &&
+              i >= node.expressions.length,
           },
         })
 
@@ -527,14 +591,35 @@ function transformJavaScript(ast, { env }) {
 
   /** @param {import('@babel/types').Node} ast */
   function sortInside(ast) {
-    visit(ast, (node) => {
+    visit(ast, (node, parent, key) => {
+      let isConcat =
+        parent?.type === 'BinaryExpression' && parent?.operator === '+'
+
       if (isStringLiteral(node)) {
-        sortStringLiteral(node, { env })
+        sortStringLiteral(node, {
+          env,
+          collapseWhitespace: {
+            start: !(isConcat && key === 'right'),
+            end: !(isConcat && key === 'left'),
+          },
+        })
       } else if (node.type === 'TemplateLiteral') {
-        sortTemplateLiteral(node, { env })
+        sortTemplateLiteral(node, {
+          env,
+          collapseWhitespace: {
+            start: !(isConcat && key === 'right'),
+            end: !(isConcat && key === 'left'),
+          },
+        })
       } else if (node.type === 'TaggedTemplateExpression') {
         if (isSortableTemplateExpression(node, functions)) {
-          sortTemplateLiteral(node.quasi, { env })
+          sortTemplateLiteral(node.quasi, {
+            env,
+            collapseWhitespace: {
+              start: !(isConcat && key === 'right'),
+              end: !(isConcat && key === 'left'),
+            },
+          })
         }
       }
     })
@@ -574,12 +659,21 @@ function transformJavaScript(ast, { env }) {
     },
 
     /** @param {import('@babel/types').TaggedTemplateExpression} node */
-    TaggedTemplateExpression(node) {
+    TaggedTemplateExpression(node, parent, key) {
       if (!isSortableTemplateExpression(node, functions)) {
         return
       }
 
-      sortTemplateLiteral(node.quasi, { env })
+      let isConcat =
+        parent?.type === 'BinaryExpression' && parent?.operator === '+'
+
+      sortTemplateLiteral(node.quasi, {
+        env,
+        collapseWhitespace: {
+          start: !(isConcat && key === 'right'),
+          end: !(isConcat && key === 'left'),
+        },
+      })
     },
   })
 }
@@ -713,7 +807,9 @@ function transformMelody(ast, { env, changes }) {
         return
       }
 
-      const isConcat = parent.type === 'BinaryConcatExpression'
+      const isConcat =
+        parent.type === 'BinaryConcatExpression' ||
+        parent.type === 'BinaryAddExpression'
 
       node.value = sortClasses(node.value, {
         env,
@@ -810,10 +906,8 @@ function transformSvelte(ast, { env, changes }) {
           env,
           ignoreFirst: i > 0 && !/^\s/.test(value.raw),
           ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.raw),
-          collapseWhitespace: {
-            start: i === 0,
-            end: i >= attr.value.length - 1,
-          },
+          removeDuplicates: false,
+          collapseWhitespace: false,
         })
         value.data = same
           ? value.raw
@@ -821,24 +915,46 @@ function transformSvelte(ast, { env, changes }) {
               env,
               ignoreFirst: i > 0 && !/^\s/.test(value.data),
               ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.data),
-              collapseWhitespace: {
-                start: i === 0,
-                end: i >= attr.value.length - 1,
-              },
+              removeDuplicates: false,
+              collapseWhitespace: false,
             })
       } else if (value.type === 'MustacheTag') {
         visit(value.expression, {
-          Literal(node) {
+          Literal(node, parent, key) {
             if (isStringLiteral(node)) {
-              if (sortStringLiteral(node, { env })) {
-                changes.push({ text: node.raw, loc: node.loc })
+              let before = node.raw
+              let sorted = sortStringLiteral(node, {
+                env,
+                removeDuplicates: false,
+                collapseWhitespace: false,
+              })
+
+              if (sorted) {
+                changes.push({
+                  before,
+                  after: node.raw,
+                  start: node.loc.start,
+                  end: node.loc.end,
+                })
               }
             }
           },
-          TemplateLiteral(node) {
-            if (sortTemplateLiteral(node, { env })) {
-              for (let quasi of node.quasis) {
-                changes.push({ text: quasi.value.raw, loc: quasi.loc })
+          TemplateLiteral(node, parent, key) {
+            let before = node.quasis.map((quasi) => quasi.value.raw)
+            let sorted = sortTemplateLiteral(node, {
+              env,
+              removeDuplicates: false,
+              collapseWhitespace: false,
+            })
+
+            if (sorted) {
+              for (let [idx, quasi] of node.quasis.entries()) {
+                changes.push({
+                  before: before[idx],
+                  after: quasi.value.raw,
+                  start: quasi.loc.start,
+                  end: quasi.loc.end,
+                })
               }
             }
           },
@@ -884,24 +1000,22 @@ export const printers = (function () {
       options.__mutatedOriginalText = true
 
       let changes = path.stack[0].changes
+
       if (changes?.length) {
         let finder = lineColumn(options.originalText)
 
-        for (let change of changes) {
-          let start = finder.toIndex(
-            change.loc.start.line,
-            change.loc.start.column + 1,
-          )
-          let end = finder.toIndex(
-            change.loc.end.line,
-            change.loc.end.column + 1,
-          )
+        changes = changes.map((change) => {
+          return {
+            ...change,
+            start: finder.toIndex(change.start.line, change.start.column + 1),
+            end: finder.toIndex(change.end.line, change.end.column + 1),
+          }
+        })
 
-          options.originalText =
-            options.originalText.substring(0, start) +
-            change.text +
-            options.originalText.substring(end)
-        }
+        options.originalText = spliceChangesIntoString(
+          options.originalText,
+          changes,
+        )
       }
     }
 

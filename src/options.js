@@ -37,6 +37,13 @@ export const options = {
     category: 'Tailwind CSS',
     description: 'Preserve whitespace around Tailwind classes when sorting',
   },
+  tailwindPreserveDuplicates: {
+    since: '0.6.1',
+    type: 'boolean',
+    default: [{ value: false }],
+    category: 'Tailwind CSS',
+    description: 'Preserve duplicate classes inside a class list when sorting',
+  },
 }
 
 /** @typedef {import('prettier').RequiredOptions} RequiredOptions */

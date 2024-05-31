@@ -141,6 +141,57 @@ Once added, tag your strings with the function and the plugin will sort them:
 const mySortedClasses = tw`bg-white p-4 dark:bg-black`
 ```
 
+## Preserving whitespace
+
+This plugin automatically removes unnecessary whitespace between classes to ensure consistent formatting. If you prefer to preserve whitespace, you can use the `tailwindPreserveWhitespace` option:
+
+```json5
+// .prettierrc
+{
+  "tailwindPreserveWhitespace": true,
+}
+```
+
+With this configuration, any whitespace surrounding classes will be preserved:
+
+```jsx
+import clsx from 'clsx'
+
+function MyButton({ isHovering, children }) {
+  return (
+    <button className=" rounded  bg-blue-500 px-4  py-2     text-base text-white ">
+      {children}
+    </button>
+  )
+}
+```
+
+## Preserving duplicate classes
+
+This plugin automatically removes duplicate classes from your class lists. However, this can cause issues in some templating languages, like Fluid or Blade, where we can't distinguish between classes and the templating syntax.
+
+If removing duplicate classes is causing issues in your project, you can use the `tailwindPreserveDuplicates` option to disable this behavior:
+
+```json5
+// .prettierrc
+{
+  "tailwindPreserveDuplicates": true,
+}
+```
+
+With this configuration, anything we perceive as duplicate classes will be preserved:
+
+```html
+<div
+  class="
+    {f:if(condition: isCompact, then: 'grid-cols-3', else: 'grid-cols-5')}
+    {f:if(condition: isDark, then: 'bg-black/50', else: 'bg-white/50')}
+    grid gap-4 p-4
+  "
+>
+</div>
+```
+
 ## Compatibility with other Prettier plugins
 
 This plugin uses Prettier APIs that can only be used by one plugin at a time, making it incompatible with other Prettier plugins implemented the same way. To solve this we've added explicit per-plugin workarounds that enable compatibility with the following Prettier plugins:

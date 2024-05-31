@@ -908,10 +908,7 @@ function transformSvelte(ast, { env, changes }) {
           env,
           ignoreFirst: i > 0 && !/^\s/.test(value.raw),
           ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.raw),
-          collapseWhitespace: {
-            start: i === 0,
-            end: i >= attr.value.length - 1,
-          },
+          collapseWhitespace: false,
         })
         value.data = same
           ? value.raw
@@ -919,24 +916,16 @@ function transformSvelte(ast, { env, changes }) {
               env,
               ignoreFirst: i > 0 && !/^\s/.test(value.data),
               ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.data),
-              collapseWhitespace: {
-                start: i === 0,
-                end: i >= attr.value.length - 1,
-              },
+              collapseWhitespace: false,
             })
       } else if (value.type === 'MustacheTag') {
         visit(value.expression, {
           Literal(node, parent, key) {
-            let isConcat =
-              parent?.type === 'BinaryExpression' && parent?.operator === '+'
-
             if (isStringLiteral(node)) {
+              let before = node.raw
               let sorted = sortStringLiteral(node, {
                 env,
-                collapseWhitespace: {
-                  start: !(isConcat && key === 'right'),
-                  end: !(isConcat && key === 'left'),
-                },
+                collapseWhitespace: false,
               })
 
               if (sorted) {
@@ -950,15 +939,10 @@ function transformSvelte(ast, { env, changes }) {
             }
           },
           TemplateLiteral(node, parent, key) {
-            let isConcat =
-              parent?.type === 'BinaryExpression' && parent?.operator === '+'
-
+            let before = node.quasis.map((quasi) => quasi.value.raw)
             let sorted = sortTemplateLiteral(node, {
               env,
-              collapseWhitespace: {
-                start: !(isConcat && key === 'right'),
-                end: !(isConcat && key === 'left'),
-              },
+              collapseWhitespace: false,
             })
 
             if (sorted) {

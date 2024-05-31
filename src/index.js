@@ -364,10 +364,7 @@ function transformLiquid(ast, { env }) {
           env,
           ignoreFirst: i > 0 && !/^\s/.test(node.value),
           ignoreLast: i < attr.value.length - 1 && !/\s$/.test(node.value),
-          collapseWhitespace: {
-            start: i === 0,
-            end: i >= attr.value.length - 1,
-          },
+          collapseWhitespace: false,
         })
 
         changes.push({

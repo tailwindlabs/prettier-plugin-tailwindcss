@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Added
+
+- Add the `tailwindPreserveDuplicates` option to keep duplicate classes ([#276](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/276))
+
+### Fixed
+
+- Improve handling of whitespace removal when concatenating strings ([#276](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/276))
+- Fix a bug where angular expressions may produce invalid code after sorting ([#276](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/276))
+- Disabled whitespace and duplicate class removal for Liquid and Svelte ([#276](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/276))
 
 ## [0.6.0] - 2024-05-30
 

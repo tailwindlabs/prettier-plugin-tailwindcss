@@ -808,7 +808,9 @@ function transformMelody(ast, { env, changes }) {
         return
       }
 
-      const isConcat = parent.type === 'BinaryConcatExpression'
+      const isConcat =
+        parent.type === 'BinaryConcatExpression' ||
+        parent.type === 'BinaryAddExpression'
 
       node.value = sortClasses(node.value, {
         env,

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Nothing yet!
+
+## [0.6.1] - 2024-05-31
+
 ### Added
 
 - Add new `tailwindPreserveDuplicates` option to disable removal of duplicate classes ([#276](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/276))
@@ -299,7 +303,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.0...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.14...v0.6.0
 [0.5.14]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.13...v0.5.14
 [0.5.13]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.5.12...v0.5.13

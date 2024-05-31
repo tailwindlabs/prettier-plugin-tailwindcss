@@ -103,15 +103,17 @@ export function sortClasses(
   }
 
   // Remove duplicates
-  classes = classes.filter((cls, index, arr) => {
-    if (arr.indexOf(cls) === index) {
-      return true
-    }
+  if (!env.options.tailwindPreserveDuplicates) {
+    classes = classes.filter((cls, index, arr) => {
+      if (arr.indexOf(cls) === index) {
+        return true
+      }
 
-    whitespace.splice(index - 1, 1)
+      whitespace.splice(index - 1, 1)
 
-    return false
-  })
+      return false
+    })
+  }
 
   classes = sortClassList(classes, { env })
 

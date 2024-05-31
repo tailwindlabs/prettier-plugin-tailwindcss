@@ -10,6 +10,14 @@ let html = [
   t`<div class=""></div>`,
   // Ensure duplicate classes are removed
   ['<div class="sm:p-0 p-0 p-0"></div>', '<div class="p-0 sm:p-0"></div>'],
+  // Ensure duplicate can be kept
+  [
+    '<div class="sm:p-0 p-0 p-0"></div>',
+    '<div class="p-0 p-0 sm:p-0"></div>',
+    {
+      tailwindPreserveDuplicates: true,
+    },
+  ],
 ]
 
 let css = [

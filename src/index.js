@@ -364,6 +364,7 @@ function transformLiquid(ast, { env }) {
           env,
           ignoreFirst: i > 0 && !/^\s/.test(node.value),
           ignoreLast: i < attr.value.length - 1 && !/\s$/.test(node.value),
+          removeDuplicates: false,
           collapseWhitespace: false,
         })
 
@@ -905,6 +906,7 @@ function transformSvelte(ast, { env, changes }) {
           env,
           ignoreFirst: i > 0 && !/^\s/.test(value.raw),
           ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.raw),
+          removeDuplicates: false,
           collapseWhitespace: false,
         })
         value.data = same
@@ -913,6 +915,7 @@ function transformSvelte(ast, { env, changes }) {
               env,
               ignoreFirst: i > 0 && !/^\s/.test(value.data),
               ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.data),
+              removeDuplicates: false,
               collapseWhitespace: false,
             })
       } else if (value.type === 'MustacheTag') {
@@ -922,6 +925,7 @@ function transformSvelte(ast, { env, changes }) {
               let before = node.raw
               let sorted = sortStringLiteral(node, {
                 env,
+                removeDuplicates: false,
                 collapseWhitespace: false,
               })
 
@@ -939,6 +943,7 @@ function transformSvelte(ast, { env, changes }) {
             let before = node.quasis.map((quasi) => quasi.value.raw)
             let sorted = sortTemplateLiteral(node, {
               env,
+              removeDuplicates: false,
               collapseWhitespace: false,
             })
 

@@ -109,9 +109,12 @@ export function sortClasses(
   }
 
   if (removeDuplicates) {
+    let seenClasses = new Set()
     let indicesToRemove = []
-    classes = classes.filter((cls, index, arr) => {
-      if (arr.indexOf(cls) === index) {
+
+    classes = classes.filter((cls, index) => {
+      if (!seenClasses.has(cls)) {
+        seenClasses.add(cls)
         return true
       }
 

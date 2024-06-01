@@ -109,14 +109,23 @@ export function sortClasses(
   }
 
   if (removeDuplicates) {
+    let indicesToRemove = []
     classes = classes.filter((cls, index, arr) => {
       if (arr.indexOf(cls) === index) {
         return true
       }
 
-      whitespace.splice(index - 1, 1)
-
+      indicesToRemove.push(index - 1)
       return false
+    })
+
+    let startIndex = 0
+    whitespace = whitespace.filter((_, index) => {
+      if (indicesToRemove[startIndex] === index) {
+        startIndex++
+        return false
+      }
+      return true
     })
   }
 

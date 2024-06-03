@@ -1,19 +1,22 @@
-/** @type {Record<string, import('prettier').SupportOption>} */
-export const options = {
+import type { RequiredOptions, SupportOption } from 'prettier'
+import type { Customizations } from './types'
+import './index.d.ts'
+
+export const options: Record<string, SupportOption> = {
   tailwindConfig: {
-    since: '0.0.0',
+    // since: '0.0.0',
     type: 'string',
     category: 'Tailwind CSS',
     description: 'Path to Tailwind configuration file',
   },
   tailwindEntryPoint: {
-    since: '0.0.0',
+    // since: '0.0.0',
     type: 'string',
     category: 'Tailwind CSS',
     description: 'Path to the CSS entrypoint in your Tailwind project (v4+)',
   },
   tailwindAttributes: {
-    since: '0.3.0',
+    // since: '0.3.0',
     type: 'string',
     array: true,
     default: [{ value: [] }],
@@ -22,7 +25,7 @@ export const options = {
       'List of attributes/props that contain sortable Tailwind classes',
   },
   tailwindFunctions: {
-    since: '0.3.0',
+    // since: '0.3.0',
     type: 'string',
     array: true,
     default: [{ value: [] }],
@@ -31,39 +34,29 @@ export const options = {
       'List of functions and tagged templates that contain sortable Tailwind classes',
   },
   tailwindPreserveWhitespace: {
-    since: '0.6.0',
+    // since: '0.6.0',
     type: 'boolean',
-    default: [{ value: false }],
+    default: false,
     category: 'Tailwind CSS',
     description: 'Preserve whitespace around Tailwind classes when sorting',
   },
   tailwindPreserveDuplicates: {
-    since: '0.6.1',
+    // since: '0.6.1',
     type: 'boolean',
-    default: [{ value: false }],
+    default: false,
     category: 'Tailwind CSS',
     description: 'Preserve duplicate classes inside a class list when sorting',
   },
 }
 
-/** @typedef {import('prettier').RequiredOptions} RequiredOptions */
-/** @typedef {import('./types').Customizations} Customizations */
-
-/**
- * @param {RequiredOptions} options
- * @param {string} parser
- * @param {Customizations} defaults
- * @returns {Customizations}
- */
-export function getCustomizations(options, parser, defaults) {
-  /** @type {Set<string>} */
-  let staticAttrs = new Set(defaults.staticAttrs)
-
-  /** @type {Set<string>} */
-  let dynamicAttrs = new Set(defaults.dynamicAttrs)
-
-  /** @type {Set<string>} */
-  let functions = new Set(defaults.functions)
+export function getCustomizations(
+  options: RequiredOptions,
+  parser: string,
+  defaults: Customizations,
+): Customizations {
+  let staticAttrs = new Set<string>(defaults.staticAttrs)
+  let dynamicAttrs = new Set<string>(defaults.dynamicAttrs)
+  let functions = new Set<string>(defaults.functions)
 
   // Create a list of "static" attributes
   for (let attr of options.tailwindAttributes ?? []) {

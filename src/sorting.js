@@ -164,7 +164,7 @@ export function sortClasses(
 }
 
 export function sortClassList(classList, { env }) {
-  let classNamesWithOrder = reorderClasses(classList, { env })
+  let orderedClasses = reorderClasses(classList, { env })
 
-  return classNamesWithOrder.map(([className]) => className)
+  return orderedClasses.map(([className]) => className)
 }

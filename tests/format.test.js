@@ -10,6 +10,11 @@ let html = [
   t`<div class=""></div>`,
   // Ensure duplicate classes are removed
   ['<div class="sm:p-0 p-0 p-0"></div>', '<div class="p-0 sm:p-0"></div>'],
+  // Duplicates are not removed for unknown classes
+  [
+    '<div class="idonotexist sm:p-0 p-0 idonotexist p-0 idonotexist"></div>',
+    '<div class="idonotexist idonotexist idonotexist p-0 sm:p-0"></div>',
+  ],
   // Ensure duplicate can be kept
   [
     '<div class="sm:p-0 p-0 p-0"></div>',

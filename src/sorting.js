@@ -141,7 +141,7 @@ export function sortClasses(
       return true
     })
 
-    // Remove all whitespace where the class after it was removed
+    // Remove whitespace that appeared before a removed classes
     whitespace = whitespace.filter((_, index) => !removedIndices.has(index + 1))
   }
 

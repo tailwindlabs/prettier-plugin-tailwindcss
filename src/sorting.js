@@ -121,6 +121,8 @@ export function sortClasses(
     suffix = `${whitespace.pop() ?? ''}${classes.pop() ?? ''}`
   }
 
+  classes = sortClassList(classes, { env })
+
   if (removeDuplicates) {
     let seenClasses = new Set()
     let indicesToRemove = new Set()
@@ -138,8 +140,6 @@ export function sortClasses(
 
     whitespace = whitespace.filter((_, index) => !indicesToRemove.has(index))
   }
-
-  classes = sortClassList(classes, { env })
 
   for (let i = 0; i < classes.length; i++) {
     result += `${classes[i]}${whitespace[i] ?? ''}`

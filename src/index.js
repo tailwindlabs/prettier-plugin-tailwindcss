@@ -878,6 +878,7 @@ function transformPug(ast, { env }) {
     const classes = ast.tokens
       .slice(startIdx, endIdx + 1)
       .map((token) => token.val)
+
     const { classList } = sortClassList(classes, {
       env,
       removeDuplicates: false,

@@ -161,7 +161,7 @@ export function sortClassList(classList, { env, removeDuplicates }) {
         return false
       }
 
-      // Only considers known classes when removing duplicates
+      // Only consider known classes when removing duplicates
       if (order !== null) {
         seenClasses.add(cls)
       }

@@ -39,6 +39,19 @@ function getClassOrderPolyfill(classes, { env }) {
   return classNamesWithOrder
 }
 
+function reorderClasses(classList, { env }) {
+  let orderedClasses = env.context.getClassOrder
+    ? env.context.getClassOrder(classList)
+    : getClassOrderPolyfill(classList, { env })
+
+  return orderedClasses.sort(([, a], [, z]) => {
+    if (a === z) return 0
+    if (a === null) return -1
+    if (z === null) return 1
+    return bigSign(a - z)
+  })
+}
+
 /**
  * @param {string} classStr
  * @param {object} opts
@@ -129,20 +142,13 @@ export function sortClasses(
 }
 
 export function sortClassList(classList, { env, removeDuplicates }) {
+  // Re-order classes based on the Tailwind CSS configuration
+  let orderedClasses = reorderClasses(classList, { env })
+
+  // Remove duplicate Tailwind classes
   if (env.options.tailwindPreserveDuplicates) {
     removeDuplicates = false
   }
-
-  let orderedClasses = env.context.getClassOrder
-    ? env.context.getClassOrder(classList)
-    : getClassOrderPolyfill(classList, { env })
-
-  orderedClasses.sort(([, a], [, z]) => {
-    if (a === z) return 0
-    if (a === null) return -1
-    if (z === null) return 1
-    return bigSign(a - z)
-  })
 
   let removedIndices = new Set()
 

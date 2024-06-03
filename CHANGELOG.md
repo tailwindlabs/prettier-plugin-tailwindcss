@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Changed
+
+- Only remove duplicate Tailwind classes ([#277](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/277))
 
 ## [0.6.1] - 2024-05-31
 

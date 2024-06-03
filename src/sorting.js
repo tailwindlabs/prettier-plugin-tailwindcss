@@ -39,48 +39,6 @@ function getClassOrderPolyfill(classes, { env }) {
   return classNamesWithOrder
 }
 
-function reorderClasses(classList, { env, removeDuplicates }) {
-  if (env.options.tailwindPreserveDuplicates) {
-    removeDuplicates = false
-  }
-
-  let orderedClasses = env.context.getClassOrder
-    ? env.context.getClassOrder(classList)
-    : getClassOrderPolyfill(classList, { env })
-
-  orderedClasses.sort(([, a], [, z]) => {
-    if (a === z) return 0
-    if (a === null) return -1
-    if (z === null) return 1
-    return bigSign(a - z)
-  })
-
-  let removedIndices = new Set()
-
-  if (removeDuplicates) {
-    let seenClasses = new Set()
-
-    orderedClasses = orderedClasses.filter(([cls, order], index) => {
-      if (seenClasses.has(cls)) {
-        removedIndices.add(index)
-        return false
-      }
-
-      // Only considers known classes when removing duplicates
-      if (order !== null) {
-        seenClasses.add(cls)
-      }
-
-      return true
-    })
-  }
-
-  return {
-    orderedClasses,
-    removedIndices,
-  }
-}
-
 /**
  * @param {string} classStr
  * @param {object} opts
@@ -146,7 +104,7 @@ export function sortClasses(
     suffix = `${whitespace.pop() ?? ''}${classes.pop() ?? ''}`
   }
 
-  let { orderedClasses, removedIndices } = reorderClasses(classes, {
+  let { classList, removedIndices } = sortClassList(classes, {
     env,
     removeDuplicates,
   })
@@ -154,10 +112,8 @@ export function sortClasses(
   // Remove whitespace that appeared before a removed classes
   whitespace = whitespace.filter((_, index) => !removedIndices.has(index + 1))
 
-  classes = orderedClasses.map(([className]) => className)
-
-  for (let i = 0; i < classes.length; i++) {
-    result += `${classes[i]}${whitespace[i] ?? ''}`
+  for (let i = 0; i < classList.length; i++) {
+    result += `${classList[i]}${whitespace[i] ?? ''}`
   }
 
   if (collapseWhitespace) {
@@ -172,11 +128,44 @@ export function sortClasses(
   return prefix + result + suffix
 }
 
-export function sortClassList(classList, { env }) {
-  let { orderedClasses } = reorderClasses(classList, {
-    env,
-    removeDuplicates: false,
+export function sortClassList(classList, { env, removeDuplicates }) {
+  if (env.options.tailwindPreserveDuplicates) {
+    removeDuplicates = false
+  }
+
+  let orderedClasses = env.context.getClassOrder
+    ? env.context.getClassOrder(classList)
+    : getClassOrderPolyfill(classList, { env })
+
+  orderedClasses.sort(([, a], [, z]) => {
+    if (a === z) return 0
+    if (a === null) return -1
+    if (z === null) return 1
+    return bigSign(a - z)
   })
 
-  return orderedClasses.map(([className]) => className)
+  let removedIndices = new Set()
+
+  if (removeDuplicates) {
+    let seenClasses = new Set()
+
+    orderedClasses = orderedClasses.filter(([cls, order], index) => {
+      if (seenClasses.has(cls)) {
+        removedIndices.add(index)
+        return false
+      }
+
+      // Only considers known classes when removing duplicates
+      if (order !== null) {
+        seenClasses.add(cls)
+      }
+
+      return true
+    })
+  }
+
+  return {
+    classList: orderedClasses.map(([className]) => className),
+    removedIndices,
+  }
 }

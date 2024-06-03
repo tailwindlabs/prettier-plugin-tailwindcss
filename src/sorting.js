@@ -110,26 +110,20 @@ export function sortClasses(
 
   if (removeDuplicates) {
     let seenClasses = new Set()
-    let indicesToRemove = []
+    let indicesToRemove = new Set()
 
     classes = classes.filter((cls, index) => {
-      if (!seenClasses.has(cls)) {
-        seenClasses.add(cls)
-        return true
-      }
-
-      indicesToRemove.push(index - 1)
-      return false
-    })
-
-    let startIndex = 0
-    whitespace = whitespace.filter((_, index) => {
-      if (indicesToRemove[startIndex] === index) {
-        startIndex++
+      if (seenClasses.has(cls)) {
+        // Remove the whitespace before the duplicate class
+        indicesToRemove.add(index - 1)
         return false
       }
+
+      seenClasses.add(cls)
       return true
     })
+
+    whitespace = whitespace.filter((_, index) => !indicesToRemove.has(index))
   }
 
   classes = sortClassList(classes, { env })

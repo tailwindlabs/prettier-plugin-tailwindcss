@@ -19,7 +19,7 @@ import * as prettierParserTypescript from 'prettier/plugins/typescript'
  */
 async function loadIfExistsESM(name) {
   try {
-    if (createRequire(import.meta.url).resolve(name)) {
+    if (req(import.meta.url).resolve(name)) {
       let mod = await import(name)
       return mod.default ?? mod
     }
@@ -48,7 +48,7 @@ export async function loadPlugins() {
 
   function maybeResolve(name) {
     try {
-      return req.resolve(name)
+      return req(import.meta.url).resolve(name)
     } catch (err) {
       return null
     }
@@ -58,6 +58,14 @@ export async function loadPlugins() {
     let path = maybeResolve(name)
 
     for (let plugin of options.plugins) {
+      if (typeof plugin === 'string') {
+        if (plugin === name || plugin === path) {
+          return mod
+        }
+
+        continue
+      }
+
       // options.plugins.*.name == name
       if (plugin.name === name) {
         return mod

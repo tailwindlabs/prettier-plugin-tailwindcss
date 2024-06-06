@@ -1,4 +1,4 @@
-import { Printer } from 'prettier'
+import { ParserOptions, Printer } from 'prettier'
 
 export interface TransformerMetadata {
   // Default customizations for a given transformer
@@ -18,12 +18,27 @@ export interface TransformerContext {
   changes: StringChange[]
 }
 
+export interface LegacyTailwindContext {
+  tailwindConfig: {
+    prefix: string | ((selector: string) => string)
+  }
+
+  getClassOrder?: (classList: string[]) => [string, bigint | null][]
+
+  layerOrder: {
+    components: bigint
+  }
+}
+
 export interface TransformerEnv {
-  context: any
+  context: LegacyTailwindContext
   customizations: Customizations
-  generateRules: () => any
+  generateRules: (
+    classes: Iterable<string>,
+    context: LegacyTailwindContext,
+  ) => [bigint][]
   parsers: any
-  options: any
+  options: ParserOptions
 }
 
 export interface ContextContainer {

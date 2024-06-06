@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Only remove duplicate Tailwind classes ([#277](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/277))
+- Make sure escapes in classes are preserved in string literals ([#286](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/286))
 
 ## [0.6.1] - 2024-05-31
 

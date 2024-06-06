@@ -93,6 +93,15 @@ let javascript = [
     ';<div class={`flex ` + `  ` + `text-red-500`} />',
     ';<div class={`flex ` + ` ` + `text-red-500`} />',
   ],
+  [
+    `;<div class={"before:content-['\\\\2248']"} />`,
+    `;<div class={"before:content-['\\\\2248']"} />`,
+  ],
+
+  [
+    `;<div class={\`before:content-['\\\\2248']\`} />`,
+    `;<div class={\`before:content-['\\\\2248']\`} />`,
+  ],
 ]
 javascript = javascript.concat(
   javascript.map((test) => [
@@ -140,6 +149,11 @@ let vue = [
   [
     `<div :class="' sm:p-5 ' + ' flex ' + ' underline ' + ' sm:m-5 '"></div>`,
     `<div :class="'sm:p-5 ' + ' flex' + ' underline' + ' sm:m-5'"></div>`,
+  ],
+
+  [
+    `<div :class="'before:content-[\\'\\\\2248\\']'" />`,
+    `<div :class="'before:content-[\\'\\\\2248\\']'" />`,
   ],
 ]
 

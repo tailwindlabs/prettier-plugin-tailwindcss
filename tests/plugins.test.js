@@ -430,6 +430,9 @@ import Custom from '../components/Custom.astro'
           `<div class={' flex ' + ' underline ' + ' block '}></div>`,
           `<div class={' flex ' + ' underline ' + ' block '}></div>`,
         ],
+
+        // Escapes
+        t`<div class={"before:content-['\\\\2248']"}></div>`,
       ],
     },
   },

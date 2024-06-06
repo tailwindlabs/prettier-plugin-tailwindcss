@@ -8,6 +8,7 @@ import * as astTypes from 'ast-types'
 import jsesc from 'jsesc'
 import lineColumn from 'line-column'
 import type { ParserOptions } from 'prettier'
+import { Parser, Printer, SupportOption } from 'prettier'
 import * as prettierParserAngular from 'prettier/plugins/angular'
 import * as prettierParserBabel from 'prettier/plugins/babel'
 // @ts-ignore
@@ -993,7 +994,7 @@ function transformSvelte(ast: any, { env, changes }: TransformerContext) {
 
 export { options } from './options.js'
 
-export const printers = (function () {
+export const printers: Record<string, Printer> = (function () {
   let printers = {}
 
   if (base.printers['svelte-ast']) {
@@ -1044,7 +1045,7 @@ export const printers = (function () {
   return printers
 })()
 
-export const parsers = {
+export const parsers: Record<string, Parser> = {
   html: createParser('html', transformHtml, {
     staticAttrs: ['class'],
   }),
@@ -1153,4 +1154,31 @@ export const parsers = {
         }),
       }
     : {}),
+}
+
+export interface PluginOptions {
+  /**
+   * Path to the Tailwind config file.
+   */
+  tailwindConfig?: string
+
+  /**
+   * Path to the Tailwind entry point (v4+)
+   */
+  tailwindEntryPoint?: string
+
+  /**
+   * List of custom function and tag names that contain classes.
+   */
+  tailwindFunctions?: string[]
+
+  /**
+   * List of custom attributes that contain classes.
+   */
+  tailwindAttributes?: string[]
+}
+
+declare module 'prettier' {
+  interface RequiredOptions extends PluginOptions {}
+  interface ParserOptions extends PluginOptions {}
 }

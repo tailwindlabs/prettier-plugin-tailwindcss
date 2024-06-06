@@ -1,6 +1,6 @@
 import type { RequiredOptions, SupportOption } from 'prettier'
 import type { Customizations } from './types'
-import './index.d.ts'
+import './index'
 
 export const options: Record<string, SupportOption> = {
   tailwindConfig: {

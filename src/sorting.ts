@@ -1,5 +1,5 @@
 import type { TransformerEnv } from './types'
-import './index.d.ts'
+import './index'
 
 export function bigSign(bigIntValue: bigint) {
   return Number(bigIntValue > 0n) - Number(bigIntValue < 0n)

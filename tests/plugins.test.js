@@ -1,6 +1,7 @@
-const prettier = require('prettier')
-const path = require('path')
-const { t, yes, no, format, pluginPath } = require('./utils')
+import { createRequire } from 'node:module'
+import { format, no, pluginPath, t, yes } from './utils.js'
+
+const require = createRequire(import.meta.url)
 
 let tests = [
   {

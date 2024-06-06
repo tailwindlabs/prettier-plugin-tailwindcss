@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "name": "prettier-plugin-tailwindcss",
   "version": "0.6.1",
   "description": "A Prettier plugin for sorting Tailwind CSS classes.",
@@ -6,9 +7,7 @@
   "main": "dist/index.mjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "repository": {
     "type": "git",
     "url": "https://github.com/tailwindlabs/prettier-plugin-tailwindcss"

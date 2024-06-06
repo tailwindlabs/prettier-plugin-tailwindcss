@@ -1,4 +1,4 @@
-const { t, yes, no, format } = require('./utils')
+import { format, no, t, yes } from './utils.js'
 
 let html = [
   t`<div class="${yes}"></div>`,

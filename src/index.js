@@ -450,12 +450,12 @@ function sortStringLiteral(
     node.extra = {
       ...node.extra,
       rawValue: result,
-      raw: raw[0] + result + raw.slice(-1),
+      raw: raw[0] + result.replace(/\\/g, '\\\\') + raw.slice(-1),
     }
   } else {
     // TypeScript (Literal)
     let raw = node.raw
-    node.raw = raw[0] + result + raw.slice(-1)
+    node.raw = raw[0] + result.replace(/\\/g, '\\\\') + raw.slice(-1)
   }
   return didChange
 }

@@ -1,4 +1,5 @@
 import { createRequire } from 'node:module'
+import { test } from 'vitest'
 import { format, no, pluginPath, t, yes } from './utils.js'
 
 const require = createRequire(import.meta.url)
@@ -450,7 +451,7 @@ for (const group of tests) {
       continue
     }
 
-    test(`parsing ${parser} works with: ${name}`, async () => {
+    test(`parsing ${parser} works with: ${name}`, async ({ expect }) => {
       // This segaults node
       // I guess the noise is fine for now
       // if (parser === 'pug') {

@@ -3,6 +3,7 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
+import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 import { format, pluginPath } from './utils'
 
 const __filename = fileURLToPath(import.meta.url)

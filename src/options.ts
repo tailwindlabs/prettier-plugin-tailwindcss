@@ -3,7 +3,6 @@ import type { Customizations } from './types'
 import './index'
 
 export const options: Record<string, SupportOption> = {
-  // Added in v0.0.0
   tailwindConfig: {
     type: 'string',
     category: 'Tailwind CSS',
@@ -16,7 +15,6 @@ export const options: Record<string, SupportOption> = {
     description: 'Path to the CSS entrypoint in your Tailwind project (v4+)',
   },
 
-  // Added in v0.3.0
   tailwindAttributes: {
     type: 'string',
     array: true,
@@ -35,7 +33,6 @@ export const options: Record<string, SupportOption> = {
       'List of functions and tagged templates that contain sortable Tailwind classes',
   },
 
-  // Added in v0.6.0
   tailwindPreserveWhitespace: {
     type: 'boolean',
     default: false,
@@ -43,7 +40,6 @@ export const options: Record<string, SupportOption> = {
     description: 'Preserve whitespace around Tailwind classes when sorting',
   },
 
-  // Added in v0.6.1
   tailwindPreserveDuplicates: {
     type: 'boolean',
     default: false,

@@ -1,11 +1,14 @@
-import type { TransformerEnv } from './types'
+import type { LegacyTailwindContext, TransformerEnv } from './types'
 import './index'
 
 export function bigSign(bigIntValue: bigint) {
   return Number(bigIntValue > 0n) - Number(bigIntValue < 0n)
 }
 
-function prefixCandidate(context: any, selector: string): string {
+function prefixCandidate(
+  context: LegacyTailwindContext,
+  selector: string,
+): string {
   let prefix = context.tailwindConfig.prefix
   return typeof prefix === 'function' ? prefix(selector) : prefix + selector
 }

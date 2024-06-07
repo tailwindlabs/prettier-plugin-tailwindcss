@@ -3,20 +3,21 @@ import type { Customizations } from './types'
 import './index'
 
 export const options: Record<string, SupportOption> = {
+  // Added in v0.0.0
   tailwindConfig: {
-    // since: '0.0.0',
     type: 'string',
     category: 'Tailwind CSS',
     description: 'Path to Tailwind configuration file',
   },
+
   tailwindEntryPoint: {
-    // since: '0.0.0',
     type: 'string',
     category: 'Tailwind CSS',
     description: 'Path to the CSS entrypoint in your Tailwind project (v4+)',
   },
+
+  // Added in v0.3.0
   tailwindAttributes: {
-    // since: '0.3.0',
     type: 'string',
     array: true,
     default: [{ value: [] }],
@@ -24,8 +25,8 @@ export const options: Record<string, SupportOption> = {
     description:
       'List of attributes/props that contain sortable Tailwind classes',
   },
+
   tailwindFunctions: {
-    // since: '0.3.0',
     type: 'string',
     array: true,
     default: [{ value: [] }],
@@ -33,15 +34,17 @@ export const options: Record<string, SupportOption> = {
     description:
       'List of functions and tagged templates that contain sortable Tailwind classes',
   },
+
+  // Added in v0.6.0
   tailwindPreserveWhitespace: {
-    // since: '0.6.0',
     type: 'boolean',
     default: false,
     category: 'Tailwind CSS',
     description: 'Preserve whitespace around Tailwind classes when sorting',
   },
+
+  // Added in v0.6.1
   tailwindPreserveDuplicates: {
-    // since: '0.6.1',
     type: 'boolean',
     default: false,
     category: 'Tailwind CSS',

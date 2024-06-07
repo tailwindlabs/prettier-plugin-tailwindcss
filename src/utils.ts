@@ -12,8 +12,14 @@ export function loadIfExists(name: string): any {
 }
 
 // https://lihautan.com/manipulating-ast-with-javascript/
-export function visit(ast, callbackMap) {
-  function _visit(node, parent, key, index, meta = {}) {
+export function visit(ast: any, callbackMap: any) {
+  function _visit(
+    node: any,
+    parent?: any,
+    key?: any,
+    index?: any,
+    meta: Record<string, unknown> = {},
+  ) {
     if (typeof callbackMap === 'function') {
       if (callbackMap(node, parent, key, index, meta) === false) {
         return

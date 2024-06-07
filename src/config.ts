@@ -16,7 +16,7 @@ import { generateRules as generateRulesFallback } from 'tailwindcss/lib/lib/gene
 import { createContext as createContextFallback } from 'tailwindcss/lib/lib/setupContextUtils'
 import loadConfigFallback from 'tailwindcss/loadConfig'
 import resolveConfigFallback from 'tailwindcss/resolveConfig'
-import { RequiredConfig } from 'tailwindcss/types/config.js'
+import type { RequiredConfig } from 'tailwindcss/types/config.js'
 import { expiringMap } from './expiring-map.js'
 import type { ContextContainer } from './types'
 

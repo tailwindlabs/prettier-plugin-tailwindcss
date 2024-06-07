@@ -1,14 +1,14 @@
-// @ts-check
 // @ts-ignore
 import type {
   AttrDoubleQuoted,
   AttrSingleQuoted,
 } from '@shopify/prettier-plugin-liquid/dist/types.js'
 import * as astTypes from 'ast-types'
+// @ts-ignore
 import jsesc from 'jsesc'
+// @ts-ignore
 import lineColumn from 'line-column'
-import type { ParserOptions } from 'prettier'
-import { Parser, Printer, SupportOption } from 'prettier'
+import type { Parser, ParserOptions, Printer } from 'prettier'
 import * as prettierParserAngular from 'prettier/plugins/angular'
 import * as prettierParserBabel from 'prettier/plugins/babel'
 // @ts-ignore
@@ -66,7 +66,7 @@ function createParser(
         customizationDefaults,
       )
 
-      let changes = []
+      let changes: any[] = []
 
       transform(ast, {
         env: { context, customizations, generateRules, parsers: {}, options },
@@ -995,7 +995,7 @@ function transformSvelte(ast: any, { env, changes }: TransformerContext) {
 export { options } from './options.js'
 
 export const printers: Record<string, Printer> = (function () {
-  let printers = {}
+  let printers: Record<string, Printer> = {}
 
   if (base.printers['svelte-ast']) {
     function mutateOriginalText(path: any, options: any) {
@@ -1156,7 +1156,7 @@ export const parsers: Record<string, Parser> = {
     : {}),
 }
 
-export interface PluginOptions {
+interface PluginOptions {
   /**
    * Path to the Tailwind config file.
    */

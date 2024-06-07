@@ -1,4 +1,4 @@
-import { ParserOptions, Printer } from 'prettier'
+import type { ParserOptions } from 'prettier'
 
 export interface TransformerMetadata {
   // Default customizations for a given transformer
@@ -44,20 +44,6 @@ export interface TransformerEnv {
 export interface ContextContainer {
   context: any
   generateRules: () => any
-}
-
-export interface InternalOptions {
-  printer: Printer<any>
-}
-
-export interface InternalPlugin {
-  name?: string
-}
-
-declare module 'prettier' {
-  interface RequiredOptions extends InternalOptions {}
-  interface ParserOptions extends InternalOptions {}
-  interface Plugin<T = any> extends InternalPlugin {}
 }
 
 export interface StringChange {

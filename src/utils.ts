@@ -11,11 +11,19 @@ export function loadIfExists(name: string): any {
   }
 }
 
+interface PathEntry<T, Meta> {
+  node: T
+  parent: T | null
+  key: string | null
+  index: number | null
+  meta: Meta
+}
+
+type Path<T, Meta> = PathEntry<T, Meta>[]
+
 type Visitor<T, Meta extends Record<string, unknown>> = (
   node: T,
-  parent: T,
-  key: string | undefined,
-  index: number | undefined,
+  path: Path<T, Meta>,
   meta: Partial<Meta>,
 ) => void | false
 
@@ -29,19 +37,13 @@ export function visit<T extends {}, Meta extends Record<string, unknown>>(
   ast: T,
   callbackMap: Visitors<T, Meta> | Visitor<T, Meta>,
 ) {
-  function _visit(
-    node: any,
-    parent: any,
-    key: string | undefined,
-    index: number | undefined,
-    meta: Meta,
-  ) {
+  function _visit(node: any, path: Path<T, Meta>, meta: Meta) {
     if (typeof callbackMap === 'function') {
-      if (callbackMap(node, parent, key, index, meta) === false) {
+      if (callbackMap(node, path, meta) === false) {
         return
       }
     } else if (node.type in callbackMap) {
-      if (callbackMap[node.type](node, parent, key, index, meta) === false) {
+      if (callbackMap[node.type](node, path, meta) === false) {
         return
       }
     }
@@ -53,21 +55,50 @@ export function visit<T extends {}, Meta extends Record<string, unknown>>(
         for (let j = 0; j < child.length; j++) {
           if (child[j] !== null) {
             let newMeta = { ...meta }
+            let newPath = [
+              {
+                node: child[j],
+                parent: node,
+                key: keys[i],
+                index: j,
+                meta: newMeta,
+              },
+              ...path,
+            ]
 
-            _visit(child[j], node, keys[i], j, newMeta)
+            _visit(child[j], newPath, newMeta)
           }
         }
       } else if (typeof child?.type === 'string') {
         let newMeta = { ...meta }
+        let newPath = [
+          {
+            node: child,
+            parent: node,
+            key: keys[i],
+            index: i,
+            meta: newMeta,
+          },
+          ...path,
+        ]
 
-        _visit(child, node, keys[i], i, newMeta)
+        _visit(child, newPath, newMeta)
       }
     }
   }
 
   let newMeta: Meta = {} as any
+  let newPath: Path<T, Meta> = [
+    {
+      node: ast,
+      parent: null,
+      key: null,
+      index: null,
+      meta: newMeta,
+    },
+  ]
 
-  _visit(ast, null, undefined, undefined, newMeta)
+  _visit(ast, newPath, newMeta)
 }
 
 /**

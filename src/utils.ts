@@ -11,14 +11,30 @@ export function loadIfExists(name: string): any {
   }
 }
 
+type Visitor<T, Meta extends Record<string, unknown>> = (
+  node: T,
+  parent: T,
+  key: string | undefined,
+  index: number | undefined,
+  meta: Partial<Meta>,
+) => void | false
+
+type Visitors<T, Meta extends Record<string, unknown>> = Record<
+  string,
+  Visitor<T, Meta>
+>
+
 // https://lihautan.com/manipulating-ast-with-javascript/
-export function visit(ast: any, callbackMap: any) {
+export function visit<T extends {}, Meta extends Record<string, unknown>>(
+  ast: T,
+  callbackMap: Visitors<T, Meta> | Visitor<T, Meta>,
+) {
   function _visit(
     node: any,
-    parent?: any,
-    key?: any,
-    index?: any,
-    meta: Record<string, unknown> = {},
+    parent: any,
+    key: string | undefined,
+    index: number | undefined,
+    meta: Meta,
   ) {
     if (typeof callbackMap === 'function') {
       if (callbackMap(node, parent, key, index, meta) === false) {
@@ -36,15 +52,22 @@ export function visit(ast: any, callbackMap: any) {
       if (Array.isArray(child)) {
         for (let j = 0; j < child.length; j++) {
           if (child[j] !== null) {
-            _visit(child[j], node, keys[i], j, { ...meta })
+            let newMeta = { ...meta }
+
+            _visit(child[j], node, keys[i], j, newMeta)
           }
         }
       } else if (typeof child?.type === 'string') {
-        _visit(child, node, keys[i], i, { ...meta })
+        let newMeta = { ...meta }
+
+        _visit(child, node, keys[i], i, newMeta)
       }
     }
   }
-  _visit(ast)
+
+  let newMeta: Meta = {} as any
+
+  _visit(ast, null, undefined, undefined, newMeta)
 }
 
 /**

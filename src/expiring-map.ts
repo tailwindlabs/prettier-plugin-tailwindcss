@@ -10,7 +10,10 @@ export function expiringMap<K, V>(duration: number): ExpiringMap<K, V> {
     get(key: K) {
       let result = map.get(key)
       if (!result) return undefined
-      if (result.expiration <= new Date()) return undefined
+      if (result.expiration <= new Date()) {
+        map.delete(key)
+        return undefined
+      }
 
       return result.value
     },

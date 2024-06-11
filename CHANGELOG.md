@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+- Improve detection of string concatenation ([#288](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/288))
 
 ## [0.6.2] - 2024-06-07
 
@@ -15,7 +15,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Only remove duplicate Tailwind classes ([#277](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/277))
 - Make sure escapes in classes are preserved in string literals ([#286](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/286))
-- Improve detection of string concatenation ([#288](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/288))
 
 ## [0.6.1] - 2024-05-31
 

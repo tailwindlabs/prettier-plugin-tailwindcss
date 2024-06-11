@@ -298,7 +298,7 @@ function transformGlimmer(ast: any, { env }: TransformerContext) {
       }
     },
 
-    TextNode(node: any, path, meta: Record<string, any>) {
+    TextNode(node, path, meta) {
       if (!meta.sortTextNodes) {
         return
       }

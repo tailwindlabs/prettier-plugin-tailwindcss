@@ -1,7 +1,7 @@
-/** @typedef {import('./types.js').StringChange} StringChange */
+import type { StringChange } from './types'
 
 // For loading prettier plugins only if they exist
-export function loadIfExists(name) {
+export function loadIfExists(name: string): any {
   try {
     if (require.resolve(name)) {
       return require(name)
@@ -12,8 +12,14 @@ export function loadIfExists(name) {
 }
 
 // https://lihautan.com/manipulating-ast-with-javascript/
-export function visit(ast, callbackMap) {
-  function _visit(node, parent, key, index, meta = {}) {
+export function visit(ast: any, callbackMap: any) {
+  function _visit(
+    node: any,
+    parent?: any,
+    key?: any,
+    index?: any,
+    meta: Record<string, unknown> = {},
+  ) {
     if (typeof callbackMap === 'function') {
       if (callbackMap(node, parent, key, index, meta) === false) {
         return
@@ -44,10 +50,8 @@ export function visit(ast, callbackMap) {
 /**
  * Apply the changes to the string such that a change in the length
  * of the string does not break the indexes of the subsequent changes.
- * @param {string} str
- * @param {StringChange[]} changes
  */
-export function spliceChangesIntoString(str, changes) {
+export function spliceChangesIntoString(str: string, changes: StringChange[]) {
   // Sort all changes in reverse order so we apply them from the end of the string
   // to the beginning. This way, the indexes for the changes after the current one
   // will still be correct after applying the current one.

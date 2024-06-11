@@ -1,7 +1,7 @@
-const checker = require('license-checker')
-const { devDependencies } = require('../package.json')
-const fs = require('fs')
-const path = require('path')
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import checker from 'license-checker'
+import * as pkg from '../package.json'
 
 let exclude = [
   'cpy-cli',
@@ -17,7 +17,7 @@ checker.init({ start: path.resolve(__dirname, '..') }, (_err, packages) => {
   for (let key in packages) {
     let name = key.split(/(?<=.)@/)[0]
     if (
-      name in devDependencies &&
+      name in pkg.devDependencies &&
       !exclude.includes(name) &&
       packages[key].licenseFile
     ) {

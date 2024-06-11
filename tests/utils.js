@@ -1,15 +1,17 @@
-const prettier = require('prettier')
-const path = require('path')
+import * as path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import * as prettier from 'prettier'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 let testClassName = 'sm:p-0 p-0'
 let testClassNameSorted = 'p-0 sm:p-0'
-let yes = '__YES__'
-let no = '__NO__'
 
-module.exports.yes = yes
-module.exports.no = no
+export let yes = '__YES__'
+export let no = '__NO__'
 
-module.exports.t = function t(strings, ...values) {
+export function t(strings, ...values) {
   let input = ''
   strings.forEach((string, i) => {
     input += string + (values[i] ? testClassName : '')
@@ -26,11 +28,9 @@ module.exports.t = function t(strings, ...values) {
   return [input, output, { tailwindPreserveWhitespace: true }]
 }
 
-let pluginPath = path.resolve(__dirname, '../dist/index.mjs')
+export let pluginPath = path.resolve(__dirname, '../dist/index.mjs')
 
-module.exports.pluginPath = pluginPath
-
-module.exports.format = async function format(str, options = {}) {
+export async function format(str, options = {}) {
   let result = await prettier.format(str, {
     pluginSearchDirs: [__dirname], // disable plugin autoload
     semi: false,

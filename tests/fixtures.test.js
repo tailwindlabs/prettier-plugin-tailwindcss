@@ -1,8 +1,14 @@
-const path = require('path')
-const fs = require('fs')
-const { exec } = require('child_process')
-const { format, pluginPath } = require('./utils')
-const { promisify } = require('util')
+import { exec } from 'node:child_process'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { promisify } from 'node:util'
+import { afterAll, beforeAll, describe, expect, test } from 'vitest'
+import { format, pluginPath } from './utils'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
 const execAsync = promisify(exec)
 
 async function formatFixture(name, extension) {
@@ -136,7 +142,7 @@ describe('fixtures', () => {
   )
 
   for (const fixture of fixtures) {
-    test(fixture.name, async () => {
+    test.concurrent(fixture.name, async () => {
       let formatted = await formatFixture(fixture.dir, fixture.ext ?? 'html')
       expect(formatted).toEqual(fixture.output)
     })

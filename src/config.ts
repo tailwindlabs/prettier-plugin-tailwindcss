@@ -6,44 +6,30 @@ import { pathToFileURL } from 'url'
 import clearModule from 'clear-module'
 import escalade from 'escalade/sync'
 import postcss from 'postcss'
+// @ts-ignore
 import postcssImport from 'postcss-import'
 import prettier from 'prettier'
+import type { ParserOptions } from 'prettier'
 // @ts-ignore
 import { generateRules as generateRulesFallback } from 'tailwindcss/lib/lib/generateRules'
 // @ts-ignore
 import { createContext as createContextFallback } from 'tailwindcss/lib/lib/setupContextUtils'
 import loadConfigFallback from 'tailwindcss/loadConfig'
 import resolveConfigFallback from 'tailwindcss/resolveConfig'
+import type { RequiredConfig } from 'tailwindcss/types/config.js'
 import { expiringMap } from './expiring-map.js'
+import type { ContextContainer } from './types'
 
 let localRequire = createRequire(import.meta.url)
 
-/** @typedef {import('prettier').ParserOptions} ParserOptions **/
-/** @typedef {import('./types.js').ContextContainer} ContextContainer **/
+let sourceToPathMap = new Map<string, string | null>()
+let sourceToEntryMap = new Map<string, string | null>()
+let pathToContextMap = expiringMap<string | null, ContextContainer>(10_000)
+let prettierConfigCache = expiringMap<string, string | null>(10_000)
 
-/**
- * @template K
- * @template V
- * @typedef {import('./expiring-map.js').ExpiringMap<K,V>} ExpiringMap
- **/
-
-/** @type {Map<string, string | null>} */
-let sourceToPathMap = new Map()
-
-/** @type {Map<string, string | null>} */
-let sourceToEntryMap = new Map()
-
-/** @type {ExpiringMap<string | null, ContextContainer>} */
-let pathToContextMap = expiringMap(10_000)
-
-/** @type {ExpiringMap<string, string | null>} */
-let prettierConfigCache = expiringMap(10_000)
-
-/**
- * @param {ParserOptions} options
- * @returns {Promise<ContextContainer>}
- */
-export async function getTailwindConfig(options) {
+export async function getTailwindConfig(
+  options: ParserOptions,
+): Promise<ContextContainer> {
   let key = `${options.filepath}:${options.tailwindConfig ?? ''}:${options.tailwindEntryPoint ?? ''}`
   let baseDir = await getBaseDir(options)
 
@@ -75,12 +61,9 @@ export async function getTailwindConfig(options) {
   return result
 }
 
-/**
- *
- * @param {ParserOptions} options
- * @returns {Promise<string | null>}
- */
-async function getPrettierConfigPath(options) {
+async function getPrettierConfigPath(
+  options: ParserOptions,
+): Promise<string | null> {
   // Locating the config file can be mildly expensive so we cache it temporarily
   let existingPath = prettierConfigCache.get(options.filepath)
   if (existingPath !== undefined) {
@@ -93,11 +76,7 @@ async function getPrettierConfigPath(options) {
   return path
 }
 
-/**
- * @param {ParserOptions} options
- * @returns {Promise<string>}
- */
-async function getBaseDir(options) {
+async function getBaseDir(options: ParserOptions): Promise<string> {
   let prettierConfigPath = await getPrettierConfigPath(options)
 
   if (options.tailwindConfig) {
@@ -115,18 +94,16 @@ async function getBaseDir(options) {
       : process.cwd()
 }
 
-/**
- * @param {string} baseDir
- * @param {string | null} tailwindConfigPath
- * @param {string | null} entryPoint
- * @returns {Promise<ContextContainer>}
- */
-async function loadTailwindConfig(baseDir, tailwindConfigPath, entryPoint) {
+async function loadTailwindConfig(
+  baseDir: string,
+  tailwindConfigPath: string | null,
+  entryPoint: string | null,
+): Promise<ContextContainer> {
   let createContext = createContextFallback
   let generateRules = generateRulesFallback
   let resolveConfig = resolveConfigFallback
   let loadConfig = loadConfigFallback
-  let tailwindConfig = {}
+  let tailwindConfig: RequiredConfig = { content: [] }
 
   try {
     let pkgFile = localRequire.resolve('tailwindcss/package.json', {
@@ -172,12 +149,11 @@ async function loadTailwindConfig(baseDir, tailwindConfigPath, entryPoint) {
   }
 }
 
-/**
- * @param {string} baseDir
- * @param {string} pkgDir
- * @param {string | null} entryPoint
- */
-async function loadV4(baseDir, pkgDir, entryPoint) {
+async function loadV4(
+  baseDir: string,
+  pkgDir: string,
+  entryPoint: string | null,
+) {
   // Import Tailwind — if this is v4 it'll have APIs we can use directly
   let pkgPath = localRequire.resolve('tailwindcss', {
     paths: [baseDir],
@@ -203,10 +179,7 @@ async function loadV4(baseDir, pkgDir, entryPoint) {
 
   return {
     context: {
-      /**
-       * @param {string[]} classList
-       */
-      getClassOrder: (classList) => design.getClassOrder(classList),
+      getClassOrder: (classList: string[]) => design.getClassOrder(classList),
     },
 
     // Stubs that are not needed for v4
@@ -214,17 +187,12 @@ async function loadV4(baseDir, pkgDir, entryPoint) {
   }
 }
 
-/**
- * @param {ParserOptions} options
- * @param {string} baseDir
- * @returns {string | null}
- */
-function getConfigPath(options, baseDir) {
+function getConfigPath(options: ParserOptions, baseDir: string): string | null {
   if (options.tailwindConfig) {
     return path.resolve(baseDir, options.tailwindConfig)
   }
 
-  let configPath
+  let configPath: string | void = undefined
   try {
     configPath = escalade(baseDir, (_dir, names) => {
       if (names.includes('tailwind.config.js')) {
@@ -249,12 +217,7 @@ function getConfigPath(options, baseDir) {
   return null
 }
 
-/**
- * @param {ParserOptions} options
- * @param {string} baseDir
- * @returns {string | null}
- */
-function getEntryPoint(options, baseDir) {
+function getEntryPoint(options: ParserOptions, baseDir: string): string | null {
   if (options.tailwindEntryPoint) {
     return path.resolve(baseDir, options.tailwindEntryPoint)
   }

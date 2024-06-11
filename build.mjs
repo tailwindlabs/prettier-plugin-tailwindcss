@@ -1,6 +1,6 @@
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import esbuild from 'esbuild'
 
 /**
@@ -62,23 +62,6 @@ function patchCjsInterop() {
   }
 }
 
-/**
- * @returns {import('esbuild').Plugin}
- */
-function copyTypes() {
-  return {
-    name: 'copy-types',
-    setup(build) {
-      build.onEnd(() =>
-        fs.promises.copyFile(
-          path.resolve(__dirname, './src/index.d.ts'),
-          path.resolve(__dirname, './dist/index.d.ts'),
-        ),
-      )
-    },
-  }
-}
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 let context = await esbuild.context({
@@ -90,7 +73,7 @@ let context = await esbuild.context({
   entryPoints: [path.resolve(__dirname, './src/index.js')],
   outfile: path.resolve(__dirname, './dist/index.mjs'),
   format: 'esm',
-  plugins: [patchRecast(), patchCjsInterop(), copyTypes()],
+  plugins: [patchRecast(), patchCjsInterop()],
 })
 
 await context.rebuild()

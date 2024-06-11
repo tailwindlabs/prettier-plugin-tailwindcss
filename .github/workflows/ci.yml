@@ -16,7 +16,7 @@ concurrency:
 env:
   CI: true
   CACHE_PREFIX: stable
-  NODE_VERSION: 16
+  NODE_VERSION: 22
 
 jobs:
   build:

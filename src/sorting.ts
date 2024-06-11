@@ -1,14 +1,23 @@
-export function bigSign(bigIntValue) {
-  return (bigIntValue > 0n) - (bigIntValue < 0n)
+import type { LegacyTailwindContext, TransformerEnv } from './types'
+import './index'
+
+export function bigSign(bigIntValue: bigint) {
+  return Number(bigIntValue > 0n) - Number(bigIntValue < 0n)
 }
 
-function prefixCandidate(context, selector) {
+function prefixCandidate(
+  context: LegacyTailwindContext,
+  selector: string,
+): string {
   let prefix = context.tailwindConfig.prefix
   return typeof prefix === 'function' ? prefix(selector) : prefix + selector
 }
 
 // Polyfill for older Tailwind CSS versions
-function getClassOrderPolyfill(classes, { env }) {
+function getClassOrderPolyfill(
+  classes: string[],
+  { env }: { env: TransformerEnv },
+): [string, bigint | null][] {
   // A list of utilities that are used by certain Tailwind CSS utilities but
   // that don't exist on their own. This will result in them "not existing" and
   // sorting could be weird since you still require them in order to make the
@@ -18,10 +27,10 @@ function getClassOrderPolyfill(classes, { env }) {
     prefixCandidate(env.context, 'peer'),
   ])
 
-  let classNamesWithOrder = []
+  let classNamesWithOrder: [string, bigint | null][] = []
 
   for (let className of classes) {
-    let order =
+    let order: bigint | null =
       env
         .generateRules(new Set([className]), env.context)
         .sort(([a], [z]) => bigSign(z - a))[0]?.[0] ?? null
@@ -39,7 +48,7 @@ function getClassOrderPolyfill(classes, { env }) {
   return classNamesWithOrder
 }
 
-function reorderClasses(classList, { env }) {
+function reorderClasses(classList: string[], { env }: { env: TransformerEnv }) {
   let orderedClasses = env.context.getClassOrder
     ? env.context.getClassOrder(classList)
     : getClassOrderPolyfill(classList, { env })
@@ -52,28 +61,22 @@ function reorderClasses(classList, { env }) {
   })
 }
 
-/**
- * @param {string} classStr
- * @param {object} opts
- * @param {any} opts.env
- * @param {boolean} [opts.ignoreFirst]
- * @param {boolean} [opts.ignoreLast]
- * @param {boolean} [opts.removeDuplicates]
- * @param {object} [opts.collapseWhitespace]
- * @param {boolean} [opts.collapseWhitespace.start]
- * @param {boolean} [opts.collapseWhitespace.end]
- * @returns {string}
- */
 export function sortClasses(
-  classStr,
+  classStr: string,
   {
     env,
     ignoreFirst = false,
     ignoreLast = false,
     removeDuplicates = true,
     collapseWhitespace = { start: true, end: true },
+  }: {
+    env: TransformerEnv
+    ignoreFirst?: boolean
+    ignoreLast?: boolean
+    removeDuplicates?: boolean
+    collapseWhitespace?: false | { start: boolean; end: boolean }
   },
-) {
+): string {
   if (typeof classStr !== 'string' || classStr === '') {
     return classStr
   }
@@ -141,7 +144,16 @@ export function sortClasses(
   return prefix + result + suffix
 }
 
-export function sortClassList(classList, { env, removeDuplicates }) {
+export function sortClassList(
+  classList: string[],
+  {
+    env,
+    removeDuplicates,
+  }: {
+    env: TransformerEnv
+    removeDuplicates: boolean
+  },
+) {
   // Re-order classes based on the Tailwind CSS configuration
   let orderedClasses = reorderClasses(classList, { env })
 
@@ -150,10 +162,10 @@ export function sortClassList(classList, { env, removeDuplicates }) {
     removeDuplicates = false
   }
 
-  let removedIndices = new Set()
+  let removedIndices = new Set<number>()
 
   if (removeDuplicates) {
-    let seenClasses = new Set()
+    let seenClasses = new Set<string>()
 
     orderedClasses = orderedClasses.filter(([cls, order], index) => {
       if (seenClasses.has(cls)) {

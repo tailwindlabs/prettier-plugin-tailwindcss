@@ -103,6 +103,11 @@ let javascript = [
     `;<div class={\`before:content-['\\\\2248']\`} />`,
     `;<div class={\`before:content-['\\\\2248']\`} />`,
   ],
+
+  [
+    `;<div class={'object-cover' + (standalone ? ' aspect-square w-full' : ' min-h-0 grow basis-0')}></div>`,
+    `;<div class={'object-cover' + (standalone ? ' aspect-square w-full' : ' min-h-0 grow basis-0')}></div>`,
+  ],
 ]
 javascript = javascript.concat(
   javascript.map((test) => [

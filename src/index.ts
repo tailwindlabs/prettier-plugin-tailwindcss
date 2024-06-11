@@ -117,11 +117,16 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
   let changes: StringChange[] = []
 
   visit(directiveAst, {
-    StringLiteral(node: any, parent: any, key: string | null) {
+    StringLiteral(node, path) {
       if (!node.value) return
 
-      let isConcat =
-        parent.type === 'BinaryExpression' && parent.operator === '+'
+      let concat = path.find((entry) => {
+        return (
+          entry.parent &&
+          entry.parent.type === 'BinaryExpression' &&
+          entry.parent.operator === '+'
+        )
+      })
 
       changes.push({
         start: node.start + 1,
@@ -130,8 +135,8 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
         after: sortClasses(node.value, {
           env,
           collapseWhitespace: {
-            start: !(isConcat && key === 'right'),
-            end: !(isConcat && key === 'left'),
+            start: concat?.key !== 'right',
+            end: concat?.key !== 'left',
           },
         }),
       })
@@ -148,21 +153,37 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
     parser: prettierParserBabel.parsers['babel-ts'],
   })
 
+  function* ancestors<N, V>(
+    path: import('ast-types/lib/node-path').NodePath<N, V>,
+  ) {
+    yield path
+
+    while (path.parentPath) {
+      path = path.parentPath
+      yield path
+    }
+  }
+
   let didChange = false
 
   astTypes.visit(ast, {
     visitLiteral(path) {
-      let isConcat =
-        path.parent.value.type === 'BinaryExpression' &&
-        path.parent.value.operator === '+'
-      let key = path.name
+      let entries = Array.from(ancestors(path))
+      let concat = entries.find((entry) => {
+        return (
+          entry.parent &&
+          entry.parent.value &&
+          entry.parent.value.type === 'BinaryExpression' &&
+          entry.parent.value.operator === '+'
+        )
+      })
 
       if (isStringLiteral(path.node)) {
         let sorted = sortStringLiteral(path.node, {
           env,
           collapseWhitespace: {
-            start: !(isConcat && key === 'right'),
-            end: !(isConcat && key === 'left'),
+            start: concat?.name !== 'right',
+            end: concat?.name !== 'left',
           },
         })
 
@@ -183,15 +204,21 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
     },
 
     visitTemplateLiteral(path) {
-      let isConcat =
-        path.parent.value.type === 'BinaryExpression' &&
-        path.parent.value.operator === '+'
-      let key = path.name
+      let entries = Array.from(ancestors(path))
+      let concat = entries.find((entry) => {
+        return (
+          entry.parent &&
+          entry.parent.value &&
+          entry.parent.value.type === 'BinaryExpression' &&
+          entry.parent.value.operator === '+'
+        )
+      })
+
       let sorted = sortTemplateLiteral(path.node, {
         env,
         collapseWhitespace: {
-          start: !(isConcat && key === 'right'),
-          end: !(isConcat && key === 'left'),
+          start: concat?.name !== 'right',
+          end: concat?.name !== 'left',
         },
       })
 
@@ -203,17 +230,22 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
     },
 
     visitTaggedTemplateExpression(path) {
-      let isConcat =
-        path.parent.value.type === 'BinaryExpression' &&
-        path.parent.value.operator === '+'
-      let key = path.name
+      let entries = Array.from(ancestors(path))
+      let concat = entries.find((entry) => {
+        return (
+          entry.parent &&
+          entry.parent.value &&
+          entry.parent.value.type === 'BinaryExpression' &&
+          entry.parent.value.operator === '+'
+        )
+      })
 
       if (isSortableTemplateExpression(path.node, functions)) {
         let sorted = sortTemplateLiteral(path.node.quasi, {
           env,
           collapseWhitespace: {
-            start: !(isConcat && key === 'right'),
-            end: !(isConcat && key === 'left'),
+            start: concat?.name !== 'right',
+            end: concat?.name !== 'left',
           },
         })
 
@@ -260,68 +292,56 @@ function transformGlimmer(ast: any, { env }: TransformerContext) {
   let { staticAttrs } = env.customizations
 
   visit(ast, {
-    AttrNode(
-      attr: any,
-      _parent: any,
-      _key: string | null,
-      _index: number,
-      meta: Record<string, any>,
-    ) {
+    AttrNode(attr, _path, meta) {
       if (staticAttrs.has(attr.name) && attr.value) {
         meta.sortTextNodes = true
       }
     },
 
-    TextNode(
-      node: any,
-      parent: any,
-      _key: string | null,
-      index: number,
-      meta: Record<string, any>,
-    ) {
+    TextNode(node, path, meta) {
       if (!meta.sortTextNodes) {
         return
       }
 
-      let siblings =
-        parent?.type === 'ConcatStatement'
-          ? {
-              prev: parent.parts[index - 1],
-              next: parent.parts[index + 1],
-            }
-          : null
+      let concat = path.find((entry) => {
+        return entry.parent && entry.parent.type === 'ConcatStatement'
+      })
+
+      let siblings = {
+        prev: concat?.parent.parts[concat.index! - 1],
+        next: concat?.parent.parts[concat.index! + 1],
+      }
 
       node.chars = sortClasses(node.chars, {
         env,
-        ignoreFirst: siblings?.prev && !/^\s/.test(node.chars),
-        ignoreLast: siblings?.next && !/\s$/.test(node.chars),
+        ignoreFirst: siblings.prev && !/^\s/.test(node.chars),
+        ignoreLast: siblings.next && !/\s$/.test(node.chars),
         collapseWhitespace: {
-          start: !siblings?.prev,
-          end: !siblings?.next,
+          start: !siblings.prev,
+          end: !siblings.next,
         },
       })
     },
 
-    StringLiteral(
-      node: any,
-      parent: any,
-      _key: string | null,
-      _index: number,
-      meta: Record<string, any>,
-    ) {
+    StringLiteral(node, path, meta) {
       if (!meta.sortTextNodes) {
         return
       }
 
-      const isConcat =
-        parent.type === 'SubExpression' && parent.path.original === 'concat'
+      let concat = path.find((entry) => {
+        return (
+          entry.parent &&
+          entry.parent.type === 'SubExpression' &&
+          entry.parent.path.original === 'concat'
+        )
+      })
 
       node.value = sortClasses(node.value, {
         env,
-        ignoreLast: isConcat && !/[^\S\r\n]$/.test(node.value),
+        ignoreLast: Boolean(concat) && !/[^\S\r\n]$/.test(node.value),
         collapseWhitespace: {
           start: false,
-          end: !isConcat,
+          end: !concat,
         },
       })
     },
@@ -597,49 +617,49 @@ function transformJavaScript(
   let { staticAttrs, functions } = env.customizations
 
   function sortInside(ast: import('@babel/types').Node) {
-    visit(
-      ast,
-      (
-        node: import('@babel/types').Node,
-        parent: import('@babel/types').Node | null,
-        key: string,
-      ) => {
-        let isConcat =
-          parent?.type === 'BinaryExpression' && parent?.operator === '+'
+    visit(ast, (node, path) => {
+      let concat = path.find((entry) => {
+        return (
+          entry.parent &&
+          entry.parent.type === 'BinaryExpression' &&
+          entry.parent.operator === '+'
+        )
+      })
 
-        if (isStringLiteral(node)) {
-          sortStringLiteral(node, {
+      if (isStringLiteral(node)) {
+        sortStringLiteral(node, {
+          env,
+          collapseWhitespace: {
+            start: concat?.key !== 'right',
+            end: concat?.key !== 'left',
+          },
+        })
+      } else if (node.type === 'TemplateLiteral') {
+        sortTemplateLiteral(node, {
+          env,
+          collapseWhitespace: {
+            start: concat?.key !== 'right',
+            end: concat?.key !== 'left',
+          },
+        })
+      } else if (node.type === 'TaggedTemplateExpression') {
+        if (isSortableTemplateExpression(node, functions)) {
+          sortTemplateLiteral(node.quasi, {
             env,
             collapseWhitespace: {
-              start: !(isConcat && key === 'right'),
-              end: !(isConcat && key === 'left'),
+              start: concat?.key !== 'right',
+              end: concat?.key !== 'left',
             },
           })
-        } else if (node.type === 'TemplateLiteral') {
-          sortTemplateLiteral(node, {
-            env,
-            collapseWhitespace: {
-              start: !(isConcat && key === 'right'),
-              end: !(isConcat && key === 'left'),
-            },
-          })
-        } else if (node.type === 'TaggedTemplateExpression') {
-          if (isSortableTemplateExpression(node, functions)) {
-            sortTemplateLiteral(node.quasi, {
-              env,
-              collapseWhitespace: {
-                start: !(isConcat && key === 'right'),
-                end: !(isConcat && key === 'left'),
-              },
-            })
-          }
         }
-      },
-    )
+      }
+    })
   }
 
   visit(ast, {
-    JSXAttribute(node: import('@babel/types').JSXAttribute) {
+    JSXAttribute(node) {
+      node = node as import('@babel/types').JSXAttribute
+
       if (!node.value) {
         return
       }
@@ -661,7 +681,9 @@ function transformJavaScript(
       }
     },
 
-    CallExpression(node: import('@babel/types').CallExpression) {
+    CallExpression(node) {
+      node = node as import('@babel/types').CallExpression
+
       if (!isSortableCallExpression(node, functions)) {
         return
       }
@@ -669,23 +691,26 @@ function transformJavaScript(
       node.arguments.forEach((arg) => sortInside(arg))
     },
 
-    TaggedTemplateExpression(
-      node: import('@babel/types').TaggedTemplateExpression,
-      parent: import('@babel/types').Expression | null,
-      key: string | null,
-    ) {
+    TaggedTemplateExpression(node, path) {
+      node = node as import('@babel/types').TaggedTemplateExpression
+
       if (!isSortableTemplateExpression(node, functions)) {
         return
       }
 
-      let isConcat =
-        parent?.type === 'BinaryExpression' && parent?.operator === '+'
+      let concat = path.find((entry) => {
+        return (
+          entry.parent &&
+          entry.parent.type === 'BinaryExpression' &&
+          entry.parent.operator === '+'
+        )
+      })
 
       sortTemplateLiteral(node.quasi, {
         env,
         collapseWhitespace: {
-          start: !(isConcat && key === 'right'),
-          end: !(isConcat && key === 'left'),
+          start: concat?.key !== 'right',
+          end: concat?.key !== 'left',
         },
       })
     },
@@ -794,42 +819,32 @@ function transformMelody(ast: any, { env, changes }: TransformerContext) {
   }
 
   visit(ast, {
-    Attribute(
-      node: any,
-      _parent: any,
-      _key: string | null,
-      _index: number,
-      meta: Record<string, any>,
-    ) {
+    Attribute(node, _path, meta) {
       if (!staticAttrs.has(node.name.name)) return
 
       meta.sortTextNodes = true
     },
 
-    StringLiteral(
-      node: any,
-      parent: any,
-      _key: string | null,
-      _index: number,
-      meta: Record<string, any>,
-    ) {
+    StringLiteral(node, path, meta) {
       if (!meta.sortTextNodes) {
         return
       }
 
-      const isConcat =
-        parent.type === 'BinaryConcatExpression' ||
-        parent.type === 'BinaryAddExpression'
+      const concat = path.find((entry) => {
+        return (
+          entry.parent &&
+          (entry.parent.type === 'BinaryConcatExpression' ||
+            entry.parent.type === 'BinaryAddExpression')
+        )
+      })
 
       node.value = sortClasses(node.value, {
         env,
-        ignoreFirst:
-          isConcat && _key === 'right' && !/^[^\S\r\n]/.test(node.value),
-        ignoreLast:
-          isConcat && _key === 'left' && !/[^\S\r\n]$/.test(node.value),
+        ignoreFirst: concat?.key === 'right' && !/^[^\S\r\n]/.test(node.value),
+        ignoreLast: concat?.key === 'left' && !/[^\S\r\n]$/.test(node.value),
         collapseWhitespace: {
-          start: !(isConcat && _key === 'right'),
-          end: !(isConcat && _key === 'left'),
+          start: concat?.key !== 'right',
+          end: concat?.key !== 'left',
         },
       })
     },
@@ -926,7 +941,7 @@ function transformSvelte(ast: any, { env, changes }: TransformerContext) {
             })
       } else if (value.type === 'MustacheTag') {
         visit(value.expression, {
-          Literal(node: any, _parent: any, _key: string | null) {
+          Literal(node) {
             if (isStringLiteral(node)) {
               let before = node.raw
               let sorted = sortStringLiteral(node, {
@@ -945,7 +960,7 @@ function transformSvelte(ast: any, { env, changes }: TransformerContext) {
               }
             }
           },
-          TemplateLiteral(node: any, _parent: any, _key: string | null) {
+          TemplateLiteral(node) {
             let before = node.quasis.map((quasi: any) => quasi.value.raw)
             let sorted = sortTemplateLiteral(node, {
               env,

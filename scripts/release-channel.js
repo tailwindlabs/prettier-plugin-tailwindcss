@@ -6,8 +6,15 @@
 //   1.2.3                  -> latest (default)
 //   0.0.0-insiders.ffaa88  -> insiders
 //   4.1.0-alpha.4          -> alpha
+import * as fs from 'node:fs/promises'
+import * as path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-import * as pkg from '../package.json'
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+const pkg = JSON.parse(
+  await fs.readFile(path.resolve(__dirname, '../package.json'), 'utf8'),
+)
 
 let version = process.argv[2] || process.env.npm_package_version || pkg.version
 

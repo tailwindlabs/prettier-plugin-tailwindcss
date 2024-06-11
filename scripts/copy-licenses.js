@@ -1,7 +1,13 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import checker from 'license-checker'
-import * as pkg from '../package.json'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+const pkg = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, '../package.json'), 'utf8'),
+)
 
 let exclude = [
   'cpy-cli',

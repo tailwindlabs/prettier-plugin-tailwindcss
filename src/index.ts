@@ -153,8 +153,8 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
     parser: prettierParserBabel.parsers['babel-ts'],
   })
 
-  function* ancestors(
-    path: import('ast-types/lib/node-path').NodePath<any, any>,
+  function* ancestors<N, V>(
+    path: import('ast-types/lib/node-path').NodePath<N, V>,
   ) {
     yield path
 

@@ -292,7 +292,7 @@ function transformGlimmer(ast: any, { env }: TransformerContext) {
   let { staticAttrs } = env.customizations
 
   visit(ast, {
-    AttrNode(attr: any, _path: any, meta: Record<string, any>) {
+    AttrNode(attr, _path, meta) {
       if (staticAttrs.has(attr.name) && attr.value) {
         meta.sortTextNodes = true
       }

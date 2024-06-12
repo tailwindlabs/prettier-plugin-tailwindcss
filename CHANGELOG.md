@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+- Export `PluginOptions` type ([#292](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/292))
 
 ## [0.6.3] - 2024-06-11
 

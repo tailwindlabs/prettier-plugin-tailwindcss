@@ -1171,7 +1171,7 @@ export const parsers: Record<string, Parser> = {
     : {}),
 }
 
-interface PluginOptions {
+export interface PluginOptions {
   /**
    * Path to the Tailwind config file.
    */

@@ -44,7 +44,7 @@ If a local configuration file cannot be found the plugin will fallback to the de
 
 ## Sorting non-standard attributes
 
-By default this plugin only sorts classes in the `class` attribute as well as any framework-specific equivalents like `class`, `className`, `:class`, `[ngClass]`, etc.
+By default this plugin sorts classes in the `class` attribute, any framework-specific equivalents like `className`, `:class`, `[ngClass]`, and any Tailwind `@apply` directives.
 
 You can sort additional attributes using the `tailwindAttributes` option, which takes an array of attribute names:
 

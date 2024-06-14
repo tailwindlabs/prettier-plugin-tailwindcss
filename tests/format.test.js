@@ -97,6 +97,7 @@ let javascript = [
 
   t`;<div class={"before:content-['\\\\2248']"} />`,
   t`;<div class={\`before:content-['\\\\2248']\`} />`,
+  t`;<div class="before:content-['\\\\2248']" />`,
 
   [
     `;<div class={'object-cover' + (standalone ? ' aspect-square w-full' : ' min-h-0 grow basis-0')}></div>`,

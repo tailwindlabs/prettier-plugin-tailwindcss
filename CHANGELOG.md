@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+- Only re-apply string escaping when necessary  ([#295](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/295))
 
 ## [0.6.4] - 2024-06-12
 

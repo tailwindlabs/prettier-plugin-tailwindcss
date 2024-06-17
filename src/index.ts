@@ -467,18 +467,37 @@ function sortStringLiteral(
   })
   let didChange = result !== node.value
   node.value = result
+
+  // A string literal was escaped if:
+  // - There are backslashes in the raw value; AND
+  // - The raw value is not the same as the value (excluding the surrounding quotes)
+  let wasEscaped = false
+
+  if (node.extra) {
+    // JavaScript (StringLiteral)
+    wasEscaped =
+      node.extra?.rawValue.includes('\\') &&
+      node.extra?.raw.slice(1, -1) !== node.value
+  } else {
+    // TypeScript (Literal)
+    wasEscaped =
+      node.value.includes('\\') && node.raw.slice(1, -1) !== node.value
+  }
+
+  let escaped = wasEscaped ? result.replace(/\\/g, '\\\\') : result
+
   if (node.extra) {
     // JavaScript (StringLiteral)
     let raw = node.extra.raw
     node.extra = {
       ...node.extra,
       rawValue: result,
-      raw: raw[0] + result.replace(/\\/g, '\\\\') + raw.slice(-1),
+      raw: raw[0] + escaped + raw.slice(-1),
     }
   } else {
     // TypeScript (Literal)
     let raw = node.raw
-    node.raw = raw[0] + result.replace(/\\/g, '\\\\') + raw.slice(-1)
+    node.raw = raw[0] + escaped + raw.slice(-1)
   }
   return didChange
 }

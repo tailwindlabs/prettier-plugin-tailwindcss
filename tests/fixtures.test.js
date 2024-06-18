@@ -1,9 +1,9 @@
 import { exec } from 'node:child_process'
-import * as fs from 'node:fs'
+import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
-import { afterAll, beforeAll, describe, expect, test } from 'vitest'
+import { afterAll, beforeAll, describe, test } from 'vitest'
 import { format, pluginPath } from './utils'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -11,101 +11,56 @@ const __dirname = path.dirname(__filename)
 
 const execAsync = promisify(exec)
 
-async function formatFixture(name, extension) {
-  let binPath = path.resolve(__dirname, '../node_modules/.bin/prettier')
-  let filePath = path.resolve(__dirname, `fixtures/${name}/index.${extension}`)
-
-  let cmd = `${binPath} ${filePath} --plugin ${pluginPath}`
-
-  return execAsync(cmd).then(({ stdout }) => stdout.trim())
-}
-
 let fixtures = [
   {
     name: 'no prettier config',
     dir: 'no-prettier-config',
-    output: '<div class="bg-red-500 sm:bg-tomato"></div>',
+    ext: 'html',
   },
   {
     name: 'inferred config path',
     dir: 'basic',
-    output: '<div class="bg-red-500 sm:bg-tomato"></div>',
+    ext: 'html',
   },
   {
     name: 'inferred config path (.cjs)',
     dir: 'cjs',
-    output: '<div class="bg-red-500 sm:bg-hotpink"></div>',
+    ext: 'html',
   },
   {
     name: 'using esm config',
     dir: 'esm',
-    output: '<div class="bg-red-500 sm:bg-hotpink"></div>',
+    ext: 'html',
   },
   {
     name: 'using esm config (explicit path)',
     dir: 'esm-explicit',
-    output: '<div class="bg-red-500 sm:bg-hotpink"></div>',
+    ext: 'html',
   },
   {
     name: 'using ts config',
     dir: 'ts',
-    output: '<div class="bg-red-500 sm:bg-hotpink"></div>',
+    ext: 'html',
   },
   {
     name: 'using ts config (explicit path)',
     dir: 'ts-explicit',
-    output: '<div class="bg-red-500 sm:bg-hotpink"></div>',
+    ext: 'html',
   },
   {
     name: 'using v3.2.7',
     dir: 'v3-2',
-    output: '<div class="bg-red-500 sm:bg-tomato"></div>',
+    ext: 'html',
   },
   {
     name: 'plugins',
     dir: 'plugins',
-    output: '<div class="uppercase foo sm:bar"></div>',
+    ext: 'html',
   },
   {
     name: 'customizations: js/jsx',
     dir: 'custom-jsx',
     ext: 'jsx',
-    output: `const a = sortMeFn("p-2 sm:p-1");
-const b = sortMeFn({
-  foo: "p-2 sm:p-1",
-});
-
-const c = dontSortFn("sm:p-1 p-2");
-const d = sortMeTemplate\`p-2 sm:p-1\`;
-const e = dontSortMeTemplate\`sm:p-1 p-2\`;
-const f = tw.foo\`p-2 sm:p-1\`;
-const g = tw.foo.bar\`p-2 sm:p-1\`;
-const h = no.foo\`sm:p-1 p-2\`;
-const i = no.tw\`sm:p-1 p-2\`;
-const k = tw.foo("p-2 sm:p-1");
-const l = tw.foo.bar("p-2 sm:p-1");
-const m = no.foo("sm:p-1 p-2");
-const n = no.tw("sm:p-1 p-2");
-
-const A = (props) => <div className={props.sortMe} />;
-const B = () => <A sortMe="p-2 sm:p-1" dontSort="sm:p-1 p-2" />;`,
-  },
-  {
-    name: 'customizations: vue',
-    dir: 'custom-vue',
-    ext: 'vue',
-    output: `<script setup>
-let a = sortMeFn("p-2 sm:p-1");
-let b = sortMeFn({ "p-2 sm:p-1": true });
-let c = dontSortFn("sm:p-1 p-2");
-let d = sortMeTemplate\`p-2 sm:p-1\`;
-let e = dontSortMeTemplate\`sm:p-1 p-2\`;
-</script>
-<template>
-  <div class="p-2 sm:p-1" sortMe="p-2 sm:p-1" dontSortMe="sm:p-1 p-2"></div>
-  <div :class="{ 'p-2 sm:p-1': true }"></div>
-  <div :sortMe="{ 'p-2 sm:p-1': true }"></div>
-</template>`,
   },
 ]
 
@@ -120,7 +75,7 @@ let configs = [
   },
 ]
 
-test('explicit config path', async () => {
+test.concurrent('explicit config path', async ({ expect }) => {
   expect(
     await format('<div class="sm:bg-tomato bg-red-500"></div>', {
       tailwindConfig: path.resolve(
@@ -134,17 +89,27 @@ test('explicit config path', async () => {
 describe('fixtures', () => {
   // Temporarily move config files out of the way so they don't interfere with the tests
   beforeAll(() =>
-    Promise.all(configs.map(({ from, to }) => fs.promises.rename(from, to))),
+    Promise.all(configs.map(({ from, to }) => fs.rename(from, to))),
   )
 
   afterAll(() =>
-    Promise.all(configs.map(({ from, to }) => fs.promises.rename(to, from))),
+    Promise.all(configs.map(({ from, to }) => fs.rename(to, from))),
   )
 
-  for (const fixture of fixtures) {
-    test.concurrent(fixture.name, async () => {
-      let formatted = await formatFixture(fixture.dir, fixture.ext ?? 'html')
-      expect(formatted).toEqual(fixture.output)
+  let binPath = path.resolve(__dirname, '../node_modules/.bin/prettier')
+
+  for (const { ext, dir, name } of fixtures) {
+    let fixturePath = path.resolve(__dirname, `fixtures/${dir}`)
+    let inputPath = path.resolve(fixturePath, `index.${ext}`)
+    let outputPath = path.resolve(fixturePath, `output.${ext}`)
+    let cmd = `${binPath} ${inputPath} --plugin ${pluginPath}`
+
+    test.concurrent(name, async ({ expect }) => {
+      let results = await execAsync(cmd)
+      let formatted = results.stdout
+      let expected = await fs.readFile(outputPath, 'utf-8')
+
+      expect(formatted.trim()).toEqual(expected.trim())
     })
   }
 })

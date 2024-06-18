@@ -33,12 +33,14 @@
     "release-notes": "node ./scripts/release-notes.js"
   },
   "devDependencies": {
+    "@babel/types": "^7.24.7",
     "@ianvs/prettier-plugin-sort-imports": "^4.1.0",
     "@microsoft/api-extractor": "^7.47.0",
     "@prettier/plugin-pug": "^3.0",
     "@shopify/prettier-plugin-liquid": "^1.4.0",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@zackad/prettier-plugin-twig-melody": "^0.5.0",
+    "ast-types": "^0.14.2",
     "clear-module": "^4.1.2",
     "cpy-cli": "^5.0.0",
     "esbuild": "^0.19.8",

@@ -58,6 +58,7 @@
     "prettier-plugin-import-sort": "^0.0.7",
     "prettier-plugin-jsdoc": "^1.0.1",
     "prettier-plugin-marko": "^3.1.1",
+    "prettier-plugin-multiline-arrays": "^3.0.6",
     "prettier-plugin-organize-attributes": "^1.0.0",
     "prettier-plugin-organize-imports": "^3.2.4",
     "prettier-plugin-sort-imports": "^1.8.1",
@@ -83,6 +84,7 @@
     "prettier-plugin-import-sort": "*",
     "prettier-plugin-jsdoc": "*",
     "prettier-plugin-marko": "*",
+    "prettier-plugin-multiline-arrays": "*",
     "prettier-plugin-organize-attributes": "*",
     "prettier-plugin-organize-imports": "*",
     "prettier-plugin-sort-imports": "*",
@@ -118,6 +120,9 @@
       "optional": true
     },
     "prettier-plugin-marko": {
+      "optional": true
+    },
+    "prettier-plugin-multiline-arrays": {
       "optional": true
     },
     "prettier-plugin-organize-attributes": {

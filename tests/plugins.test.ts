@@ -1,10 +1,18 @@
 import { createRequire } from 'node:module'
 import { test } from 'vitest'
+import type { TestEntry } from './utils.js'
 import { format, no, pluginPath, t, yes } from './utils.js'
 
 const require = createRequire(import.meta.url)
 
-let tests = [
+interface PluginTest {
+  versions: number[]
+  plugins: string[]
+  options?: Record<string, any>
+  tests: Record<string, TestEntry[]>
+}
+
+let tests: PluginTest[] = [
   {
     versions: [2, 3],
     plugins: ['@trivago/prettier-plugin-sort-imports'],
@@ -479,6 +487,7 @@ for (const group of tests) {
       // Hide logs from Pug's prettier plugin
       if (parser === 'pug') {
         let pug = await import('@prettier/plugin-pug')
+        // @ts-ignore
         pug.logger.level = 'off'
       }
 

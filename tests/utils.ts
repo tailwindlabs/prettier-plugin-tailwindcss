@@ -11,7 +11,19 @@ let testClassNameSorted = 'p-0 sm:p-0'
 export let yes = '__YES__'
 export let no = '__NO__'
 
-export function t(strings, ...values) {
+export type TestEntry = [
+  input: string,
+  output: string,
+  options?: {
+    tailwindPreserveWhitespace?: boolean
+    tailwindPreserveDuplicates?: boolean
+  },
+]
+
+export function t(
+  strings: TemplateStringsArray,
+  ...values: string[]
+): TestEntry {
   let input = ''
   strings.forEach((string, i) => {
     input += string + (values[i] ? testClassName : '')
@@ -30,7 +42,7 @@ export function t(strings, ...values) {
 
 export let pluginPath = path.resolve(__dirname, '../dist/index.mjs')
 
-export async function format(str, options = {}) {
+export async function format(str: string, options: prettier.Options = {}) {
   let result = await prettier.format(str, {
     pluginSearchDirs: [__dirname], // disable plugin autoload
     semi: false,

@@ -106,24 +106,9 @@ let tests: PluginTest[] = [
     versions: [3],
     plugins: ['prettier-plugin-multiline-arrays'],
     tests: {
-      babel: [
-        [
-          `const array = [\n'one']`,
-          `const array = [\n  'one',\n]`,
-        ],
-      ],
-      typescript: [
-        [
-          `const array = [\n'one']`,
-          `const array = [\n  'one',\n]`,
-        ],
-      ],
-      'babel-ts': [
-        [
-          `const array = [\n'one']`,
-          `const array = [\n  'one',\n]`,
-        ],
-      ],
+      babel: [[`const array = [\n'one']`, `const array = [\n  'one',\n]`]],
+      typescript: [[`const array = [\n'one']`, `const array = [\n  'one',\n]`]],
+      'babel-ts': [[`const array = [\n'one']`, `const array = [\n  'one',\n]`]],
     },
   },
   {

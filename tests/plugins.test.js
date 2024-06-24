@@ -476,12 +476,11 @@ for (const group of tests) {
     }
 
     test(`parsing ${parser} works with: ${name}`, async ({ expect }) => {
-      // This segaults node
-      // I guess the noise is fine for now
-      // if (parser === 'pug') {
-      //   let pug = await import('@prettier/plugin-pug')
-      //   pug.logger.level = 'off'
-      // }
+      // Hide logs from Pug's prettier plugin
+      if (parser === 'pug') {
+        let pug = await import('@prettier/plugin-pug')
+        pug.logger.level = 'off'
+      }
 
       let plugins = [
         ...group.plugins.map((name) => require.resolve(name)),

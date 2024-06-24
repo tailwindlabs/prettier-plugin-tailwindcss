@@ -88,13 +88,13 @@ test.concurrent('explicit config path', async ({ expect }) => {
 
 describe('fixtures', () => {
   // Temporarily move config files out of the way so they don't interfere with the tests
-  beforeAll(() =>
-    Promise.all(configs.map(({ from, to }) => fs.rename(from, to))),
-  )
+  beforeAll(async () => {
+    await Promise.all(configs.map(({ from, to }) => fs.rename(from, to)))
+  })
 
-  afterAll(() =>
-    Promise.all(configs.map(({ from, to }) => fs.rename(to, from))),
-  )
+  afterAll(async () => {
+    await Promise.all(configs.map(({ from, to }) => fs.rename(to, from)))
+  })
 
   let binPath = path.resolve(__dirname, '../node_modules/.bin/prettier')
 

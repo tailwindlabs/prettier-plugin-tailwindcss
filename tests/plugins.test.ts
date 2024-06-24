@@ -6,7 +6,6 @@ import { format, no, pluginPath, t, yes } from './utils.js'
 const require = createRequire(import.meta.url)
 
 interface PluginTest {
-  versions: number[]
   plugins: string[]
   options?: Record<string, any>
   tests: Record<string, TestEntry[]>
@@ -14,7 +13,6 @@ interface PluginTest {
 
 let tests: PluginTest[] = [
   {
-    versions: [2, 3],
     plugins: ['@trivago/prettier-plugin-sort-imports'],
     options: {
       importOrder: ['^@one/(.*)$', '^@two/(.*)$', '^[./]'],
@@ -44,7 +42,6 @@ let tests: PluginTest[] = [
     },
   },
   {
-    versions: [2, 3],
     plugins: ['@ianvs/prettier-plugin-sort-imports'],
     options: {
       importOrder: ['^@tailwindcss/(.*)$', '^@babel/(.*)$', '^[./]'],
@@ -74,7 +71,6 @@ let tests: PluginTest[] = [
     },
   },
   {
-    versions: [3],
     plugins: ['prettier-plugin-sort-imports'],
     options: {
       sortingMethod: 'alphabetical',
@@ -103,7 +99,6 @@ let tests: PluginTest[] = [
     },
   },
   {
-    versions: [3],
     plugins: ['prettier-plugin-multiline-arrays'],
     tests: {
       babel: [[`const array = [\n'one']`, `const array = [\n  'one',\n]`]],
@@ -112,7 +107,6 @@ let tests: PluginTest[] = [
     },
   },
   {
-    versions: [2, 3],
     plugins: ['prettier-plugin-organize-imports'],
     options: {},
     tests: {
@@ -137,7 +131,6 @@ let tests: PluginTest[] = [
     },
   },
   {
-    versions: [3],
     plugins: ['@zackad/prettier-plugin-twig-melody'],
     options: {
       twigAlwaysBreakObjects: false,
@@ -172,7 +165,6 @@ let tests: PluginTest[] = [
     },
   },
   {
-    versions: [2, 3],
     plugins: ['@prettier/plugin-pug'],
     tests: {
       pug: [
@@ -206,7 +198,6 @@ let tests: PluginTest[] = [
   },
   {
     // NOTE: This plugin doesn't officially support Prettier v3 but it seems to work fine
-    versions: [2, 3],
     plugins: ['prettier-plugin-import-sort'],
     tests: {
       babel: [
@@ -223,7 +214,6 @@ let tests: PluginTest[] = [
     },
   },
   {
-    versions: [2, 3],
     plugins: ['prettier-plugin-jsdoc'],
     tests: {
       babel: [
@@ -235,7 +225,6 @@ let tests: PluginTest[] = [
     },
   },
   {
-    versions: [2, 3],
     plugins: ['prettier-plugin-css-order'],
     tests: {
       css: [
@@ -248,7 +237,6 @@ let tests: PluginTest[] = [
   },
   {
     // NOTE: This plugin doesn't officially support Prettier v3 but it appears to work
-    versions: [2, 3],
     plugins: ['prettier-plugin-style-order'],
     tests: {
       css: [
@@ -260,7 +248,6 @@ let tests: PluginTest[] = [
     },
   },
   {
-    versions: [2, 3],
     plugins: ['prettier-plugin-organize-attributes'],
     tests: {
       html: [
@@ -272,7 +259,6 @@ let tests: PluginTest[] = [
     },
   },
   {
-    versions: [2, 3],
     plugins: ['@shopify/prettier-plugin-liquid'],
     tests: {
       'liquid-html': [
@@ -306,7 +292,6 @@ let tests: PluginTest[] = [
     },
   },
   {
-    versions: [3],
     plugins: ['prettier-plugin-marko'],
     tests: {
       marko: [
@@ -350,7 +335,6 @@ let tests: PluginTest[] = [
     },
   },
   {
-    versions: [2, 3],
     plugins: ['prettier-plugin-astro'],
     tests: {
       astro: [
@@ -402,7 +386,6 @@ import Custom from '../components/Custom.astro'
     },
   },
   {
-    versions: [2, 3],
     plugins: ['prettier-plugin-svelte'],
     tests: {
       svelte: [
@@ -460,14 +443,7 @@ import Custom from '../components/Custom.astro'
 for (const group of tests) {
   let name = group.plugins.join(', ')
 
-  let canRun = group.versions.includes(3)
-
   for (let parser in group.tests) {
-    if (!canRun) {
-      test.todo(`parsing ${parser} works with: ${name}`)
-      continue
-    }
-
     test(`parsing ${parser} works with: ${name}`, async ({ expect }) => {
       // Hide logs from Pug's prettier plugin
       if (parser === 'pug') {

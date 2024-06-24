@@ -174,6 +174,7 @@ async function loadCompatiblePlugins() {
     'prettier-plugin-css-order',
     'prettier-plugin-import-sort',
     'prettier-plugin-jsdoc',
+    'prettier-plugin-multiline-arrays',
     'prettier-plugin-organize-attributes',
     'prettier-plugin-style-order',
     'prettier-plugin-sort-imports',

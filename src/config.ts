@@ -18,6 +18,7 @@ import loadConfigFallback from 'tailwindcss/loadConfig'
 import resolveConfigFallback from 'tailwindcss/resolveConfig'
 import type { RequiredConfig } from 'tailwindcss/types/config.js'
 import { expiringMap } from './expiring-map.js'
+import { resolveIn } from './resolve'
 import type { ContextContainer } from './types'
 
 let localRequire = createRequire(import.meta.url)
@@ -106,10 +107,7 @@ async function loadTailwindConfig(
   let tailwindConfig: RequiredConfig = { content: [] }
 
   try {
-    let pkgFile = localRequire.resolve('tailwindcss/package.json', {
-      paths: [baseDir],
-    })
-
+    let pkgFile = resolveIn('tailwindcss/package.json', [baseDir])
     let pkgDir = path.dirname(pkgFile)
 
     try {
@@ -155,9 +153,7 @@ async function loadV4(
   entryPoint: string | null,
 ) {
   // Import Tailwind — if this is v4 it'll have APIs we can use directly
-  let pkgPath = localRequire.resolve('tailwindcss', {
-    paths: [baseDir],
-  })
+  let pkgPath = resolveIn('tailwindcss', [baseDir])
   let tw = await import(pathToFileURL(pkgPath).toString())
 
   // This is not Tailwind v4

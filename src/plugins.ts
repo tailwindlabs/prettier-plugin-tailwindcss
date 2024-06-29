@@ -1,4 +1,3 @@
-import { createRequire as req } from 'node:module'
 import type { Parser, ParserOptions, Plugin, Printer } from 'prettier'
 import './types'
 import * as prettierParserAcorn from 'prettier/plugins/acorn'
@@ -9,6 +8,7 @@ import * as prettierParserHTML from 'prettier/plugins/html'
 import * as prettierParserMeriyah from 'prettier/plugins/meriyah'
 import * as prettierParserPostCSS from 'prettier/plugins/postcss'
 import * as prettierParserTypescript from 'prettier/plugins/typescript'
+import { loadIfExists, maybeResolve } from './resolve'
 
 interface PluginDetails {
   parsers: Record<string, Parser<any>>
@@ -16,19 +16,14 @@ interface PluginDetails {
 }
 
 async function loadIfExistsESM(name: string): Promise<Plugin<any>> {
-  try {
-    if (req(import.meta.url).resolve(name)) {
-      let mod = await import(name)
-      return mod.default ?? mod
-    }
+  let mod = await loadIfExists<Plugin<any>>(name)
 
-    throw new Error('unreachable')
-  } catch (e) {
-    return {
-      parsers: {},
-      printers: {},
-    }
+  mod ??= {
+    parsers: {},
+    printers: {},
   }
+
+  return mod
 }
 
 export async function loadPlugins() {
@@ -44,14 +39,6 @@ export async function loadPlugins() {
   let printers = {
     ...builtin.printers,
     ...thirdparty.printers,
-  }
-
-  function maybeResolve(name: string) {
-    try {
-      return req(import.meta.url).resolve(name)
-    } catch (err) {
-      return null
-    }
   }
 
   function findEnabledPlugin(

@@ -18,7 +18,7 @@ interface PluginDetails {
 async function loadIfExistsESM(name: string): Promise<Plugin<any>> {
   let mod = await loadIfExists<Plugin<any>>(name)
 
-  mod = mod ?? {
+  mod ??= {
     parsers: {},
     printers: {},
   }

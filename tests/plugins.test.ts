@@ -165,6 +165,40 @@ let tests: PluginTest[] = [
     },
   },
   {
+    plugins: ['@zackad/prettier-plugin-twig'],
+    options: {
+      twigAlwaysBreakObjects: false,
+    },
+    tests: {
+      twig: [
+        [
+          `<section class="{{ {base:css.prices}|classes }}"></section>`,
+          `<section class="{{ { base: css.prices }|classes }}"></section>`,
+        ],
+        t`<section class="${yes}"></section>`,
+        t`<section class="${yes} text-{{ i }}"></section>`,
+        t`<section class="${yes} {{ i }}-text"></section>`,
+        t`<section class="text-{{ i }} ${yes}"></section>`,
+        t`<section class="{{ i }}-text ${yes}"></section>`,
+
+        // text-center is used because it's placed between p-0 and sm:p-0
+        t`<section class="${yes} text-center{{ i }}"></section>`,
+        t`<section class="${yes} {{ i }}text-center"></section>`,
+        t`<section class="text-center{{ i }} ${yes}"></section>`,
+        t`<section class="{{ i }}text-center ${yes}"></section>`,
+
+        [
+          `<div class=" sm:flex   underline  block"></div>`,
+          `<div class="block underline sm:flex"></div>`,
+        ],
+        [
+          `<div class="{{ ' flex ' + ' underline ' + ' block ' }}"></div>`,
+          `<div class="{{ 'flex ' + ' underline' + ' block' }}"></div>`,
+        ],
+      ],
+    },
+  },
+  {
     plugins: ['@prettier/plugin-pug'],
     tests: {
       pug: [

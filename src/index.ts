@@ -1174,6 +1174,14 @@ export const parsers: Record<string, Parser> = {
         }),
       }
     : {}),
+  ...(base.parsers.twig
+    ? {
+        // Note: Melody and twig are the same language
+        twig: createParser('twig', transformMelody, {
+          staticAttrs: ['class'],
+        }),
+      }
+    : {}),
   ...(base.parsers.pug
     ? {
         pug: createParser('pug', transformPug, {

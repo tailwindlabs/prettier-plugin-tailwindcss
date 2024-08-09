@@ -106,17 +106,25 @@ export function visit<T extends {}, Meta extends Record<string, unknown>>(
  * of the string does not break the indexes of the subsequent changes.
  */
 export function spliceChangesIntoString(str: string, changes: StringChange[]) {
-  // Sort all changes in reverse order so we apply them from the end of the string
-  // to the beginning. This way, the indexes for the changes after the current one
-  // will still be correct after applying the current one.
+  // Sort all changes in order to make it easier to apply them
   changes.sort((a, b) => {
-    return b.end - a.end || b.start - a.start
+    return a.end - b.end || a.start - b.start
   })
 
-  // Splice in each change to the string
-  for (let change of changes) {
-    str = str.slice(0, change.start) + change.after + str.slice(change.end)
-  }
+  // Grab the first change so that we can ensure
+  // that the previous change always exists during the loop
+  let [previous, ...rest] = changes
+  // If no changes, return original string
+  if (previous == null) return str
 
-  return str
+  // Append original string between each chunk, and then the chunk itself
+  // This is sort of a String Builder pattern, thus creating less memory pressure
+  let chunks = [str.slice(0, previous.start), previous.after]
+  for (const change of rest) {
+    chunks.push(str.slice(previous.end, change.start), change.after)
+    previous = change
+  }
+  // Add leftover string from last chunk to end
+  chunks.push(str.slice(previous.end))
+  return chunks.join('')
 }

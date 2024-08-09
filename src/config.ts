@@ -171,7 +171,11 @@ async function loadV4(
 
   // Load the design system and set up a compatible context object that is
   // usable by the rest of the plugin
-  let design = tw.__unstable__loadDesignSystem(result.css)
+  let design = await tw.__unstable__loadDesignSystem(result.css, {
+    loadPlugin() {
+      return () => {}
+    },
+  })
 
   return {
     context: {

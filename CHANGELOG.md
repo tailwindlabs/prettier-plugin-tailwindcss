@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add support for `prettier-plugin-multiline-arrays` ([#299](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/299))
 - Add resolution cache for known plugins ([#301](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/301))
+- Support Tailwind CSS `v4.0.0-alpha.19` ([#310](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/310))
 
 ## [0.6.5] - 2024-06-17
 

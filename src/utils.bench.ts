@@ -30,18 +30,28 @@ describe('spliceChangesIntoString', () => {
     return [strTemplate.repeat(repeatCount), changes] as const
   }
 
-  let [strSmall, changesSmall] = buildFixture(10, 5)
+  let [strS, changesS] = buildFixture(5, 2)
   bench('small string', () => {
-    spliceChangesIntoString(strSmall, changesSmall)
+    spliceChangesIntoString(strS, changesS)
   })
 
-  let [strMedium, changesMedium] = buildFixture(1_000, 50)
+  let [strM, changesM] = buildFixture(100, 5)
   bench('medium string', () => {
-    spliceChangesIntoString(strMedium, changesMedium)
+    spliceChangesIntoString(strM, changesM)
   })
 
-  let [strLarge, changesLarge] = buildFixture(100_000, 7_000)
+  let [strL, changesL] = buildFixture(1_000, 50)
   bench('large string', () => {
-    spliceChangesIntoString(strLarge, changesLarge)
+    spliceChangesIntoString(strL, changesL)
+  })
+
+  let [strXL, changesXL] = buildFixture(100_000, 500)
+  bench('extra large string', () => {
+    spliceChangesIntoString(strXL, changesXL)
+  })
+
+  let [strXL2, changesXL2] = buildFixture(100_000, 5_000)
+  bench('extra large string (5k changes)', () => {
+    spliceChangesIntoString(strXL2, changesXL2)
   })
 })

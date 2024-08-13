@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+- Improved performance with large Svelte, Liquid, and Angular files ([#312](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/312))
 
 ## [0.6.6] - 2024-08-09
 

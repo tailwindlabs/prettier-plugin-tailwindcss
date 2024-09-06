@@ -18,7 +18,7 @@ import loadConfigFallback from 'tailwindcss/loadConfig'
 import resolveConfigFallback from 'tailwindcss/resolveConfig'
 import type { RequiredConfig } from 'tailwindcss/types/config.js'
 import { expiringMap } from './expiring-map.js'
-import { resolveIn } from './resolve'
+import { resolveFrom, resolveIn } from './resolve'
 import type { ContextContainer } from './types'
 
 let localRequire = createRequire(import.meta.url)
@@ -147,6 +147,37 @@ async function loadTailwindConfig(
   }
 }
 
+/**
+ * Create a loader function that can load plugins and config files relative to
+ * the CSS file that uses them. However, we don't want missing files to prevent
+ * everything from working so we'll let the error handler decide how to proceed.
+ *
+ * @param {object} param0
+ * @returns
+ */
+function createLoader<T>({
+  filepath,
+  onError,
+}: {
+  filepath: string
+  onError: (id: string, error: unknown) => T
+}) {
+  let baseDir = path.dirname(filepath)
+  let cacheKey = `${+Date.now()}`
+
+  return async function loadFile(id: string) {
+    try {
+      let resolved = resolveFrom(baseDir, id)
+      let url = pathToFileURL(resolved)
+      url.searchParams.append('t', cacheKey)
+
+      return await import(url.href).then((m) => m.default ?? m)
+    } catch (err) {
+      return onError(id, err)
+    }
+  }
+}
+
 async function loadV4(
   baseDir: string,
   pkgDir: string,
@@ -172,9 +203,23 @@ async function loadV4(
   // Load the design system and set up a compatible context object that is
   // usable by the rest of the plugin
   let design = await tw.__unstable__loadDesignSystem(result.css, {
-    loadPlugin() {
-      return () => {}
-    },
+    loadPlugin: createLoader({
+      filepath: entryPoint,
+      onError(id, err) {
+        console.error(`Unable to load plugin: ${id}`, err)
+
+        return () => {}
+      },
+    }),
+
+    loadConfig: createLoader({
+      filepath: entryPoint,
+      onError(id, err) {
+        console.error(`Unable to load config: ${id}`, err)
+
+        return {}
+      },
+    }),
   })
 
   return {

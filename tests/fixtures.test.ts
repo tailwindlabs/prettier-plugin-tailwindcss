@@ -62,6 +62,12 @@ let fixtures = [
     dir: 'custom-jsx',
     ext: 'jsx',
   },
+
+  {
+    name: 'v4: basic formatting',
+    dir: 'v4/basic',
+    ext: 'html',
+  },
 ]
 
 let configs = [

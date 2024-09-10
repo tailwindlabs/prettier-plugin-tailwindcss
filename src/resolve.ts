@@ -1,4 +1,5 @@
 import { createRequire as req } from 'node:module'
+import resolveFrom from 'resolve-from'
 import { expiringMap } from './expiring-map'
 
 const localRequire = req(import.meta.url)
@@ -45,3 +46,5 @@ function freshMaybeResolve(name: string) {
     return null
   }
 }
+
+export { resolveFrom }

@@ -17,7 +17,7 @@ import loadConfigFallback from 'tailwindcss/loadConfig'
 import resolveConfigFallback from 'tailwindcss/resolveConfig'
 import type { RequiredConfig } from 'tailwindcss/types/config.js'
 import { expiringMap } from './expiring-map.js'
-import { resolveJsFrom } from './resolve'
+import { resolveCssFrom, resolveJsFrom } from './resolve'
 import type { ContextContainer } from './types'
 
 let sourceToPathMap = new Map<string, string | null>()
@@ -150,15 +150,17 @@ async function loadTailwindConfig(
  * everything from working so we'll let the error handler decide how to proceed.
  */
 function createLoader<T>({
+  legacy,
   filepath,
   onError,
 }: {
+  legacy: boolean
   filepath: string
-  onError: (id: string, error: unknown) => T
+  onError: (id: string, error: unknown, resourceType: string) => T
 }) {
   let cacheKey = `${+Date.now()}`
 
-  async function loadFile(id: string, base: string) {
+  async function loadFile(id: string, base: string, resourceType: string) {
     try {
       let resolved = resolveJsFrom(base, id)
 
@@ -167,12 +169,21 @@ function createLoader<T>({
 
       return await import(url.href).then((m) => m.default ?? m)
     } catch (err) {
-      return onError(id, err)
+      return onError(id, err, resourceType)
     }
   }
 
-  let baseDir = path.dirname(filepath)
-  return (id: string) => loadFile(id, baseDir)
+  if (legacy) {
+    let baseDir = path.dirname(filepath)
+    return (id: string) => loadFile(id, baseDir, 'module')
+  }
+
+  return async (id: string, base: string, resourceType: string) => {
+    return {
+      base,
+      module: await loadFile(id, base, resourceType),
+    }
+  }
 }
 
 async function loadV4(
@@ -193,16 +204,63 @@ async function loadV4(
   // If the user doesn't define an entrypoint then we use the default theme
   entryPoint = entryPoint ?? `${pkgDir}/theme.css`
 
+  let importBasePath = path.dirname(entryPoint)
+
   // Resolve imports in the entrypoint to a flat CSS tree
   let css = await fs.readFile(entryPoint, 'utf-8')
-  let resolveImports = postcss([postcssImport()])
-  let result = await resolveImports.process(css, { from: entryPoint })
-  css = result.css
+
+  // Determine if the v4 API supports resolving `@import`
+  let supportsImports = false
+  try {
+    await tw.__unstable__loadDesignSystem('@import "./empty";', {
+      loadStylesheet: () => {
+        supportsImports = true
+        return {
+          base: importBasePath,
+          content: '',
+        }
+      },
+    })
+  } catch {}
+
+  if (!supportsImports) {
+    let resolveImports = postcss([postcssImport()])
+    let result = await resolveImports.process(css, { from: entryPoint })
+    css = result.css
+  }
 
   // Load the design system and set up a compatible context object that is
   // usable by the rest of the plugin
   let design = await tw.__unstable__loadDesignSystem(css, {
+    base: importBasePath,
+
+    // v4.0.0-alpha.25+
+    loadModule: createLoader({
+      legacy: false,
+      filepath: entryPoint,
+      onError: (id, err, resourceType) => {
+        console.error(`Unable to load ${resourceType}: ${id}`, err)
+
+        if (resourceType === 'config') {
+          return {}
+        } else if (resourceType === 'plugin') {
+          return () => {}
+        }
+      },
+    }),
+
+    loadStylesheet: async (id: string, base: string) => {
+      let resolved = resolveCssFrom(base, id)
+
+      return {
+        base: path.dirname(resolved),
+        content: await fs.readFile(resolved, 'utf-8'),
+      }
+    },
+
+    // v4.0.0-alpha.24 and below
     loadPlugin: createLoader({
+      legacy: true,
       filepath: entryPoint,
       onError(id, err) {
         console.error(`Unable to load plugin: ${id}`, err)
@@ -212,6 +270,7 @@ async function loadV4(
     }),
 
     loadConfig: createLoader({
+      legacy: true,
       filepath: entryPoint,
       onError(id, err) {
         console.error(`Unable to load config: ${id}`, err)

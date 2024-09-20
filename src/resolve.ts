@@ -21,6 +21,14 @@ const cjsResolver = ResolverFactory.createResolver({
   conditionNames: ['node', 'require'],
 })
 
+const cssResolver = ResolverFactory.createResolver({
+  fileSystem,
+  useSyncFileSystemCalls: true,
+  extensions: ['.css'],
+  mainFields: ['style'],
+  conditionNames: ['style'],
+})
+
 // This is a long-lived cache for resolved modules whether they exist or not
 // Because we're compatible with a large number of plugins, we need to check
 // for the existence of a module before attempting to import it. This cache
@@ -56,4 +64,8 @@ export function resolveJsFrom(base: string, id: string): string {
   } catch (err) {
     return cjsResolver.resolveSync({}, base, id) || id
   }
+}
+
+export function resolveCssFrom(base: string, id: string) {
+  return cssResolver.resolveSync({}, base, id) || id
 }

@@ -1,6 +1,5 @@
 // @ts-check
 import * as fs from 'fs/promises'
-import { createRequire } from 'module'
 import * as path from 'path'
 import { pathToFileURL } from 'url'
 import clearModule from 'clear-module'
@@ -20,8 +19,6 @@ import type { RequiredConfig } from 'tailwindcss/types/config.js'
 import { expiringMap } from './expiring-map.js'
 import { resolveFrom, resolveIn } from './resolve'
 import type { ContextContainer } from './types'
-
-let localRequire = createRequire(import.meta.url)
 
 let sourceToPathMap = new Map<string, string | null>()
 let sourceToEntryMap = new Map<string, string | null>()
@@ -151,9 +148,6 @@ async function loadTailwindConfig(
  * Create a loader function that can load plugins and config files relative to
  * the CSS file that uses them. However, we don't want missing files to prevent
  * everything from working so we'll let the error handler decide how to proceed.
- *
- * @param {object} param0
- * @returns
  */
 function createLoader<T>({
   filepath,
@@ -162,12 +156,11 @@ function createLoader<T>({
   filepath: string
   onError: (id: string, error: unknown) => T
 }) {
-  let baseDir = path.dirname(filepath)
   let cacheKey = `${+Date.now()}`
 
-  return async function loadFile(id: string) {
+  async function loadFile(id: string, base: string) {
     try {
-      let resolved = resolveFrom(baseDir, id)
+      let resolved = resolveFrom(base, id)
       let url = pathToFileURL(resolved)
       url.searchParams.append('t', cacheKey)
 
@@ -176,6 +169,9 @@ function createLoader<T>({
       return onError(id, err)
     }
   }
+
+  let baseDir = path.dirname(filepath)
+  return (id: string) => loadFile(id, baseDir)
 }
 
 async function loadV4(
@@ -199,10 +195,11 @@ async function loadV4(
   let css = await fs.readFile(entryPoint, 'utf-8')
   let resolveImports = postcss([postcssImport()])
   let result = await resolveImports.process(css, { from: entryPoint })
+  css = result.css
 
   // Load the design system and set up a compatible context object that is
   // usable by the rest of the plugin
-  let design = await tw.__unstable__loadDesignSystem(result.css, {
+  let design = await tw.__unstable__loadDesignSystem(css, {
     loadPlugin: createLoader({
       filepath: entryPoint,
       onError(id, err) {

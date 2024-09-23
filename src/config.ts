@@ -17,7 +17,7 @@ import loadConfigFallback from 'tailwindcss/loadConfig'
 import resolveConfigFallback from 'tailwindcss/resolveConfig'
 import type { RequiredConfig } from 'tailwindcss/types/config.js'
 import { expiringMap } from './expiring-map.js'
-import { resolveFrom, resolveIn } from './resolve'
+import { resolveJsFrom } from './resolve'
 import type { ContextContainer } from './types'
 
 let sourceToPathMap = new Map<string, string | null>()
@@ -104,7 +104,7 @@ async function loadTailwindConfig(
   let tailwindConfig: RequiredConfig = { content: [] }
 
   try {
-    let pkgFile = resolveIn('tailwindcss/package.json', [baseDir])
+    let pkgFile = resolveJsFrom(baseDir, 'tailwindcss/package.json')
     let pkgDir = path.dirname(pkgFile)
 
     try {
@@ -160,7 +160,8 @@ function createLoader<T>({
 
   async function loadFile(id: string, base: string) {
     try {
-      let resolved = resolveFrom(base, id)
+      let resolved = resolveJsFrom(base, id)
+
       let url = pathToFileURL(resolved)
       url.searchParams.append('t', cacheKey)
 
@@ -180,7 +181,8 @@ async function loadV4(
   entryPoint: string | null,
 ) {
   // Import Tailwind — if this is v4 it'll have APIs we can use directly
-  let pkgPath = resolveIn('tailwindcss', [baseDir])
+  let pkgPath = resolveJsFrom(baseDir, 'tailwindcss')
+
   let tw = await import(pathToFileURL(pkgPath).toString())
 
   // This is not Tailwind v4

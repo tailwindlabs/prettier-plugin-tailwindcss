@@ -43,6 +43,7 @@
     "ast-types": "^0.14.2",
     "clear-module": "^4.1.2",
     "cpy-cli": "^5.0.0",
+    "enhanced-resolve": "^5.17.1",
     "esbuild": "^0.19.8",
     "escalade": "^3.1.1",
     "import-sort-style-module": "^6.0.0",

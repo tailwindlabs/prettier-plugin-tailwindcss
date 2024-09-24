@@ -40,8 +40,13 @@ export function maybeResolve(name: string) {
   let modpath = resolveCache.get(name)
 
   if (modpath === undefined) {
-    modpath = resolveJsFrom(fileURLToPath(import.meta.url), name)
-    resolveCache.set(name, modpath)
+    try {
+      modpath = resolveJsFrom(fileURLToPath(import.meta.url), name)
+      resolveCache.set(name, modpath)
+    } catch (err) {
+      resolveCache.set(name, null)
+      return null
+    }
   }
 
   return modpath

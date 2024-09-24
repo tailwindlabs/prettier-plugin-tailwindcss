@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Improved performance with large Svelte, Liquid, and Angular files ([#312](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/312))
-- Add support for @plugin and @config in v4 ([#316](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/316))
+- Add support for `@plugin` and `@config` in v4 ([#316](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/316))
+- Add support for Tailwind CSS v4.0.0-alpha.25 ([#317](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/317))
 
 ## [0.6.6] - 2024-08-09
 

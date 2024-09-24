@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Nothing yet!
+
+## [0.6.7] - 2024-09-24
+
 - Improved performance with large Svelte, Liquid, and Angular files ([#312](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/312))
 - Add support for `@plugin` and `@config` in v4 ([#316](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/316))
 - Add support for Tailwind CSS v4.0.0-alpha.25 ([#317](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/317))
@@ -330,7 +334,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.6...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.7...HEAD
+[0.6.7]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.6...v0.6.7
 [0.6.6]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.5...v0.6.6
 [0.6.5]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.4...v0.6.5
 [0.6.4]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.3...v0.6.4

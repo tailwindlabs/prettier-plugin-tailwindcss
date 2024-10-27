@@ -1210,6 +1210,16 @@ export interface PluginOptions {
    * List of custom attributes that contain classes.
    */
   tailwindAttributes?: string[]
+
+  /**
+   * Preserve whitespace around Tailwind classes when sorting.
+   */
+  tailwindPreserveWhitespace?: boolean
+
+  /**
+   * Preserve duplicate classes inside a class list when sorting.
+   */
+  tailwindPreserveDuplicates?: boolean
 }
 
 declare module 'prettier' {

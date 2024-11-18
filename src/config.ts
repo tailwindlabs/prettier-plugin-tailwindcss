@@ -30,6 +30,7 @@ export async function getTailwindConfig(
 ): Promise<ContextContainer> {
   let key = [
     options.filepath,
+    options.tailwindStylesheet ?? '',
     options.tailwindEntryPoint ?? '',
     options.tailwindConfig ?? '',
   ].join(':')
@@ -325,6 +326,10 @@ function getConfigPath(options: ParserOptions, baseDir: string): string | null {
 }
 
 function getEntryPoint(options: ParserOptions, baseDir: string): string | null {
+  if (options.tailwindStylesheet) {
+    return path.resolve(baseDir, options.tailwindStylesheet)
+  }
+
   if (options.tailwindEntryPoint) {
     return path.resolve(baseDir, options.tailwindEntryPoint)
   }

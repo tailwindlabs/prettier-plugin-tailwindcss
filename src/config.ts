@@ -28,7 +28,11 @@ let prettierConfigCache = expiringMap<string, string | null>(10_000)
 export async function getTailwindConfig(
   options: ParserOptions,
 ): Promise<ContextContainer> {
-  let key = `${options.filepath}:${options.tailwindConfig ?? ''}:${options.tailwindEntryPoint ?? ''}`
+  let key = [
+    options.filepath,
+    options.tailwindEntryPoint ?? '',
+    options.tailwindConfig ?? '',
+  ].join(':')
   let baseDir = await getBaseDir(options)
 
   // Map the source file to it's associated Tailwind config file

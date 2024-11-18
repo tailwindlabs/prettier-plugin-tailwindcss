@@ -335,10 +335,18 @@ function getEntryPoint(options: ParserOptions, baseDir: string): string | null {
   }
 
   if (options.tailwindEntryPoint) {
+    console.warn(
+      'Use the `tailwindStylesheet` option for v4 projects instead of `tailwindEntryPoint`.',
+    )
+
     return path.resolve(baseDir, options.tailwindEntryPoint)
   }
 
   if (options.tailwindConfig && options.tailwindConfig.endsWith('.css')) {
+    console.warn(
+      'Use the `tailwindStylesheet` option for v4 projects instead of `tailwindConfig`.',
+    )
+
     return path.resolve(baseDir, options.tailwindConfig)
   }
 

@@ -297,6 +297,10 @@ async function loadV4(
 
 function getConfigPath(options: ParserOptions, baseDir: string): string | null {
   if (options.tailwindConfig) {
+    if (options.tailwindConfig.endsWith('.css')) {
+      return null
+    }
+
     return path.resolve(baseDir, options.tailwindConfig)
   }
 
@@ -332,6 +336,10 @@ function getEntryPoint(options: ParserOptions, baseDir: string): string | null {
 
   if (options.tailwindEntryPoint) {
     return path.resolve(baseDir, options.tailwindEntryPoint)
+  }
+
+  if (options.tailwindConfig && options.tailwindConfig.endsWith('.css')) {
+    return path.resolve(baseDir, options.tailwindConfig)
   }
 
   return null

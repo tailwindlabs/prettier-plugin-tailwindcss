@@ -38,8 +38,6 @@ Note that paths are resolved relative to the Prettier configuration file.
 }
 ```
 
-Note: this option was previously named `tailwindEntryPoint` it has been renamed to better reflect its purpose.
-
 ### Customizing your Tailwind config path
 
 To ensure that the class sorting takes into consideration any of your project's Tailwind customizations, it needs access to your [Tailwind configuration file](https://tailwindcss.com/docs/configuration) (`tailwind.config.js`).

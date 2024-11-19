@@ -38,7 +38,7 @@ Note that paths are resolved relative to the Prettier configuration file.
 }
 ```
 
-### Customizing your Tailwind config path
+### Specifying your Tailwind JavaScript config path
 
 To ensure that the class sorting takes into consideration any of your project's Tailwind customizations, it needs access to your [Tailwind configuration file](https://tailwindcss.com/docs/configuration) (`tailwind.config.js`).
 

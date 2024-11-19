@@ -27,7 +27,7 @@ As of v0.5.x, this plugin now requires Prettier v3 and is ESM-only. This means i
 
 ### Using with Tailwind CSS v4.0
 
-When using Tailwind CSS v4 you must specify what CSS file we should use that contains your theme, custom utilities, etc… To do this use the `tailwindStylesheet` option in your Prettier configuration.
+When using Tailwind CSS v4 you must specify your CSS file entry point, which includes your theme, custom utilities, and other Tailwind configuration options. To do this, use the `tailwindStylesheet` option in your Prettier configuration.
 
 Note that paths are resolved relative to the Prettier configuration file.
 

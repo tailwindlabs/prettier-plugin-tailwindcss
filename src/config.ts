@@ -28,7 +28,12 @@ let prettierConfigCache = expiringMap<string, string | null>(10_000)
 export async function getTailwindConfig(
   options: ParserOptions,
 ): Promise<ContextContainer> {
-  let key = `${options.filepath}:${options.tailwindConfig ?? ''}:${options.tailwindEntryPoint ?? ''}`
+  let key = [
+    options.filepath,
+    options.tailwindStylesheet ?? '',
+    options.tailwindEntryPoint ?? '',
+    options.tailwindConfig ?? '',
+  ].join(':')
   let baseDir = await getBaseDir(options)
 
   // Map the source file to it's associated Tailwind config file
@@ -292,6 +297,10 @@ async function loadV4(
 
 function getConfigPath(options: ParserOptions, baseDir: string): string | null {
   if (options.tailwindConfig) {
+    if (options.tailwindConfig.endsWith('.css')) {
+      return null
+    }
+
     return path.resolve(baseDir, options.tailwindConfig)
   }
 
@@ -321,8 +330,24 @@ function getConfigPath(options: ParserOptions, baseDir: string): string | null {
 }
 
 function getEntryPoint(options: ParserOptions, baseDir: string): string | null {
+  if (options.tailwindStylesheet) {
+    return path.resolve(baseDir, options.tailwindStylesheet)
+  }
+
   if (options.tailwindEntryPoint) {
+    console.warn(
+      'Use the `tailwindStylesheet` option for v4 projects instead of `tailwindEntryPoint`.',
+    )
+
     return path.resolve(baseDir, options.tailwindEntryPoint)
+  }
+
+  if (options.tailwindConfig && options.tailwindConfig.endsWith('.css')) {
+    console.warn(
+      'Use the `tailwindStylesheet` option for v4 projects instead of `tailwindConfig`.',
+    )
+
+    return path.resolve(baseDir, options.tailwindConfig)
   }
 
   return null

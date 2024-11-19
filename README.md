@@ -25,7 +25,20 @@ As of v0.5.x, this plugin now requires Prettier v3 and is ESM-only. This means i
 
 ## Options
 
-### Customizing your Tailwind config path
+### Specifying your Tailwind stylesheet path
+
+When using Tailwind CSS v4 you must specify your CSS file entry point, which includes your theme, custom utilities, and other Tailwind configuration options. To do this, use the `tailwindStylesheet` option in your Prettier configuration.
+
+Note that paths are resolved relative to the Prettier configuration file.
+
+```json5
+// .prettierrc
+{
+  "tailwindStylesheet": "./resources/css/app.css"
+}
+```
+
+### Specifying your Tailwind JavaScript config path
 
 To ensure that the class sorting takes into consideration any of your project's Tailwind customizations, it needs access to your [Tailwind configuration file](https://tailwindcss.com/docs/configuration) (`tailwind.config.js`).
 

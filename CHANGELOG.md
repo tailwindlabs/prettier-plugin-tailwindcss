@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Introduce `tailwindStylesheet` option to replace tail`windEntryPoint ([#330](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/330))
+- Introduce `tailwindStylesheet` option to replace `tailwindEntryPoint` ([#330](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/330))
 
 ## [0.6.8] - 2024-09-24
 

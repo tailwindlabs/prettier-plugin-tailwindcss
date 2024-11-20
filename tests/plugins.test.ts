@@ -131,12 +131,12 @@ let tests: PluginTest[] = [
     },
   },
   {
-    plugins: ['@zackad/prettier-plugin-twig-melody'],
+    plugins: ['@zackad/prettier-plugin-twig'],
     options: {
       twigAlwaysBreakObjects: false,
     },
     tests: {
-      melody: [
+      twig: [
         [
           `<section class="{{ {base:css.prices}|classes }}"></section>`,
           `<section class="{{ { base: css.prices }|classes }}"></section>`,

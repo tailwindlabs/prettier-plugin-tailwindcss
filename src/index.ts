@@ -537,7 +537,7 @@ function sortTemplateLiteral(
       // And does not end with a space
       ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.raw),
 
-      collapseWhitespace: {
+      collapseWhitespace: collapseWhitespace && {
         start: collapseWhitespace && collapseWhitespace.start && i === 0,
         end:
           collapseWhitespace &&
@@ -553,7 +553,7 @@ function sortTemplateLiteral(
           ignoreFirst: i > 0 && !/^\s/.test(quasi.value.cooked),
           ignoreLast:
             i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
-          collapseWhitespace: {
+          collapseWhitespace: collapseWhitespace && {
             start: collapseWhitespace && collapseWhitespace.start && i === 0,
             end:
               collapseWhitespace &&

@@ -25,6 +25,14 @@ let html: TestEntry[] = [
       tailwindPreserveDuplicates: true,
     },
   ],
+
+  // … is moved to the end of the list
+  ['<div class="... sm:p-0 p-0"></div>', '<div class="p-0 sm:p-0 ..."></div>'],
+  ['<div class="… sm:p-0 p-0"></div>', '<div class="p-0 sm:p-0 …"></div>'],
+  ['<div class="sm:p-0 ... p-0"></div>', '<div class="p-0 sm:p-0 ..."></div>'],
+  ['<div class="sm:p-0 … p-0"></div>', '<div class="p-0 sm:p-0 …"></div>'],
+  ['<div class="sm:p-0 p-0 ..."></div>', '<div class="p-0 sm:p-0 ..."></div>'],
+  ['<div class="sm:p-0 p-0 …"></div>', '<div class="p-0 sm:p-0 …"></div>'],
 ]
 
 let css: TestEntry[] = [

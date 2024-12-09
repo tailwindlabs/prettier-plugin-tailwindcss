@@ -415,7 +415,6 @@ import Custom from '../components/Custom.astro'
           `<div class="sm:p-0 p-0 {someVar}sm:block md:inline flex" />`,
           `<div class="p-0 sm:p-0 {someVar}sm:block flex md:inline" />`,
         ],
-        ['<div class={`sm:p-0\np-0`} />', '<div class={`p-0 sm:p-0`} />'],
         t`{#await promise()} <div class="${yes}" /> {:then} <div class="${yes}" /> {/await}`,
         t`{#await promise() then} <div class="${yes}" /> {/await}`,
 
@@ -435,6 +434,12 @@ import Custom from '../components/Custom.astro'
 
         // Escapes
         t`<div class={"before:content-['\\\\2248']"}></div>`,
+
+        // Preserve whitespace in template strings
+        [
+          `<div class={\`underline  flex\`}></div>`,
+          `<div class={\`flex  underline\`}></div>`,
+        ],
       ],
     },
   },

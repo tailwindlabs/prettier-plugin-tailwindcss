@@ -39,7 +39,7 @@
     "@prettier/plugin-pug": "^3.0",
     "@shopify/prettier-plugin-liquid": "^1.4.0",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
-    "@zackad/prettier-plugin-twig": "^0.11",
+    "@zackad/prettier-plugin-twig": "^0.14",
     "ast-types": "^0.14.2",
     "clear-module": "^4.1.2",
     "cpy-cli": "^5.0.0",

@@ -13,6 +13,15 @@ export const options: Record<string, SupportOption> = {
     type: 'string',
     category: 'Tailwind CSS',
     description: 'Path to the CSS entrypoint in your Tailwind project (v4+)',
+
+    // Can't include this otherwise the option is not passed to parsers
+    // deprecated: "This option is deprecated. Use 'tailwindStylesheet' instead.",
+  },
+
+  tailwindStylesheet: {
+    type: 'string',
+    category: 'Tailwind CSS',
+    description: 'Path to the CSS stylesheet in your Tailwind project (v4+)',
   },
 
   tailwindAttributes: {

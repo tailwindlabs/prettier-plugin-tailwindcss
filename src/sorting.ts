@@ -53,7 +53,11 @@ function reorderClasses(classList: string[], { env }: { env: TransformerEnv }) {
     ? env.context.getClassOrder(classList)
     : getClassOrderPolyfill(classList, { env })
 
-  return orderedClasses.sort(([, a], [, z]) => {
+  return orderedClasses.sort(([nameA, a], [nameZ, z]) => {
+    // Move `...` to the end of the list
+    if (nameA === '...' || nameA === '…') return 1
+    if (nameZ === '...' || nameZ === '…') return -1
+
     if (a === z) return 0
     if (a === null) return -1
     if (z === null) return 1

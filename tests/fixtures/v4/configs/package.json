@@ -1,8 +1,8 @@
 {
   "dependencies": {
-    "tailwindcss": "^4.0.0-alpha.23"
+    "tailwindcss": "^4.0.0-alpha.34"
   },
   "prettier": {
-    "tailwindEntryPoint": "./app.css"
+    "tailwindStylesheet": "./app.css"
   }
 }

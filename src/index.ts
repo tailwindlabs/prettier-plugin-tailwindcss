@@ -1197,7 +1197,14 @@ export interface PluginOptions {
   tailwindConfig?: string
 
   /**
-   * Path to the Tailwind entry point (v4+)
+   * Path to the CSS stylesheet used by Tailwind CSS (v4+)
+   */
+  tailwindStylesheet?: string
+
+  /**
+   * Path to the CSS stylesheet used by Tailwind CSS (v4+)
+   *
+   * @deprecated Use `tailwindStylesheet` instead
    */
   tailwindEntryPoint?: string
 

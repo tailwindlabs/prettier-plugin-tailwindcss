@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Add support for `@zackad/prettier-plugin-twig` ([#308](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/308))
+- Dropped support for `@zackad/prettier-plugin-twig-melody` ([#308](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/308))
 
 ## [0.6.9] - 2024-11-19
 

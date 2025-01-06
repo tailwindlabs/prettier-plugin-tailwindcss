@@ -129,11 +129,11 @@ async function loadBuiltinPlugins(): Promise<PluginDetails> {
 
 async function loadThirdPartyPlugins(): Promise<PluginDetails> {
   // Commented out plugins do not currently work with Prettier v3.0
-  let [astro, liquid, marko, melody, pug, svelte] = await Promise.all([
+  let [astro, liquid, marko, twig, pug, svelte] = await Promise.all([
     loadIfExistsESM('prettier-plugin-astro'),
     loadIfExistsESM('@shopify/prettier-plugin-liquid'),
     loadIfExistsESM('prettier-plugin-marko'),
-    loadIfExistsESM('@zackad/prettier-plugin-twig-melody'),
+    loadIfExistsESM('@zackad/prettier-plugin-twig'),
     loadIfExistsESM('@prettier/plugin-pug'),
     loadIfExistsESM('prettier-plugin-svelte'),
   ])
@@ -142,7 +142,7 @@ async function loadThirdPartyPlugins(): Promise<PluginDetails> {
       ...astro.parsers,
       ...liquid.parsers,
       ...marko.parsers,
-      ...melody.parsers,
+      ...twig.parsers,
       ...pug.parsers,
       ...svelte.parsers,
     },

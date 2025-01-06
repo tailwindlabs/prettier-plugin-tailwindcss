@@ -39,7 +39,7 @@
     "@prettier/plugin-pug": "^3.0",
     "@shopify/prettier-plugin-liquid": "^1.4.0",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
-    "@zackad/prettier-plugin-twig-melody": "^0.5.0",
+    "@zackad/prettier-plugin-twig": "^0.14.1",
     "ast-types": "^0.14.2",
     "clear-module": "^4.1.2",
     "cpy-cli": "^5.0.0",
@@ -78,7 +78,7 @@
     "@prettier/plugin-pug": "*",
     "@shopify/prettier-plugin-liquid": "*",
     "@trivago/prettier-plugin-sort-imports": "*",
-    "@zackad/prettier-plugin-twig-melody": "*",
+    "@zackad/prettier-plugin-twig": "*",
     "prettier": "^3.0",
     "prettier-plugin-astro": "*",
     "prettier-plugin-css-order": "*",
@@ -105,7 +105,7 @@
     "@trivago/prettier-plugin-sort-imports": {
       "optional": true
     },
-    "@zackad/prettier-plugin-twig-melody": {
+    "@zackad/prettier-plugin-twig": {
       "optional": true
     },
     "prettier-plugin-astro": {

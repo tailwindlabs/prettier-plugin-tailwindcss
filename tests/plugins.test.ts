@@ -436,9 +436,12 @@ import Custom from '../components/Custom.astro'
         t`<div class={"before:content-['\\\\2248']"}></div>`,
 
         // Preserve whitespace in template strings
+        // This test has lots of whitespace to ensure that the Svelte
+        // parser doesn't produce invalid syntax as output since it breaks
+        // when changing the length of the text.
         [
-          `<div class={\`underline  flex\`}></div>`,
-          `<div class={\`flex  underline\`}></div>`,
+          `<div\n class={\`underline \n flex\`}></div>`,
+          `<div\n  class={\`flex \n underline\`}\n></div>`,
         ],
       ],
     },

@@ -830,11 +830,11 @@ function transformMarko(ast: any, { env }: TransformerContext) {
   }
 }
 
-function transformMelody(ast: any, { env, changes }: TransformerContext) {
+function transformTwig(ast: any, { env, changes }: TransformerContext) {
   let { staticAttrs } = env.customizations
 
   for (let child of ast.expressions ?? []) {
-    transformMelody(child, { env, changes })
+    transformTwig(child, { env, changes })
   }
 
   visit(ast, {
@@ -1167,9 +1167,9 @@ export const parsers: Record<string, Parser> = {
         }),
       }
     : {}),
-  ...(base.parsers.melody
+  ...(base.parsers.twig
     ? {
-        melody: createParser('melody', transformMelody, {
+        twig: createParser('twig', transformTwig, {
           staticAttrs: ['class'],
         }),
       }

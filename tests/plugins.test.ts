@@ -131,17 +131,18 @@ let tests: PluginTest[] = [
     },
   },
   {
-    plugins: ['@zackad/prettier-plugin-twig-melody'],
+    plugins: ['@zackad/prettier-plugin-twig'],
     options: {
       twigAlwaysBreakObjects: false,
     },
     tests: {
-      melody: [
+      twig: [
         [
           `<section class="{{ {base:css.prices}|classes }}"></section>`,
           `<section class="{{ { base: css.prices }|classes }}"></section>`,
         ],
         t`<section class="${yes}"></section>`,
+
         t`<section class="${yes} text-{{ i }}"></section>`,
         t`<section class="${yes} {{ i }}-text"></section>`,
         t`<section class="text-{{ i }} ${yes}"></section>`,

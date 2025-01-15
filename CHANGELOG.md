@@ -12,8 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.6.10] - 2025-01-15
 
 - Add support for `@zackad/prettier-plugin-twig` ([#308](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/308))
-- Dropped support for `@zackad/prettier-plugin-twig-melody` ([#308](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/308))
-- Updated Prettier options types ([#325](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/325))
+- Drop support for `@zackad/prettier-plugin-twig-melody` ([#308](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/308))
+- Update Prettier options types ([#325](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/325))
 - Don't remove whitespace inside template literals in Svelte ([#332](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/332))
 
 ## [0.6.9] - 2024-11-19

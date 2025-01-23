@@ -70,7 +70,7 @@ let fixtures = [
   },
   {
     name: 'v4: configs and plugins',
-    dir: 'v4/configs',
+    dir: 'v4/css-loading-js',
     ext: 'html',
   },
 ]

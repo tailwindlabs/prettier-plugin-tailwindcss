@@ -4,6 +4,7 @@ import * as path from 'path'
 import { pathToFileURL } from 'url'
 import clearModule from 'clear-module'
 import escalade from 'escalade/sync'
+import { createJiti, Jiti } from 'jiti'
 import postcss from 'postcss'
 // @ts-ignore
 import postcssImport from 'postcss-import'
@@ -156,10 +157,12 @@ async function loadTailwindConfig(
  */
 function createLoader<T>({
   legacy,
+  jiti,
   filepath,
   onError,
 }: {
   legacy: boolean
+  jiti: Jiti
   filepath: string
   onError: (id: string, error: unknown, resourceType: string) => T
 }) {
@@ -172,7 +175,7 @@ function createLoader<T>({
       let url = pathToFileURL(resolved)
       url.searchParams.append('t', cacheKey)
 
-      return await import(url.href).then((m) => m.default ?? m)
+      return await jiti.import(url.href, { default: true })
     } catch (err) {
       return onError(id, err, resourceType)
     }
@@ -209,6 +212,12 @@ async function loadV4(
   // If the user doesn't define an entrypoint then we use the default theme
   entryPoint = entryPoint ?? `${pkgDir}/theme.css`
 
+  // Create a Jiti instance that can be used to load plugins and config files
+  let jiti = createJiti(import.meta.url, {
+    moduleCache: false,
+    fsCache: false,
+  })
+
   let importBasePath = path.dirname(entryPoint)
 
   // Resolve imports in the entrypoint to a flat CSS tree
@@ -242,6 +251,7 @@ async function loadV4(
     // v4.0.0-alpha.25+
     loadModule: createLoader({
       legacy: false,
+      jiti,
       filepath: entryPoint,
       onError: (id, err, resourceType) => {
         console.error(`Unable to load ${resourceType}: ${id}`, err)
@@ -266,6 +276,7 @@ async function loadV4(
     // v4.0.0-alpha.24 and below
     loadPlugin: createLoader({
       legacy: true,
+      jiti,
       filepath: entryPoint,
       onError(id, err) {
         console.error(`Unable to load plugin: ${id}`, err)
@@ -276,6 +287,7 @@ async function loadV4(
 
     loadConfig: createLoader({
       legacy: true,
+      jiti,
       filepath: entryPoint,
       onError(id, err) {
         console.error(`Unable to load config: ${id}`, err)

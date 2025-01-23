@@ -4,7 +4,7 @@ import * as path from 'path'
 import { pathToFileURL } from 'url'
 import clearModule from 'clear-module'
 import escalade from 'escalade/sync'
-import { createJiti, Jiti } from 'jiti'
+import { createJiti, type Jiti } from 'jiti'
 import postcss from 'postcss'
 // @ts-ignore
 import postcssImport from 'postcss-import'

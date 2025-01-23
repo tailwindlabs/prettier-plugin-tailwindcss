@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "tailwindcss": "^4.0.0-alpha.34"
+    "tailwindcss": "^4.0.0"
   },
   "prettier": {
     "tailwindStylesheet": "./app.css"

@@ -1,0 +1,21 @@
+@import 'tailwindcss';
+
+/* Load ESM versions */
+@config './esm/my-config.mjs';
+@plugin './esm/my-plugin.mjs';
+
+/* Load Common JS versions */
+@config './cjs/my-config.cjs';
+@plugin './cjs/my-plugin.cjs';
+
+/* Load TypeScript versions */
+@config './ts/my-config.ts';
+@plugin './ts/my-plugin.ts';
+
+/* Attempt to load files that do not exist */
+@config './missing-confg.mjs';
+@plugin './missing-plugin.mjs';
+
+@theme {
+  --color-tomato: tomato;
+}

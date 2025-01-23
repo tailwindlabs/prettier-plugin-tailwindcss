@@ -1,8 +1,0 @@
-@import "tailwindcss";
-
-@config "./tailwind.config.mjs";
-@plugin "./my-plugin.mjs";
-
-@theme {
-  --color-tomato: tomato;
-}

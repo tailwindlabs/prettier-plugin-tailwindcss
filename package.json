@@ -6,7 +6,7 @@
   "license": "MIT",
   "main": "dist/index.mjs",
   "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "types": "dist/index.d.mts",
   "files": [
     "dist"
   ],
@@ -18,13 +18,8 @@
     "url": "https://github.com/tailwindlabs/prettier-plugin-tailwindcss/issues"
   },
   "scripts": {
-    "_pre": "rimraf dist && cpy 'node_modules/tailwindcss/lib/css/*' dist/css",
-    "_esbuild": "node build.mjs",
-    "prebuild": "npm run _pre",
-    "build": "npm run _esbuild -- --minify",
-    "postbuild": "tsup src/index.ts",
-    "predev": "npm run _pre",
-    "dev": "npm run _esbuild -- --watch",
+    "build": "npx tsdown",
+    "dev": "npm run build -- --watch",
     "pretest": "node scripts/install-fixture-deps.js",
     "test": "vitest",
     "prepublishOnly": "npm run build && node scripts/copy-licenses.js",
@@ -48,7 +43,6 @@
     "cpy-cli": "^6.0.0",
     "dedent": "^1.6.0",
     "enhanced-resolve": "^5.18.3",
-    "esbuild": "^0.25.9",
     "escalade": "^3.2.0",
     "import-sort-style-module": "^6.0.0",
     "jiti": "^2.6.0",
@@ -71,10 +65,12 @@
     "recast": "0.20.5",
     "resolve-from": "^5.0.0",
     "rimraf": "^6.0.1",
+    "rolldown": "^1.0.0-beta.39",
+    "rollup-plugin-bundle-stats": "^4.21.3",
     "svelte": "^5.38.2",
-    "tailwindcss-v4": "npm:tailwindcss@^4.1.12",
     "tailwindcss-v3": "npm:tailwindcss@^3.4.17",
-    "tsup": "^8.5.0",
+    "tailwindcss-v4": "npm:tailwindcss@^4.1.12",
+    "tsdown": "^0.15.4",
     "vitest": "^3.2.4"
   },
   "peerDependencies": {

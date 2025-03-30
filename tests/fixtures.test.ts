@@ -8,8 +8,8 @@ import { format, pluginPath } from './utils'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-
 const execAsync = promisify(exec)
+const normalizeLineEndings = (text: string) => text.replace(/\r\n/g, '\n')
 
 let fixtures = [
   {
@@ -114,8 +114,6 @@ describe('fixtures', () => {
     let inputPath = path.resolve(fixturePath, `index.${ext}`)
     let outputPath = path.resolve(fixturePath, `output.${ext}`)
     let cmd = `${binPath} ${inputPath} --plugin ${pluginPath}`
-
-    const normalizeLineEndings = (text: string) => text.replace(/\r\n/g, '\n')
 
     test.concurrent(name, async ({ expect }) => {
       let results = await execAsync(cmd)

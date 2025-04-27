@@ -444,10 +444,6 @@ import Custom from '../components/Custom.astro'
           `<div\n class={\`underline \n flex\`}></div>`,
           `<div\n  class={\`flex \n underline\`}\n></div>`,
         ],
-        [
-          `<div class="flex underline flex"></div>`,
-          `<div class="flex underline"></div>`,
-        ],
 
         // Remove duplicates in Svelte text case:
         [

@@ -557,6 +557,7 @@ function sortTemplateLiteral(
           ignoreFirst: i > 0 && !/^\s/.test(quasi.value.cooked),
           ignoreLast:
             i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
+          removeDuplicates,
           collapseWhitespace: collapseWhitespace && {
             start: collapseWhitespace && collapseWhitespace.start && i === 0,
             end:

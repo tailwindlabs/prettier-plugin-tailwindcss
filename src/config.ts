@@ -29,12 +29,16 @@ let prettierConfigCache = expiringMap<string, string | null>(10_000)
 export async function getTailwindConfig(
   options: ParserOptions,
 ): Promise<ContextContainer> {
+  let pkgName = 'tailwindcss'
+
   let key = [
     options.filepath,
     options.tailwindStylesheet ?? '',
     options.tailwindEntryPoint ?? '',
     options.tailwindConfig ?? '',
+    pkgName,
   ].join(':')
+
   let baseDir = await getBaseDir(options)
 
   // Map the source file to it's associated Tailwind config file
@@ -58,7 +62,12 @@ export async function getTailwindConfig(
   }
 
   // By this point we know we need to load the Tailwind config file
-  let result = await loadTailwindConfig(baseDir, configPath, entryPoint)
+  let result = await loadTailwindConfig(
+    baseDir,
+    pkgName,
+    configPath,
+    entryPoint,
+  )
 
   pathToContextMap.set(contextKey, result)
 
@@ -100,6 +109,7 @@ async function getBaseDir(options: ParserOptions): Promise<string> {
 
 async function loadTailwindConfig(
   baseDir: string,
+  pkgName: string,
   tailwindConfigPath: string | null,
   entryPoint: string | null,
 ): Promise<ContextContainer> {
@@ -110,11 +120,11 @@ async function loadTailwindConfig(
   let tailwindConfig: RequiredConfig = { content: [] }
 
   try {
-    let pkgFile = resolveJsFrom(baseDir, 'tailwindcss/package.json')
+    let pkgFile = resolveJsFrom(baseDir, `${pkgName}/package.json`)
     let pkgDir = path.dirname(pkgFile)
 
     try {
-      let v4 = await loadV4(baseDir, pkgDir, entryPoint)
+      let v4 = await loadV4(baseDir, pkgDir, pkgName, entryPoint)
       if (v4) {
         return v4
       }
@@ -197,10 +207,11 @@ function createLoader<T>({
 async function loadV4(
   baseDir: string,
   pkgDir: string,
+  pkgName: string,
   entryPoint: string | null,
 ) {
   // Import Tailwind — if this is v4 it'll have APIs we can use directly
-  let pkgPath = resolveJsFrom(baseDir, 'tailwindcss')
+  let pkgPath = resolveJsFrom(baseDir, pkgName)
 
   let tw = await import(pathToFileURL(pkgPath).toString())
 

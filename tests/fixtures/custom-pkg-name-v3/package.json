@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "tailwindcss-v3": "npm:tailwindcss@^3.4.17"
+  },
+  "prettier": {
+    "tailwindPackageName": "tailwindcss-v3",
+    "tailwindConfig": "./config.js"
+  }
+}

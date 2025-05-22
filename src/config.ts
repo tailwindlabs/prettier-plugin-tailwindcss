@@ -55,7 +55,7 @@ export async function getTailwindConfig(
   }
 
   // Now see if we've loaded the Tailwind config file before (and it's still valid)
-  let contextKey = `${configPath}:${entryPoint}`
+  let contextKey = `${pkgName}:${configPath}:${entryPoint}`
   let existing = pathToContextMap.get(contextKey)
   if (existing) {
     return existing

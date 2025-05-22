@@ -29,7 +29,7 @@ let prettierConfigCache = expiringMap<string, string | null>(10_000)
 export async function getTailwindConfig(
   options: ParserOptions,
 ): Promise<ContextContainer> {
-  let pkgName = 'tailwindcss'
+  let pkgName = options.tailwindPackageName ?? 'tailwindcss'
 
   let key = [
     options.filepath,

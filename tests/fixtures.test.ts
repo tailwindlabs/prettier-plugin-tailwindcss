@@ -73,6 +73,16 @@ let fixtures = [
     dir: 'v4/css-loading-js',
     ext: 'html',
   },
+  {
+    name: 'custom npm package name: v3',
+    dir: 'custom-pkg-name-v3',
+    ext: 'html',
+  },
+  {
+    name: 'custom npm package name: v4',
+    dir: 'custom-pkg-name-v4',
+    ext: 'html',
+  },
 ]
 
 let configs = [

@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "tailwindcss-v4": "npm:tailwindcss@^4.1.7"
+  },
+  "prettier": {
+    "tailwindPackageName": "tailwindcss-v4",
+    "tailwindStylesheet": "./app.css"
+  }
+}

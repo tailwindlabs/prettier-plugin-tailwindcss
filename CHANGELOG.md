@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+- Support sorting in callable template literals ([#367](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/367))
+- Support sorting in function calls mixed with property accesses ([#367](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/367))
 
 ## [0.6.11] - 2025-01-23
 

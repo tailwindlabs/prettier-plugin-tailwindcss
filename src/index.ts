@@ -596,6 +596,19 @@ function isSortableTemplateExpression(
     }
   }
 
+  if (node.tag.type === 'CallExpression') {
+    let expr = node.tag.callee
+
+    // If the tag is a CallExpression we should traverse all CallExpression's until we find the leading Identifier
+    while (expr.type === 'CallExpression') {
+      expr = expr.callee
+    }
+
+    if (expr.type === 'Identifier') {
+      return functions.has(expr.name)
+    }
+  }
+
   return false
 }
 
@@ -619,6 +632,19 @@ function isSortableCallExpression(
     // If the tag is a MemberExpression we should traverse all MemberExpression's until we find the leading Identifier
     while (expr.type === 'MemberExpression') {
       expr = expr.object
+    }
+
+    if (expr.type === 'Identifier') {
+      return functions.has(expr.name)
+    }
+  }
+
+  if (node.callee.type === 'CallExpression') {
+    let expr = node.callee.callee
+
+    // If the tag is a CallExpression we should traverse all CallExpression's until we find the leading Identifier
+    while (expr.type === 'CallExpression') {
+      expr = expr.callee
     }
 
     if (expr.type === 'Identifier') {

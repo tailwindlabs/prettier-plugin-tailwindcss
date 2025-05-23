@@ -356,8 +356,8 @@ function transformLiquid(ast: any, { env }: TransformerContext) {
   }) {
     return Array.isArray(node.name)
       ? node.name.every(
-          (n) => n.type === 'TextNode' && staticAttrs.has(n.value),
-        )
+        (n) => n.type === 'TextNode' && staticAttrs.has(n.value),
+      )
       : staticAttrs.has(node.name)
   }
 
@@ -549,18 +549,18 @@ function sortTemplateLiteral(
     quasi.value.cooked = same
       ? quasi.value.raw
       : sortClasses(quasi.value.cooked, {
-          env,
-          ignoreFirst: i > 0 && !/^\s/.test(quasi.value.cooked),
-          ignoreLast:
-            i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
-          collapseWhitespace: collapseWhitespace && {
-            start: collapseWhitespace && collapseWhitespace.start && i === 0,
-            end:
-              collapseWhitespace &&
-              collapseWhitespace.end &&
-              i >= node.expressions.length,
-          },
-        })
+        env,
+        ignoreFirst: i > 0 && !/^\s/.test(quasi.value.cooked),
+        ignoreLast:
+          i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
+        collapseWhitespace: collapseWhitespace && {
+          start: collapseWhitespace && collapseWhitespace.start && i === 0,
+          end:
+            collapseWhitespace &&
+            collapseWhitespace.end &&
+            i >= node.expressions.length,
+        },
+      })
 
     if (
       quasi.value.raw !== originalRaw ||
@@ -846,6 +846,23 @@ function transformTwig(ast: any, { env, changes }: TransformerContext) {
 
     StringLiteral(node, path, meta) {
       if (!meta.sortTextNodes) {
+        // Check for .addClass() calls in Drupal Twig templates
+        const isAddClassCall = path.some((entry) => {
+          return (
+            entry.parent &&
+            entry.parent.type === 'CallExpression' &&
+            entry.parent.callee &&
+            entry.parent.callee.type === 'MemberExpression' &&
+            entry.parent.callee.property &&
+            entry.parent.callee.property.name === 'addClass'
+          )
+        })
+
+        if (isAddClassCall) {
+          node.value = sortClasses(node.value, { env })
+          return
+        }
+
         return
       }
 
@@ -952,12 +969,12 @@ function transformSvelte(ast: any, { env, changes }: TransformerContext) {
         value.data = same
           ? value.raw
           : sortClasses(value.data, {
-              env,
-              ignoreFirst: i > 0 && !/^\s/.test(value.data),
-              ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.data),
-              removeDuplicates: false,
-              collapseWhitespace: false,
-            })
+            env,
+            ignoreFirst: i > 0 && !/^\s/.test(value.data),
+            ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.data),
+            removeDuplicates: false,
+            collapseWhitespace: false,
+          })
       } else if (value.type === 'MustacheTag') {
         visit(value.expression, {
           Literal(node) {
@@ -1135,58 +1152,58 @@ export const parsers: Record<string, Parser> = {
 
   ...(base.parsers.svelte
     ? {
-        svelte: createParser('svelte', transformSvelte, {
-          staticAttrs: ['class'],
-        }),
-      }
+      svelte: createParser('svelte', transformSvelte, {
+        staticAttrs: ['class'],
+      }),
+    }
     : {}),
   ...(base.parsers.astro
     ? {
-        astro: createParser('astro', transformAstro, {
-          staticAttrs: ['class', 'className'],
-          dynamicAttrs: ['class:list', 'className'],
-        }),
-      }
+      astro: createParser('astro', transformAstro, {
+        staticAttrs: ['class', 'className'],
+        dynamicAttrs: ['class:list', 'className'],
+      }),
+    }
     : {}),
   ...(base.parsers.astroExpressionParser
     ? {
-        astroExpressionParser: createParser(
-          'astroExpressionParser',
-          transformJavaScript,
-          {
-            staticAttrs: ['class'],
-            dynamicAttrs: ['class:list'],
-          },
-        ),
-      }
+      astroExpressionParser: createParser(
+        'astroExpressionParser',
+        transformJavaScript,
+        {
+          staticAttrs: ['class'],
+          dynamicAttrs: ['class:list'],
+        },
+      ),
+    }
     : {}),
   ...(base.parsers.marko
     ? {
-        marko: createParser('marko', transformMarko, {
-          staticAttrs: ['class'],
-        }),
-      }
+      marko: createParser('marko', transformMarko, {
+        staticAttrs: ['class'],
+      }),
+    }
     : {}),
   ...(base.parsers.twig
     ? {
-        twig: createParser('twig', transformTwig, {
-          staticAttrs: ['class'],
-        }),
-      }
+      twig: createParser('twig', transformTwig, {
+        staticAttrs: ['class'],
+      }),
+    }
     : {}),
   ...(base.parsers.pug
     ? {
-        pug: createParser('pug', transformPug, {
-          staticAttrs: ['class'],
-        }),
-      }
+      pug: createParser('pug', transformPug, {
+        staticAttrs: ['class'],
+      }),
+    }
     : {}),
   ...(base.parsers['liquid-html']
     ? {
-        'liquid-html': createParser('liquid-html', transformLiquid, {
-          staticAttrs: ['class'],
-        }),
-      }
+      'liquid-html': createParser('liquid-html', transformLiquid, {
+        staticAttrs: ['class'],
+      }),
+    }
     : {}),
 }
 

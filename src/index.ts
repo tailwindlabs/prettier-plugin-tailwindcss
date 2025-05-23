@@ -579,37 +579,7 @@ function isSortableTemplateExpression(
     | import('ast-types').namedTypes.TaggedTemplateExpression,
   functions: Set<string>,
 ): boolean {
-  if (node.tag.type === 'Identifier') {
-    return functions.has(node.tag.name)
-  }
-
-  if (node.tag.type === 'MemberExpression') {
-    let expr = node.tag.object
-
-    // If the tag is a MemberExpression we should traverse all MemberExpression's until we find the leading Identifier
-    while (expr.type === 'MemberExpression') {
-      expr = expr.object
-    }
-
-    if (expr.type === 'Identifier') {
-      return functions.has(expr.name)
-    }
-  }
-
-  if (node.tag.type === 'CallExpression') {
-    let expr = node.tag.callee
-
-    // If the tag is a CallExpression we should traverse all CallExpression's until we find the leading Identifier
-    while (expr.type === 'CallExpression') {
-      expr = expr.callee
-    }
-
-    if (expr.type === 'Identifier') {
-      return functions.has(expr.name)
-    }
-  }
-
-  return false
+  return isSortableExpression(node.tag, functions)
 }
 
 function isSortableCallExpression(
@@ -618,38 +588,29 @@ function isSortableCallExpression(
     | import('ast-types').namedTypes.CallExpression,
   functions: Set<string>,
 ): boolean {
-  if (!node.arguments?.length) {
-    return false
+  if (!node.arguments?.length) return false
+
+  return isSortableExpression(node.callee, functions)
+}
+
+function isSortableExpression(
+  node:
+    | import('@babel/types').Expression
+    | import('@babel/types').V8IntrinsicIdentifier
+    | import('ast-types').namedTypes.ASTNode,
+  functions: Set<string>,
+): boolean {
+  // Traverse property accesses and function calls to find the leading ident
+  while (node.type === 'CallExpression' || node.type === 'MemberExpression') {
+    if (node.type === 'CallExpression') {
+      node = node.callee
+    } else if (node.type === 'MemberExpression') {
+      node = node.object
+    }
   }
 
-  if (node.callee.type === 'Identifier') {
-    return functions.has(node.callee.name)
-  }
-
-  if (node.callee.type === 'MemberExpression') {
-    let expr = node.callee.object
-
-    // If the tag is a MemberExpression we should traverse all MemberExpression's until we find the leading Identifier
-    while (expr.type === 'MemberExpression') {
-      expr = expr.object
-    }
-
-    if (expr.type === 'Identifier') {
-      return functions.has(expr.name)
-    }
-  }
-
-  if (node.callee.type === 'CallExpression') {
-    let expr = node.callee.callee
-
-    // If the tag is a CallExpression we should traverse all CallExpression's until we find the leading Identifier
-    while (expr.type === 'CallExpression') {
-      expr = expr.callee
-    }
-
-    if (expr.type === 'Identifier') {
-      return functions.has(expr.name)
-    }
+  if (node.type === 'Identifier') {
+    return functions.has(node.name)
   }
 
   return false

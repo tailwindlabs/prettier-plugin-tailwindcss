@@ -181,7 +181,7 @@ let tests: PluginTest[] = [
         ],
         [
           `{{ attributes.addClass("sm:p-0 " ~ variant ~ " p-0") }}`,
-          `{{ attributes.addClass('sm:p-0' ~ variant ~ 'p-0') }}`,
+          `{{ attributes.addClass('sm:p-0 ' ~ variant ~ ' p-0') }}`,
         ],
         [
           `{{ attributes

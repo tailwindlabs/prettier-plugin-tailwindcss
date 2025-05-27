@@ -831,7 +831,7 @@ function transformMarko(ast: any, { env }: TransformerContext) {
 }
 
 function transformTwig(ast: any, { env, changes }: TransformerContext) {
-  let { staticAttrs } = env.customizations
+  let { staticAttrs, functions } = env.customizations
 
   for (let child of ast.expressions ?? []) {
     transformTwig(child, { env, changes })
@@ -840,6 +840,14 @@ function transformTwig(ast: any, { env, changes }: TransformerContext) {
   visit(ast, {
     Attribute(node, _path, meta) {
       if (!staticAttrs.has(node.name.name)) return
+
+      meta.sortTextNodes = true
+    },
+
+    CallExpression(node, _path, meta) {
+      if (node.callee.type !== 'MemberExpression') return
+      if (!node.callee.property) return
+      if (!functions.has(node.callee.property.name)) return
 
       meta.sortTextNodes = true
     },

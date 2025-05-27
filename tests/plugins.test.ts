@@ -235,7 +235,7 @@ let tests: PluginTest[] = [
             import './three'
             import '@one/file'
             import '@two/file'
-            export default function Foo() { return <div className="p-4 sm:p-0"></div> }
+            export default function Foo() { return <div className="sm:p-0 p-4"></div> }
           `,
           `import '@one/file'\nimport '@two/file'\n\nimport './three'\n\nexport default function Foo() {\n  return <div className="p-4 sm:p-0"></div>\n}`,
         ],
@@ -247,7 +247,7 @@ let tests: PluginTest[] = [
     tests: {
       babel: [
         [
-          `/**\n             * @param {  string   }    param0 description\n             */\n            export default function Foo(param0) { return <div className="p-4 sm:p-0"></div> }`,
+          `/**\n             * @param {  string   }    param0 description\n             */\n            export default function Foo(param0) { return <div className="sm:p-0 p-4"></div> }`,
           `/** @param {string} param0 Description */\nexport default function Foo(param0) {\n  return <div className="p-4 sm:p-0"></div>\n}`,
         ],
       ],

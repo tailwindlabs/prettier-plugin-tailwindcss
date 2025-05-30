@@ -142,10 +142,18 @@ async function loadTailwindConfig(
     loadConfig = require(path.join(pkgDir, 'loadConfig'))
   } catch {}
 
-  if (tailwindConfigPath) {
-    clearModule(tailwindConfigPath)
-    const loadedConfig = loadConfig(tailwindConfigPath)
-    tailwindConfig = loadedConfig.default ?? loadedConfig
+  try {
+    if (tailwindConfigPath) {
+      clearModule(tailwindConfigPath)
+      const loadedConfig = loadConfig(tailwindConfigPath)
+      tailwindConfig = loadedConfig.default ?? loadedConfig
+    }
+  } catch (err) {
+    console.error(
+      `Unable to load your Tailwind CSS v3 config: ${tailwindConfigPath}`,
+    )
+
+    throw err
   }
 
   // suppress "empty content" warning
@@ -232,7 +240,16 @@ async function loadV4(
   let importBasePath = path.dirname(entryPoint)
 
   // Resolve imports in the entrypoint to a flat CSS tree
-  let css = await fs.readFile(entryPoint, 'utf-8')
+  let css: string
+
+  try {
+    css = await fs.readFile(entryPoint, 'utf-8')
+  } catch (err) {
+    console.error(
+      `Unable to load your Tailwind CSS v4 stylesheet: ${entryPoint}`,
+    )
+    throw err
+  }
 
   // Determine if the v4 API supports resolving `@import`
   let supportsImports = false
@@ -354,12 +371,38 @@ function getConfigPath(options: ParserOptions, baseDir: string): string | null {
 
 function getEntryPoint(options: ParserOptions, baseDir: string): string | null {
   if (options.tailwindStylesheet) {
+    if (
+      options.tailwindStylesheet.endsWith('.js') ||
+      options.tailwindStylesheet.endsWith('.mjs') ||
+      options.tailwindStylesheet.endsWith('.cjs') ||
+      options.tailwindStylesheet.endsWith('.ts') ||
+      options.tailwindStylesheet.endsWith('.mts') ||
+      options.tailwindStylesheet.endsWith('.cts')
+    ) {
+      console.error(
+        "Your `tailwindStylesheet` option points to a JS/TS config file. You must point to your project's `.css` file for v4 projects.",
+      )
+    } else if (
+      options.tailwindStylesheet.endsWith('.sass') ||
+      options.tailwindStylesheet.endsWith('.scss') ||
+      options.tailwindStylesheet.endsWith('.less') ||
+      options.tailwindStylesheet.endsWith('.styl')
+    ) {
+      console.error(
+        'Your `tailwindStylesheet` option points to a preprocessor file. This is unsupported and you may get unexpected results.',
+      )
+    } else if (!options.tailwindStylesheet.endsWith('.css')) {
+      console.error(
+        'Your `tailwindStylesheet` option does not point to a CSS file. This is unsupported and you may get unexpected results.',
+      )
+    }
+
     return path.resolve(baseDir, options.tailwindStylesheet)
   }
 
   if (options.tailwindEntryPoint) {
     console.warn(
-      'Use the `tailwindStylesheet` option for v4 projects instead of `tailwindEntryPoint`.',
+      'Deprecated: Use the `tailwindStylesheet` option for v4 projects instead of `tailwindEntryPoint`.',
     )
 
     return path.resolve(baseDir, options.tailwindEntryPoint)
@@ -367,7 +410,7 @@ function getEntryPoint(options: ParserOptions, baseDir: string): string | null {
 
   if (options.tailwindConfig && options.tailwindConfig.endsWith('.css')) {
     console.warn(
-      'Use the `tailwindStylesheet` option for v4 projects instead of `tailwindConfig`.',
+      'Deprecated: Use the `tailwindStylesheet` option for v4 projects instead of `tailwindConfig`.',
     )
 
     return path.resolve(baseDir, options.tailwindConfig)

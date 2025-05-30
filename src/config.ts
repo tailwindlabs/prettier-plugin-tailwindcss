@@ -142,10 +142,18 @@ async function loadTailwindConfig(
     loadConfig = require(path.join(pkgDir, 'loadConfig'))
   } catch {}
 
-  if (tailwindConfigPath) {
-    clearModule(tailwindConfigPath)
-    const loadedConfig = loadConfig(tailwindConfigPath)
-    tailwindConfig = loadedConfig.default ?? loadedConfig
+  try {
+    if (tailwindConfigPath) {
+      clearModule(tailwindConfigPath)
+      const loadedConfig = loadConfig(tailwindConfigPath)
+      tailwindConfig = loadedConfig.default ?? loadedConfig
+    }
+  } catch (err) {
+    console.error(
+      `Unable to load your Tailwind CSS v3 config: ${tailwindConfigPath}`,
+    )
+
+    throw err
   }
 
   // suppress "empty content" warning
@@ -232,7 +240,16 @@ async function loadV4(
   let importBasePath = path.dirname(entryPoint)
 
   // Resolve imports in the entrypoint to a flat CSS tree
-  let css = await fs.readFile(entryPoint, 'utf-8')
+  let css: string
+
+  try {
+    css = await fs.readFile(entryPoint, 'utf-8')
+  } catch (err) {
+    console.error(
+      `Unable to load your Tailwind CSS v4 stylesheet: ${entryPoint}`,
+    )
+    throw err
+  }
 
   // Determine if the v4 API supports resolving `@import`
   let supportsImports = false

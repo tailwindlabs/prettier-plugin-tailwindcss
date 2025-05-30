@@ -9,7 +9,6 @@ import { format, pluginPath } from './utils'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const execAsync = promisify(exec)
-const normalizeLineEndings = (text: string) => text.replace(/\r\n/g, '\n')
 
 let fixtures = [
   {
@@ -117,8 +116,10 @@ describe('fixtures', () => {
 
     test.concurrent(name, async ({ expect }) => {
       let results = await execAsync(cmd)
-      let formatted = normalizeLineEndings(results.stdout)
-      let expected = normalizeLineEndings(await fs.readFile(outputPath, 'utf-8'))
+      let formatted = results.stdout.replace(/\r\n/g, '\n')
+      let expected = await fs
+        .readFile(outputPath, 'utf-8')
+        .then((c) => c.replace(/\r\n/g, '\n'))
 
       expect(formatted.trim()).toEqual(expected.trim())
     })

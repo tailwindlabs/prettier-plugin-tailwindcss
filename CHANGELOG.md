@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Nothing yet!
 
+## [0.6.12] - 2025-05-30
+
+- Add internal (unsupported) option to load Tailwind CSS using a different package name ([#366](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/366))
+
 ## [0.6.11] - 2025-01-23
 
 - Support TypeScript configs and plugins when using v4 ([#342](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/342))

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+- Prevent Svelte files from breaking when there are duplicate classes ([#359](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/359))
 
 ## [0.6.12] - 2025-05-30
 

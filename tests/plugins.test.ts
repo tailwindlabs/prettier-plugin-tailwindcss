@@ -444,6 +444,26 @@ import Custom from '../components/Custom.astro'
           `<div\n class={\`underline \n flex\`}></div>`,
           `<div\n  class={\`flex \n underline\`}\n></div>`,
         ],
+
+        // Duplicates can be removed in simple attributes
+        [
+          `<div class="flex flex underline flex flex"></div>`,
+          `<div class="flex underline"></div>`,
+        ],
+
+        // Duplicates cannot be removed in string literals otherwise invalid
+        // code will be produced during printing.
+        [
+          `<div class={'flex underline flex'}></div>`,
+          `<div class={'flex flex underline'}></div>`,
+        ],
+
+        // Duplicates cannot be removed in template literals otherwise invalid
+        // code will be produced during printing.
+        [
+          `<div class={\`flex underline flex\`}></div>`,
+          `<div class={\`flex flex underline\`}></div>`,
+        ],
       ],
     },
   },

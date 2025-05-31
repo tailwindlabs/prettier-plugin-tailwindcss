@@ -134,6 +134,7 @@ let tests: PluginTest[] = [
     plugins: ['@zackad/prettier-plugin-twig'],
     options: {
       twigAlwaysBreakObjects: false,
+      tailwindFunctions: ['addClass'],
     },
     tests: {
       twig: [
@@ -161,6 +162,33 @@ let tests: PluginTest[] = [
         [
           `<div class="{{ ' flex ' + ' underline ' + ' block ' }}"></div>`,
           `<div class="{{ 'flex ' + ' underline' + ' block' }}"></div>`,
+        ],
+
+        // Drupal attributes.addClass() tests
+        [
+          `<div {{ attributes.addClass("sm:p-0 p-0") }}></div>`,
+          `<div {{ attributes.addClass('p-0 sm:p-0') }}></div>`,
+        ],
+        [
+          `{{ attributes.addClass("sm:p-0 p-0") }}`,
+          `{{ attributes.addClass('p-0 sm:p-0') }}`,
+        ],
+        [
+          `{% set className = "p-0 sm:p-0" %}
+           {{ attributes.addClass(className) }}`,
+          `{% set className = 'p-0 sm:p-0' %}
+{{ attributes.addClass(className) }}`,
+        ],
+        [
+          `{{ attributes.addClass("sm:p-0 " ~ variant ~ " p-0") }}`,
+          `{{ attributes.addClass('sm:p-0 ' ~ variant ~ ' p-0') }}`,
+        ],
+        [
+          `{{ attributes
+                .addClass("sm:p-0 p-0")
+                .addClass("flex block")
+                .addClass("underline") }}`,
+          `{{ attributes.addClass('p-0 sm:p-0').addClass('block flex').addClass('underline') }}`,
         ],
       ],
     },

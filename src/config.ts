@@ -123,12 +123,18 @@ async function loadTailwindConfig(
     let pkgFile = resolveJsFrom(baseDir, `${pkgName}/package.json`)
     let pkgDir = path.dirname(pkgFile)
 
+    // If the user doesn't define an entrypoint then we use the default theme
+    entryPoint = entryPoint ?? `${pkgDir}/theme.css`
+
     try {
-      let v4 = await loadV4(baseDir, pkgDir, pkgName, entryPoint)
-      if (v4) {
-        return v4
-      }
-    } catch {}
+      let v4 = await loadV4(baseDir, pkgName, entryPoint)
+      if (v4) return v4
+    } catch (err) {
+      console.error(
+        `Unable to load your Tailwind CSS v4 stylesheet: ${entryPoint}`,
+      )
+      console.error(err)
+    }
 
     resolveConfig = require(path.join(pkgDir, 'resolveConfig'))
     createContext = require(
@@ -212,24 +218,14 @@ function createLoader<T>({
   }
 }
 
-async function loadV4(
-  baseDir: string,
-  pkgDir: string,
-  pkgName: string,
-  entryPoint: string | null,
-) {
+async function loadV4(baseDir: string, pkgName: string, entryPoint: string) {
   // Import Tailwind — if this is v4 it'll have APIs we can use directly
   let pkgPath = resolveJsFrom(baseDir, pkgName)
 
   let tw = await import(pathToFileURL(pkgPath).toString())
 
   // This is not Tailwind v4
-  if (!tw.__unstable__loadDesignSystem) {
-    return null
-  }
-
-  // If the user doesn't define an entrypoint then we use the default theme
-  entryPoint = entryPoint ?? `${pkgDir}/theme.css`
+  if (!tw.__unstable__loadDesignSystem) return null
 
   // Create a Jiti instance that can be used to load plugins and config files
   let jiti = createJiti(import.meta.url, {
@@ -242,14 +238,7 @@ async function loadV4(
   // Resolve imports in the entrypoint to a flat CSS tree
   let css: string
 
-  try {
-    css = await fs.readFile(entryPoint, 'utf-8')
-  } catch (err) {
-    console.error(
-      `Unable to load your Tailwind CSS v4 stylesheet: ${entryPoint}`,
-    )
-    throw err
-  }
+  css = await fs.readFile(entryPoint, 'utf-8')
 
   // Determine if the v4 API supports resolving `@import`
   let supportsImports = false

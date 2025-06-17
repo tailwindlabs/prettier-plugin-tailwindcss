@@ -1,4 +1,5 @@
 import { createRequire } from 'node:module'
+import dedent from 'dedent'
 import { test } from 'vitest'
 import type { TestEntry } from './utils.js'
 import { format, no, pluginPath, t, yes } from './utils.js'
@@ -463,6 +464,57 @@ import Custom from '../components/Custom.astro'
         [
           `<div class={\`flex underline flex\`}></div>`,
           `<div class={\`flex flex underline\`}></div>`,
+        ],
+      ],
+    },
+  },
+
+  // This test ensures that our plugin works with the multiline array, JSDoc,
+  // and import sorting plugins when used together.
+  //
+  // The plugins actually have to be *imported* in a specific order for
+  // them to function correctly *together*.
+  {
+    plugins: [
+      'prettier-plugin-multiline-arrays',
+      '@trivago/prettier-plugin-sort-imports',
+      'prettier-plugin-jsdoc',
+    ],
+    options: {
+      multilineArraysWrapThreshold: 0,
+      importOrder: ['^@one/(.*)$', '^@two/(.*)$', '^[./]'],
+      importOrderSortSpecifiers: true,
+    },
+    tests: {
+      babel: [
+        [
+          dedent`
+            import './three'
+            import '@two/file'
+            import '@one/file'
+
+            /**
+              * - Position
+              */
+            const position = {}
+            const arr = ['a', 'b', 'c', 'd', 'e', 'f']
+          `,
+          dedent`
+            import '@one/file'
+            import '@two/file'
+            import './three'
+
+            /** - Position */
+            const position = {}
+            const arr = [
+              'a',
+              'b',
+              'c',
+              'd',
+              'e',
+              'f',
+            ]
+          `,
         ],
       ],
     },

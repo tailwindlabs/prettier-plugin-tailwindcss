@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Prevent Svelte files from breaking when there are duplicate classes ([#359](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/359))
+- Ensure `prettier-plugin-multiline-arrays` and `prettier-plugin-jsdoc` work used together with this plugin ([#372](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/372))
 
 ## [0.6.12] - 2025-05-30
 

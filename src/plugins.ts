@@ -157,12 +157,19 @@ async function loadCompatiblePlugins() {
     'prettier-plugin-css-order',
     'prettier-plugin-organize-attributes',
     'prettier-plugin-style-order',
+
+    // The following plugins must come *before* the jsdoc plugin for it to
+    // function correctly. Additionally `multiline-arrays` usually needs to be
+    // placed before import sorting plugins.
+    //
+    // https://github.com/electrovir/prettier-plugin-multiline-arrays#compatibility
     'prettier-plugin-multiline-arrays',
     '@ianvs/prettier-plugin-sort-imports',
     '@trivago/prettier-plugin-sort-imports',
     'prettier-plugin-import-sort',
     'prettier-plugin-organize-imports',
     'prettier-plugin-sort-imports',
+
     'prettier-plugin-jsdoc',
   ]
 

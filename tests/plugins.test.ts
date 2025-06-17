@@ -469,15 +469,30 @@ import Custom from '../components/Custom.astro'
     },
   },
 
+  // This test ensures that our plugin works with the multiline array, JSDoc,
+  // and import sorting plugins when used together.
+  //
+  // The plugins actually have to be *imported* in a specific order for
+  // them to function correctly *together*.
   {
-    plugins: ['prettier-plugin-multiline-arrays', 'prettier-plugin-jsdoc'],
+    plugins: [
+      'prettier-plugin-multiline-arrays',
+      '@trivago/prettier-plugin-sort-imports',
+      'prettier-plugin-jsdoc',
+    ],
     options: {
       multilineArraysWrapThreshold: 0,
+      importOrder: ['^@one/(.*)$', '^@two/(.*)$', '^[./]'],
+      importOrderSortSpecifiers: true,
     },
     tests: {
-      typescript: [
+      babel: [
         [
           dedent`
+            import './three'
+            import '@two/file'
+            import '@one/file'
+
             /**
               * - Position
               */
@@ -485,6 +500,10 @@ import Custom from '../components/Custom.astro'
             const arr = ['a', 'b', 'c', 'd', 'e', 'f']
           `,
           dedent`
+            import '@one/file'
+            import '@two/file'
+            import './three'
+
             /** - Position */
             const position = {}
             const arr = [

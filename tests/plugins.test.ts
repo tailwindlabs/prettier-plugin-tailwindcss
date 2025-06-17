@@ -1,4 +1,5 @@
 import { createRequire } from 'node:module'
+import dedent from 'dedent'
 import { test } from 'vitest'
 import type { TestEntry } from './utils.js'
 import { format, no, pluginPath, t, yes } from './utils.js'
@@ -463,6 +464,38 @@ import Custom from '../components/Custom.astro'
         [
           `<div class={\`flex underline flex\`}></div>`,
           `<div class={\`flex flex underline\`}></div>`,
+        ],
+      ],
+    },
+  },
+
+  {
+    plugins: ['prettier-plugin-multiline-arrays', 'prettier-plugin-jsdoc'],
+    options: {
+      multilineArraysWrapThreshold: 0,
+    },
+    tests: {
+      typescript: [
+        [
+          dedent`
+            /**
+              * - Position
+              */
+            const position = {}
+            const arr = ['a', 'b', 'c', 'd', 'e', 'f']
+          `,
+          dedent`
+            /** - Position */
+            const position = {}
+            const arr = [
+              'a',
+              'b',
+              'c',
+              'd',
+              'e',
+              'f',
+            ]
+          `,
         ],
       ],
     },

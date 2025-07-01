@@ -128,24 +128,32 @@ async function loadBuiltinPlugins(): Promise<PluginDetails> {
 }
 
 async function loadThirdPartyPlugins(): Promise<PluginDetails> {
-  let [astro, liquid, marko, twig, pug, svelte] = await Promise.all([
-    loadIfExistsESM('prettier-plugin-astro'),
-    loadIfExistsESM('@shopify/prettier-plugin-liquid'),
-    loadIfExistsESM('prettier-plugin-marko'),
-    loadIfExistsESM('@zackad/prettier-plugin-twig'),
-    loadIfExistsESM('@prettier/plugin-pug'),
-    loadIfExistsESM('prettier-plugin-svelte'),
-  ])
+  let [astro, liquid, marko, twig, hermes, oxc, pug, svelte] =
+    await Promise.all([
+      loadIfExistsESM('prettier-plugin-astro'),
+      loadIfExistsESM('@shopify/prettier-plugin-liquid'),
+      loadIfExistsESM('prettier-plugin-marko'),
+      loadIfExistsESM('@zackad/prettier-plugin-twig'),
+      loadIfExistsESM('@prettier/plugin-hermes'),
+      loadIfExistsESM('@prettier/plugin-oxc'),
+      loadIfExistsESM('@prettier/plugin-pug'),
+      loadIfExistsESM('prettier-plugin-svelte'),
+    ])
+
   return {
     parsers: {
       ...astro.parsers,
       ...liquid.parsers,
       ...marko.parsers,
       ...twig.parsers,
+      ...hermes.parsers,
+      ...oxc.parsers,
       ...pug.parsers,
       ...svelte.parsers,
     },
     printers: {
+      ...hermes.printers,
+      ...oxc.printers,
       ...svelte.printers,
     },
   }

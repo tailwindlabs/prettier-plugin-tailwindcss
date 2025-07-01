@@ -634,6 +634,10 @@ function isSortableCallExpression(
   return false
 }
 
+// TODO: The `ast` types here aren't strictly correct.
+//
+// We cross several parsers that share roughly the same shape so things are
+// good enough. The actual AST we should be using is probably estree + ts.
 function transformJavaScript(
   ast: import('@babel/types').Node,
   { env }: TransformerContext,
@@ -1118,11 +1122,22 @@ export const parsers: Record<string, Parser> = {
     staticAttrs: ['class', 'className'],
   }),
 
+  hermes: createParser('hermes', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
   typescript: createParser('typescript', transformJavaScript, {
     staticAttrs: ['class', 'className'],
   }),
 
   'babel-ts': createParser('babel-ts', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  oxc: createParser('oxc', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+  'oxc-ts': createParser('oxc', transformJavaScript, {
     staticAttrs: ['class', 'className'],
   }),
 

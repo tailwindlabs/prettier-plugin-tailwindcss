@@ -141,6 +141,44 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
         }),
       })
     },
+
+    TemplateLiteral(node, path) {
+      if (!node.quasis.length) return
+
+      let concat = path.find((entry) => {
+        return (
+          entry.parent &&
+          entry.parent.type === 'BinaryExpression' &&
+          entry.parent.operator === '+'
+        )
+      })
+
+      for (let i = 0; i < node.quasis.length; i++) {
+        let quasi = node.quasis[i]
+
+        changes.push({
+          start: quasi.start,
+          end: quasi.end,
+          before: quasi.value.raw,
+          after: sortClasses(quasi.value.raw, {
+            env,
+
+            // Is not the first "item" and does not start with a space
+            ignoreFirst: i > 0 && !/^\s/.test(quasi.value.raw),
+
+            // Is between two expressions
+            // And does not end with a space
+            ignoreLast:
+              i < node.expressions.length && !/\s$/.test(quasi.value.raw),
+
+            collapseWhitespace: {
+              start: concat?.key !== 'right' && i === 0,
+              end: concat?.key !== 'left' && i >= node.expressions.length,
+            },
+          }),
+        })
+      }
+    },
   })
 
   attr.value = spliceChangesIntoString(attr.value, changes)

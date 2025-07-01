@@ -1,6 +1,7 @@
 import { createRequire } from 'node:module'
 import dedent from 'dedent'
 import { test } from 'vitest'
+import { javascript } from './tests.js'
 import type { TestEntry } from './utils.js'
 import { format, no, pluginPath, t, yes } from './utils.js'
 
@@ -164,6 +165,19 @@ let tests: PluginTest[] = [
           `<div class="{{ 'flex ' + ' underline' + ' block' }}"></div>`,
         ],
       ],
+    },
+  },
+  {
+    plugins: ['@prettier/plugin-hermes'],
+    tests: {
+      hermes: javascript,
+    },
+  },
+  {
+    plugins: ['@prettier/plugin-oxc'],
+    tests: {
+      oxc: javascript,
+      'oxc-ts': javascript,
     },
   },
   {

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+- Add support for OXC + Hermes Prettier plugins ([#376](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/376))
 
 ## [0.6.13] - 2025-06-19
 

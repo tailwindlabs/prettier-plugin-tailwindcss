@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Add support for OXC + Hermes Prettier plugins ([#376](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/376))
+- Sort template literals in Angular expressions ([#377](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/377))
 
 ## [0.6.13] - 2025-06-19
 

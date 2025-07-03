@@ -239,8 +239,7 @@ export let tests: Record<string, TestEntry[]> = {
     // TODO: Enable this test — it causes console noise but not a failure
     // t`<div [ngClass]="{ '${no}': foo && definitely&a:syntax*error }" class="${yes}"></div>`,
 
-    // TODO: Enable test once we can run all tests against Prettier v3.6
-    // t`<div [ngClass]="\`${yes}\`"></div>`,
+    t`<div [ngClass]="\`${yes}\`"></div>`,
   ],
   css: [...css, t`@apply ${yes} !important;`],
   scss: [

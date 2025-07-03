@@ -49,6 +49,13 @@ export async function loadPlugins() {
     let path = maybeResolve(name)
 
     for (let plugin of options.plugins) {
+      if (plugin instanceof URL) {
+        if (plugin.protocol !== 'file:') continue
+        if (plugin.hostname !== '') continue
+
+        plugin = plugin.pathname
+      }
+
       if (typeof plugin === 'string') {
         if (plugin === name || plugin === path) {
           return mod

@@ -1175,7 +1175,7 @@ export const parsers: Record<string, Parser> = {
   oxc: createParser('oxc', transformJavaScript, {
     staticAttrs: ['class', 'className'],
   }),
-  'oxc-ts': createParser('oxc', transformJavaScript, {
+  'oxc-ts': createParser('oxc-ts', transformJavaScript, {
     staticAttrs: ['class', 'className'],
   }),
 

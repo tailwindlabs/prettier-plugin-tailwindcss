@@ -17,3 +17,4 @@ const n = no.tw('sm:p-1 p-2');
 
 const A = (props) => <div className={props.sortMe} />;
 const B = () => <A sortMe="sm:p-1 p-2" dontSort="sm:p-1 p-2" />;
+const C = <A className="[&>.a\_p]:after:content-['\2'] [&>.a\_p]:z-0" />;

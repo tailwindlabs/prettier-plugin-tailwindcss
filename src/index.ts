@@ -28,6 +28,9 @@ import { spliceChangesIntoString, visit } from './utils.js'
 
 let base = await loadPlugins()
 
+// Regex to match backslashes that are followed by characters that form escape sequences
+const ESCAPE_SEQUENCE_BACKSLASH_REGEX = /\\(['"\\nrtbfv0-7xuU])/g
+
 function createParser(
   parserFormat: string,
   transform: (ast: any, context: TransformerContext) => void,
@@ -508,36 +511,30 @@ function sortStringLiteral(
   let didChange = result !== node.value
   node.value = result
 
-  // A string literal was escaped if:
-  // - There are backslashes in the raw value; AND
-  // - The raw value is not the same as the value (excluding the surrounding quotes)
-  let wasEscaped = false
+  // Preserve the original escaping level for the new content
+  let raw = node.extra?.raw || node.raw
+  let quote = raw[0]
+  let originalRawContent = raw.slice(1, -1)
+  let originalValue = node.extra?.rawValue || node.value
 
-  if (node.extra) {
-    // JavaScript (StringLiteral)
-    wasEscaped =
-      node.extra?.rawValue.includes('\\') &&
-      node.extra?.raw.slice(1, -1) !== node.value
-  } else {
-    // TypeScript (Literal)
-    wasEscaped =
-      node.value.includes('\\') && node.raw.slice(1, -1) !== node.value
+  // If the original had escaping, apply the same escaping pattern to the result
+  let newRawContent = result
+  if (originalRawContent !== originalValue && originalValue.includes('\\')) {
+    // The original was escaped, so we need to escape the result in the same way
+    // But only escape backslashes that are followed by characters that form escape sequences
+    newRawContent = result.replace(ESCAPE_SEQUENCE_BACKSLASH_REGEX, '\\\\$1')
   }
 
-  let escaped = wasEscaped ? result.replace(/\\/g, '\\\\') : result
-
   if (node.extra) {
     // JavaScript (StringLiteral)
-    let raw = node.extra.raw
     node.extra = {
       ...node.extra,
       rawValue: result,
-      raw: raw[0] + escaped + raw.slice(-1),
+      raw: quote + newRawContent + quote,
     }
   } else {
     // TypeScript (Literal)
-    let raw = node.raw
-    node.raw = raw[0] + escaped + raw.slice(-1)
+    node.raw = quote + newRawContent + quote
   }
   return didChange
 }

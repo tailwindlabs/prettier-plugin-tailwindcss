@@ -28,8 +28,7 @@ import { spliceChangesIntoString, visit } from './utils.js'
 
 let base = await loadPlugins()
 
-// Regex to match backslashes that are followed by characters that form escape sequences
-const ESCAPE_SEQUENCE_BACKSLASH_REGEX = /\\(['"\\nrtbfv0-7xuU])/g
+const ESCAPE_SEQUENCE_PATTERN = /\\(['"\\nrtbfv0-7xuU])/g
 
 function createParser(
   parserFormat: string,
@@ -527,7 +526,7 @@ function sortStringLiteral(
   if (originalRawContent !== originalValue && originalValue.includes('\\')) {
     // The original was escaped, so we need to escape the result in the same way
     // But only escape backslashes that are followed by characters that form escape sequences
-    newRawContent = result.replace(ESCAPE_SEQUENCE_BACKSLASH_REGEX, '\\\\$1')
+    newRawContent = result.replace(ESCAPE_SEQUENCE_PATTERN, '\\\\$1')
   }
 
   if (node.extra) {

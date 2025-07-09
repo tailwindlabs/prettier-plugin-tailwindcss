@@ -141,6 +141,44 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
         }),
       })
     },
+
+    TemplateLiteral(node, path) {
+      if (!node.quasis.length) return
+
+      let concat = path.find((entry) => {
+        return (
+          entry.parent &&
+          entry.parent.type === 'BinaryExpression' &&
+          entry.parent.operator === '+'
+        )
+      })
+
+      for (let i = 0; i < node.quasis.length; i++) {
+        let quasi = node.quasis[i]
+
+        changes.push({
+          start: quasi.start,
+          end: quasi.end,
+          before: quasi.value.raw,
+          after: sortClasses(quasi.value.raw, {
+            env,
+
+            // Is not the first "item" and does not start with a space
+            ignoreFirst: i > 0 && !/^\s/.test(quasi.value.raw),
+
+            // Is between two expressions
+            // And does not end with a space
+            ignoreLast:
+              i < node.expressions.length && !/\s$/.test(quasi.value.raw),
+
+            collapseWhitespace: {
+              start: concat?.key !== 'right' && i === 0,
+              end: concat?.key !== 'left' && i >= node.expressions.length,
+            },
+          }),
+        })
+      }
+    },
   })
 
   attr.value = spliceChangesIntoString(attr.value, changes)
@@ -454,6 +492,7 @@ function sortStringLiteral(
   node: any,
   {
     env,
+    removeDuplicates,
     collapseWhitespace = { start: true, end: true },
   }: {
     env: TransformerEnv
@@ -463,6 +502,7 @@ function sortStringLiteral(
 ) {
   let result = sortClasses(node.value, {
     env,
+    removeDuplicates,
     collapseWhitespace,
   })
   let didChange = result !== node.value
@@ -513,6 +553,7 @@ function sortTemplateLiteral(
   node: any,
   {
     env,
+    removeDuplicates,
     collapseWhitespace = { start: true, end: true },
   }: {
     env: TransformerEnv
@@ -530,6 +571,7 @@ function sortTemplateLiteral(
 
     quasi.value.raw = sortClasses(quasi.value.raw, {
       env,
+      removeDuplicates,
       // Is not the first "item" and does not start with a space
       ignoreFirst: i > 0 && !/^\s/.test(quasi.value.raw),
 
@@ -553,6 +595,7 @@ function sortTemplateLiteral(
           ignoreFirst: i > 0 && !/^\s/.test(quasi.value.cooked),
           ignoreLast:
             i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
+          removeDuplicates,
           collapseWhitespace: collapseWhitespace && {
             start: collapseWhitespace && collapseWhitespace.start && i === 0,
             end:
@@ -616,6 +659,10 @@ function isSortableExpression(
   return false
 }
 
+// TODO: The `ast` types here aren't strictly correct.
+//
+// We cross several parsers that share roughly the same shape so things are
+// good enough. The actual AST we should be using is probably estree + ts.
 function transformJavaScript(
   ast: import('@babel/types').Node,
   { env }: TransformerContext,
@@ -933,7 +980,7 @@ function transformSvelte(ast: any, { env, changes }: TransformerContext) {
           env,
           ignoreFirst: i > 0 && !/^\s/.test(value.raw),
           ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.raw),
-          removeDuplicates: false,
+          removeDuplicates: true,
           collapseWhitespace: false,
         })
         value.data = same
@@ -942,7 +989,7 @@ function transformSvelte(ast: any, { env, changes }: TransformerContext) {
               env,
               ignoreFirst: i > 0 && !/^\s/.test(value.data),
               ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.data),
-              removeDuplicates: false,
+              removeDuplicates: true,
               collapseWhitespace: false,
             })
       } else if (value.type === 'MustacheTag') {
@@ -1100,11 +1147,22 @@ export const parsers: Record<string, Parser> = {
     staticAttrs: ['class', 'className'],
   }),
 
+  hermes: createParser('hermes', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
   typescript: createParser('typescript', transformJavaScript, {
     staticAttrs: ['class', 'className'],
   }),
 
   'babel-ts': createParser('babel-ts', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  oxc: createParser('oxc', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+  'oxc-ts': createParser('oxc-ts', transformJavaScript, {
     staticAttrs: ['class', 'className'],
   }),
 

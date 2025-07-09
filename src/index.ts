@@ -520,25 +520,25 @@ function sortStringLiteral(
   let originalRawContent = raw.slice(1, -1)
   let originalValue = node.extra?.rawValue ?? node.value
 
-  // If the original had escaping, apply the same escaping pattern to the result
-  let newRawContent = result
-
   if (node.extra) {
+    // The original list has ecapes so we ensure that the sorted list also
+    // maintains those by replacing backslashes from escape sequences.
+    //
+    // It seems that TypeScript-based ASTs don't need this special handling
+    // which is why this is guarded inside the `node.extra` check
     if (originalRawContent !== originalValue && originalValue.includes('\\')) {
-      // The original was escaped, so we need to escape the result in the same way
-      // But only escape backslashes that are followed by characters that form escape sequences
-      newRawContent = result.replace(ESCAPE_SEQUENCE_PATTERN, '\\\\$1')
+      result = result.replace(ESCAPE_SEQUENCE_PATTERN, '\\\\$1')
     }
 
     // JavaScript (StringLiteral)
     node.extra = {
       ...node.extra,
       rawValue: result,
-      raw: quote + newRawContent + quote,
+      raw: quote + result + quote,
     }
   } else {
     // TypeScript (Literal)
-    node.raw = quote + newRawContent + quote
+    node.raw = quote + result + quote
   }
 
   return true

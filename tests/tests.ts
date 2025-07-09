@@ -111,6 +111,10 @@ export let javascript: TestEntry[] = [
     `;<div class={'object-cover' + (standalone ? ' aspect-square w-full' : ' min-h-0 grow basis-0')}></div>`,
     `;<div class={'object-cover' + (standalone ? ' aspect-square w-full' : ' min-h-0 grow basis-0')}></div>`,
   ],
+  [
+    `;<div class="[&>.a\\_p]:after:content-['\\2'] [&>.a\\_p]:z-0"></div>`,
+    `;<div class="[&>.a\\_p]:z-0 [&>.a\\_p]:after:content-['\\2']"></div>`,
+  ],
 ]
 javascript = javascript.concat(
   javascript.map((test) => [

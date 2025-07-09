@@ -523,13 +523,13 @@ function sortStringLiteral(
   // If the original had escaping, apply the same escaping pattern to the result
   let newRawContent = result
 
-  if (originalRawContent !== originalValue && originalValue.includes('\\')) {
-    // The original was escaped, so we need to escape the result in the same way
-    // But only escape backslashes that are followed by characters that form escape sequences
-    newRawContent = result.replace(ESCAPE_SEQUENCE_PATTERN, '\\\\$1')
-  }
-
   if (node.extra) {
+    if (originalRawContent !== originalValue && originalValue.includes('\\')) {
+      // The original was escaped, so we need to escape the result in the same way
+      // But only escape backslashes that are followed by characters that form escape sequences
+      newRawContent = result.replace(ESCAPE_SEQUENCE_PATTERN, '\\\\$1')
+    }
+
     // JavaScript (StringLiteral)
     node.extra = {
       ...node.extra,

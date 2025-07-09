@@ -510,6 +510,9 @@ function sortStringLiteral(
   })
 
   let didChange = result !== node.value
+
+  if (!didChange) return false
+
   node.value = result
 
   // Preserve the original escaping level for the new content
@@ -539,7 +542,7 @@ function sortStringLiteral(
     node.raw = quote + newRawContent + quote
   }
 
-  return didChange
+  return true
 }
 
 function isStringLiteral(node: any) {

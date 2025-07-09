@@ -508,17 +508,19 @@ function sortStringLiteral(
     removeDuplicates,
     collapseWhitespace,
   })
+
   let didChange = result !== node.value
   node.value = result
 
   // Preserve the original escaping level for the new content
-  let raw = node.extra?.raw || node.raw
+  let raw = node.extra?.raw ?? node.raw
   let quote = raw[0]
   let originalRawContent = raw.slice(1, -1)
-  let originalValue = node.extra?.rawValue || node.value
+  let originalValue = node.extra?.rawValue ?? node.value
 
   // If the original had escaping, apply the same escaping pattern to the result
   let newRawContent = result
+
   if (originalRawContent !== originalValue && originalValue.includes('\\')) {
     // The original was escaped, so we need to escape the result in the same way
     // But only escape backslashes that are followed by characters that form escape sequences
@@ -536,6 +538,7 @@ function sortStringLiteral(
     // TypeScript (Literal)
     node.raw = quote + newRawContent + quote
   }
+
   return didChange
 }
 

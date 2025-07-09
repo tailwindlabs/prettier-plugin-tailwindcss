@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add support for OXC + Hermes Prettier plugins ([#376](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/376), [#380](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/380))
 - Sort template literals in Angular expressions ([#377](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/377))
+- Don't repeatedly add backslashes to escape sequences when formatting ([#381](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/381))
 
 ## [0.6.13] - 2025-06-19
 

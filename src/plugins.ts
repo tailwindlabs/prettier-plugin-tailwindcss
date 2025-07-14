@@ -184,6 +184,7 @@ async function loadCompatiblePlugins() {
     'prettier-plugin-import-sort',
     'prettier-plugin-organize-imports',
     'prettier-plugin-sort-imports',
+    'prettier-plugin-jsx-attr-sort',
 
     'prettier-plugin-jsdoc',
   ]

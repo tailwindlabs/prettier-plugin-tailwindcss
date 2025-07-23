@@ -786,7 +786,38 @@ function transformJavaScript(
 }
 
 function transformCss(ast: any, { env }: TransformerContext) {
+  // `parseValue` inside Prettier's CSS parser is private API so we have to
+  // produce the same result by parsing an import statement with the same params
+  function tryParseAtRuleParams(name: string, params: any) {
+    // It might already be an object or array. Could happen in the future if
+    // Prettier decides to start parsing these.
+    if (typeof params !== 'string') return params
+
+    // Otherwise we let prettier re-parse the params into its custom value AST
+    // based on postcss-value parser.
+    try {
+      let parser = base.parsers['css']
+      let root = parser.parse(`@import ${params};`, env.options)
+
+      return root.nodes[0].params
+    } catch (err) {
+      console.warn(`[prettier-plugin-tailwindcss] Unable to parse at rule`)
+      console.warn({ name, params })
+      console.warn(err)
+    }
+
+    return params
+  }
+
   ast.walk((node: any) => {
+    if (
+      node.name === 'plugin' ||
+      node.name === 'config' ||
+      node.name === 'source'
+    ) {
+      node.params = tryParseAtRuleParams(node.name, node.params)
+    }
+
     if (node.type === 'css-atrule' && node.name === 'apply') {
       let isImportant = /\s+(?:!important|#{(['"]*)!important\1})\s*$/.test(
         node.params,

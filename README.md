@@ -19,7 +19,7 @@ Then add the plugin to your [Prettier configuration](https://prettier.io/docs/en
 }
 ```
 
-If using a JavaScript config, you can import the types for intellisense/autocomplete:
+When using a JavaScript config, you can import the types for IntelliSense:
 
 ```js
 // prettier.config.js

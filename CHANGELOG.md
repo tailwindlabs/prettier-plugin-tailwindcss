@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+- Don't augment global Prettier `ParserOptions` and `RequiredOptions` types ([#354](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/354))
 
 ## [0.6.14] - 2025-07-09
 

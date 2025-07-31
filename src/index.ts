@@ -796,7 +796,7 @@ function transformCss(ast: any, { env }: TransformerContext) {
     // Otherwise we let prettier re-parse the params into its custom value AST
     // based on postcss-value parser.
     try {
-      let parser = base.parsers['css']
+      let parser = base.parsers.css
       let root = parser.parse(`@import ${params};`, env.options)
 
       return root.nodes[0].params

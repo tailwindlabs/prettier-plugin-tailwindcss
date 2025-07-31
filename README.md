@@ -226,7 +226,6 @@ This plugin uses Prettier APIs that can only be used by one plugin at a time, ma
 - `@trivago/prettier-plugin-sort-imports`
 - `prettier-plugin-astro`
 - `prettier-plugin-css-order`
-- `prettier-plugin-import-sort`
 - `prettier-plugin-jsdoc`
 - `prettier-plugin-multiline-arrays`
 - `prettier-plugin-organize-attributes`

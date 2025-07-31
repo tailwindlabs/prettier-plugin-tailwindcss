@@ -181,7 +181,6 @@ async function loadCompatiblePlugins() {
     'prettier-plugin-multiline-arrays',
     '@ianvs/prettier-plugin-sort-imports',
     '@trivago/prettier-plugin-sort-imports',
-    'prettier-plugin-import-sort',
     'prettier-plugin-organize-imports',
     'prettier-plugin-sort-imports',
 

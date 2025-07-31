@@ -1319,8 +1319,3 @@ export interface PluginOptions {
    */
   tailwindPreserveDuplicates?: boolean
 }
-
-declare module 'prettier' {
-  interface RequiredOptions extends PluginOptions {}
-  interface ParserOptions extends PluginOptions {}
-}

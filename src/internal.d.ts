@@ -1,4 +1,6 @@
-export interface InternalOptions {
+import type { PluginOptions } from '.'
+
+export interface InternalOptions extends PluginOptions {
   printer: Printer<any>
 
   /**

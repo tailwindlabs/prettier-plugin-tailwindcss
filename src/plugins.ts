@@ -183,6 +183,7 @@ async function loadCompatiblePlugins() {
     '@trivago/prettier-plugin-sort-imports',
     'prettier-plugin-organize-imports',
     'prettier-plugin-sort-imports',
+    'prettier-plugin-jsx-attr-sort',
 
     'prettier-plugin-jsdoc',
   ]

@@ -912,9 +912,14 @@ function transformTwig(ast: any, { env, changes }: TransformerContext) {
     },
 
     CallExpression(node, _path, meta) {
-      if (node.callee.type !== 'MemberExpression') return
-      if (!node.callee.property) return
-      if (!functions.has(node.callee.property.name)) return
+      if (node.callee.type === 'MemberExpression') {
+        if (!node.callee.property) return
+        if (!functions.has(node.callee.property.name)) return
+      } else if (node.callee.type === 'Identifier') {
+        if (!functions.has(node.callee.name)) return
+      } else {
+        return
+      }
 
       meta.sortTextNodes = true
     },

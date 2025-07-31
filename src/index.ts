@@ -624,24 +624,7 @@ function isSortableTemplateExpression(
     | import('ast-types').namedTypes.TaggedTemplateExpression,
   functions: Set<string>,
 ): boolean {
-  if (node.tag.type === 'Identifier') {
-    return functions.has(node.tag.name)
-  }
-
-  if (node.tag.type === 'MemberExpression') {
-    let expr = node.tag.object
-
-    // If the tag is a MemberExpression we should traverse all MemberExpression's until we find the leading Identifier
-    while (expr.type === 'MemberExpression') {
-      expr = expr.object
-    }
-
-    if (expr.type === 'Identifier') {
-      return functions.has(expr.name)
-    }
-  }
-
-  return false
+  return isSortableExpression(node.tag, functions)
 }
 
 function isSortableCallExpression(
@@ -650,25 +633,29 @@ function isSortableCallExpression(
     | import('ast-types').namedTypes.CallExpression,
   functions: Set<string>,
 ): boolean {
-  if (!node.arguments?.length) {
-    return false
+  if (!node.arguments?.length) return false
+
+  return isSortableExpression(node.callee, functions)
+}
+
+function isSortableExpression(
+  node:
+    | import('@babel/types').Expression
+    | import('@babel/types').V8IntrinsicIdentifier
+    | import('ast-types').namedTypes.ASTNode,
+  functions: Set<string>,
+): boolean {
+  // Traverse property accesses and function calls to find the leading ident
+  while (node.type === 'CallExpression' || node.type === 'MemberExpression') {
+    if (node.type === 'CallExpression') {
+      node = node.callee
+    } else if (node.type === 'MemberExpression') {
+      node = node.object
+    }
   }
 
-  if (node.callee.type === 'Identifier') {
-    return functions.has(node.callee.name)
-  }
-
-  if (node.callee.type === 'MemberExpression') {
-    let expr = node.callee.object
-
-    // If the tag is a MemberExpression we should traverse all MemberExpression's until we find the leading Identifier
-    while (expr.type === 'MemberExpression') {
-      expr = expr.object
-    }
-
-    if (expr.type === 'Identifier') {
-      return functions.has(expr.name)
-    }
+  if (node.type === 'Identifier') {
+    return functions.has(node.name)
   }
 
   return false
@@ -786,7 +773,38 @@ function transformJavaScript(
 }
 
 function transformCss(ast: any, { env }: TransformerContext) {
+  // `parseValue` inside Prettier's CSS parser is private API so we have to
+  // produce the same result by parsing an import statement with the same params
+  function tryParseAtRuleParams(name: string, params: any) {
+    // It might already be an object or array. Could happen in the future if
+    // Prettier decides to start parsing these.
+    if (typeof params !== 'string') return params
+
+    // Otherwise we let prettier re-parse the params into its custom value AST
+    // based on postcss-value parser.
+    try {
+      let parser = base.parsers.css
+      let root = parser.parse(`@import ${params};`, env.options)
+
+      return root.nodes[0].params
+    } catch (err) {
+      console.warn(`[prettier-plugin-tailwindcss] Unable to parse at rule`)
+      console.warn({ name, params })
+      console.warn(err)
+    }
+
+    return params
+  }
+
   ast.walk((node: any) => {
+    if (
+      node.name === 'plugin' ||
+      node.name === 'config' ||
+      node.name === 'source'
+    ) {
+      node.params = tryParseAtRuleParams(node.name, node.params)
+    }
+
     if (node.type === 'css-atrule' && node.name === 'apply') {
       let isImportant = /\s+(?:!important|#{(['"]*)!important\1})\s*$/.test(
         node.params,
@@ -1287,9 +1305,4 @@ export interface PluginOptions {
    * Preserve duplicate classes inside a class list when sorting.
    */
   tailwindPreserveDuplicates?: boolean
-}
-
-declare module 'prettier' {
-  interface RequiredOptions extends PluginOptions {}
-  interface ParserOptions extends PluginOptions {}
 }

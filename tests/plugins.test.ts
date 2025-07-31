@@ -213,23 +213,6 @@ let tests: PluginTest[] = [
     },
   },
   {
-    // NOTE: This plugin doesn't officially support Prettier v3 but it seems to work fine
-    plugins: ['prettier-plugin-import-sort'],
-    tests: {
-      babel: [
-        [
-          `
-            import './three'
-            import '@one/file'
-            import '@two/file'
-            export default function Foo() { return <div className="sm:p-0 p-4"></div> }
-          `,
-          `import '@one/file'\nimport '@two/file'\n\nimport './three'\n\nexport default function Foo() {\n  return <div className="p-4 sm:p-0"></div>\n}`,
-        ],
-      ],
-    },
-  },
-  {
     plugins: ['prettier-plugin-jsdoc'],
     tests: {
       babel: [

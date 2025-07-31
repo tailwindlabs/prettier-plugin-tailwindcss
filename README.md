@@ -19,13 +19,24 @@ Then add the plugin to your [Prettier configuration](https://prettier.io/docs/en
 }
 ```
 
+When using a JavaScript config, you can import the types for IntelliSense:
+
+```js
+// prettier.config.js
+
+/** @type {import('prettier').Config & import('prettier-plugin-tailwindcss').PluginOptions} */
+export default {
+  plugins: ["prettier-plugin-tailwindcss"],
+}
+```
+
 ## Upgrading to v0.5.x
 
 As of v0.5.x, this plugin now requires Prettier v3 and is ESM-only. This means it cannot be loaded via `require()`. For more information see our [upgrade guide](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/issues/207#issuecomment-1698071122).
 
 ## Options
 
-### Specifying your Tailwind stylesheet path
+### Specifying your Tailwind stylesheet path (Tailwind CSS v4+)
 
 When using Tailwind CSS v4 you must specify your CSS file entry point, which includes your theme, custom utilities, and other Tailwind configuration options. To do this, use the `tailwindStylesheet` option in your Prettier configuration.
 
@@ -38,7 +49,7 @@ Note that paths are resolved relative to the Prettier configuration file.
 }
 ```
 
-### Specifying your Tailwind JavaScript config path
+### Specifying your Tailwind JavaScript config path (Tailwind CSS v3)
 
 To ensure that the class sorting takes into consideration any of your project's Tailwind customizations, it needs access to your [Tailwind configuration file](https://tailwindcss.com/docs/configuration) (`tailwind.config.js`).
 
@@ -215,7 +226,6 @@ This plugin uses Prettier APIs that can only be used by one plugin at a time, ma
 - `@trivago/prettier-plugin-sort-imports`
 - `prettier-plugin-astro`
 - `prettier-plugin-css-order`
-- `prettier-plugin-import-sort`
 - `prettier-plugin-jsdoc`
 - `prettier-plugin-multiline-arrays`
 - `prettier-plugin-organize-attributes`

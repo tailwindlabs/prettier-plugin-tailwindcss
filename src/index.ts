@@ -28,6 +28,8 @@ import { spliceChangesIntoString, visit } from './utils.js'
 
 let base = await loadPlugins()
 
+const ESCAPE_SEQUENCE_PATTERN = /\\(['"\\nrtbfv0-7xuU])/g
+
 function createParser(
   parserFormat: string,
   transform: (ast: any, context: TransformerContext) => void,
@@ -140,6 +142,44 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
           },
         }),
       })
+    },
+
+    TemplateLiteral(node, path) {
+      if (!node.quasis.length) return
+
+      let concat = path.find((entry) => {
+        return (
+          entry.parent &&
+          entry.parent.type === 'BinaryExpression' &&
+          entry.parent.operator === '+'
+        )
+      })
+
+      for (let i = 0; i < node.quasis.length; i++) {
+        let quasi = node.quasis[i]
+
+        changes.push({
+          start: quasi.start,
+          end: quasi.end,
+          before: quasi.value.raw,
+          after: sortClasses(quasi.value.raw, {
+            env,
+
+            // Is not the first "item" and does not start with a space
+            ignoreFirst: i > 0 && !/^\s/.test(quasi.value.raw),
+
+            // Is between two expressions
+            // And does not end with a space
+            ignoreLast:
+              i < node.expressions.length && !/\s$/.test(quasi.value.raw),
+
+            collapseWhitespace: {
+              start: concat?.key !== 'right' && i === 0,
+              end: concat?.key !== 'left' && i >= node.expressions.length,
+            },
+          }),
+        })
+      }
     },
   })
 
@@ -454,6 +494,7 @@ function sortStringLiteral(
   node: any,
   {
     env,
+    removeDuplicates,
     collapseWhitespace = { start: true, end: true },
   }: {
     env: TransformerEnv
@@ -463,43 +504,44 @@ function sortStringLiteral(
 ) {
   let result = sortClasses(node.value, {
     env,
+    removeDuplicates,
     collapseWhitespace,
   })
+
   let didChange = result !== node.value
+
+  if (!didChange) return false
+
   node.value = result
 
-  // A string literal was escaped if:
-  // - There are backslashes in the raw value; AND
-  // - The raw value is not the same as the value (excluding the surrounding quotes)
-  let wasEscaped = false
+  // Preserve the original escaping level for the new content
+  let raw = node.extra?.raw ?? node.raw
+  let quote = raw[0]
+  let originalRawContent = raw.slice(1, -1)
+  let originalValue = node.extra?.rawValue ?? node.value
 
   if (node.extra) {
-    // JavaScript (StringLiteral)
-    wasEscaped =
-      node.extra?.rawValue.includes('\\') &&
-      node.extra?.raw.slice(1, -1) !== node.value
-  } else {
-    // TypeScript (Literal)
-    wasEscaped =
-      node.value.includes('\\') && node.raw.slice(1, -1) !== node.value
-  }
+    // The original list has ecapes so we ensure that the sorted list also
+    // maintains those by replacing backslashes from escape sequences.
+    //
+    // It seems that TypeScript-based ASTs don't need this special handling
+    // which is why this is guarded inside the `node.extra` check
+    if (originalRawContent !== originalValue && originalValue.includes('\\')) {
+      result = result.replace(ESCAPE_SEQUENCE_PATTERN, '\\\\$1')
+    }
 
-  let escaped = wasEscaped ? result.replace(/\\/g, '\\\\') : result
-
-  if (node.extra) {
     // JavaScript (StringLiteral)
-    let raw = node.extra.raw
     node.extra = {
       ...node.extra,
       rawValue: result,
-      raw: raw[0] + escaped + raw.slice(-1),
+      raw: quote + result + quote,
     }
   } else {
     // TypeScript (Literal)
-    let raw = node.raw
-    node.raw = raw[0] + escaped + raw.slice(-1)
+    node.raw = quote + result + quote
   }
-  return didChange
+
+  return true
 }
 
 function isStringLiteral(node: any) {
@@ -513,6 +555,7 @@ function sortTemplateLiteral(
   node: any,
   {
     env,
+    removeDuplicates,
     collapseWhitespace = { start: true, end: true },
   }: {
     env: TransformerEnv
@@ -530,6 +573,7 @@ function sortTemplateLiteral(
 
     quasi.value.raw = sortClasses(quasi.value.raw, {
       env,
+      removeDuplicates,
       // Is not the first "item" and does not start with a space
       ignoreFirst: i > 0 && !/^\s/.test(quasi.value.raw),
 
@@ -553,6 +597,7 @@ function sortTemplateLiteral(
           ignoreFirst: i > 0 && !/^\s/.test(quasi.value.cooked),
           ignoreLast:
             i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
+          removeDuplicates,
           collapseWhitespace: collapseWhitespace && {
             start: collapseWhitespace && collapseWhitespace.start && i === 0,
             end:
@@ -579,24 +624,7 @@ function isSortableTemplateExpression(
     | import('ast-types').namedTypes.TaggedTemplateExpression,
   functions: Set<string>,
 ): boolean {
-  if (node.tag.type === 'Identifier') {
-    return functions.has(node.tag.name)
-  }
-
-  if (node.tag.type === 'MemberExpression') {
-    let expr = node.tag.object
-
-    // If the tag is a MemberExpression we should traverse all MemberExpression's until we find the leading Identifier
-    while (expr.type === 'MemberExpression') {
-      expr = expr.object
-    }
-
-    if (expr.type === 'Identifier') {
-      return functions.has(expr.name)
-    }
-  }
-
-  return false
+  return isSortableExpression(node.tag, functions)
 }
 
 function isSortableCallExpression(
@@ -605,30 +633,38 @@ function isSortableCallExpression(
     | import('ast-types').namedTypes.CallExpression,
   functions: Set<string>,
 ): boolean {
-  if (!node.arguments?.length) {
-    return false
+  if (!node.arguments?.length) return false
+
+  return isSortableExpression(node.callee, functions)
+}
+
+function isSortableExpression(
+  node:
+    | import('@babel/types').Expression
+    | import('@babel/types').V8IntrinsicIdentifier
+    | import('ast-types').namedTypes.ASTNode,
+  functions: Set<string>,
+): boolean {
+  // Traverse property accesses and function calls to find the leading ident
+  while (node.type === 'CallExpression' || node.type === 'MemberExpression') {
+    if (node.type === 'CallExpression') {
+      node = node.callee
+    } else if (node.type === 'MemberExpression') {
+      node = node.object
+    }
   }
 
-  if (node.callee.type === 'Identifier') {
-    return functions.has(node.callee.name)
-  }
-
-  if (node.callee.type === 'MemberExpression') {
-    let expr = node.callee.object
-
-    // If the tag is a MemberExpression we should traverse all MemberExpression's until we find the leading Identifier
-    while (expr.type === 'MemberExpression') {
-      expr = expr.object
-    }
-
-    if (expr.type === 'Identifier') {
-      return functions.has(expr.name)
-    }
+  if (node.type === 'Identifier') {
+    return functions.has(node.name)
   }
 
   return false
 }
 
+// TODO: The `ast` types here aren't strictly correct.
+//
+// We cross several parsers that share roughly the same shape so things are
+// good enough. The actual AST we should be using is probably estree + ts.
 function transformJavaScript(
   ast: import('@babel/types').Node,
   { env }: TransformerContext,
@@ -737,7 +773,38 @@ function transformJavaScript(
 }
 
 function transformCss(ast: any, { env }: TransformerContext) {
+  // `parseValue` inside Prettier's CSS parser is private API so we have to
+  // produce the same result by parsing an import statement with the same params
+  function tryParseAtRuleParams(name: string, params: any) {
+    // It might already be an object or array. Could happen in the future if
+    // Prettier decides to start parsing these.
+    if (typeof params !== 'string') return params
+
+    // Otherwise we let prettier re-parse the params into its custom value AST
+    // based on postcss-value parser.
+    try {
+      let parser = base.parsers.css
+      let root = parser.parse(`@import ${params};`, env.options)
+
+      return root.nodes[0].params
+    } catch (err) {
+      console.warn(`[prettier-plugin-tailwindcss] Unable to parse at rule`)
+      console.warn({ name, params })
+      console.warn(err)
+    }
+
+    return params
+  }
+
   ast.walk((node: any) => {
+    if (
+      node.name === 'plugin' ||
+      node.name === 'config' ||
+      node.name === 'source'
+    ) {
+      node.params = tryParseAtRuleParams(node.name, node.params)
+    }
+
     if (node.type === 'css-atrule' && node.name === 'apply') {
       let isImportant = /\s+(?:!important|#{(['"]*)!important\1})\s*$/.test(
         node.params,
@@ -954,7 +1021,7 @@ function transformSvelte(ast: any, { env, changes }: TransformerContext) {
           env,
           ignoreFirst: i > 0 && !/^\s/.test(value.raw),
           ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.raw),
-          removeDuplicates: false,
+          removeDuplicates: true,
           collapseWhitespace: false,
         })
         value.data = same
@@ -963,7 +1030,7 @@ function transformSvelte(ast: any, { env, changes }: TransformerContext) {
               env,
               ignoreFirst: i > 0 && !/^\s/.test(value.data),
               ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.data),
-              removeDuplicates: false,
+              removeDuplicates: true,
               collapseWhitespace: false,
             })
       } else if (value.type === 'MustacheTag') {
@@ -1121,11 +1188,22 @@ export const parsers: Record<string, Parser> = {
     staticAttrs: ['class', 'className'],
   }),
 
+  hermes: createParser('hermes', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
   typescript: createParser('typescript', transformJavaScript, {
     staticAttrs: ['class', 'className'],
   }),
 
   'babel-ts': createParser('babel-ts', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+
+  oxc: createParser('oxc', transformJavaScript, {
+    staticAttrs: ['class', 'className'],
+  }),
+  'oxc-ts': createParser('oxc-ts', transformJavaScript, {
     staticAttrs: ['class', 'className'],
   }),
 
@@ -1235,9 +1313,4 @@ export interface PluginOptions {
    * Preserve duplicate classes inside a class list when sorting.
    */
   tailwindPreserveDuplicates?: boolean
-}
-
-declare module 'prettier' {
-  interface RequiredOptions extends PluginOptions {}
-  interface ParserOptions extends PluginOptions {}
 }

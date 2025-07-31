@@ -7,7 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+- Don't augment global Prettier `ParserOptions` and `RequiredOptions` types ([#354](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/354))
+- Drop support for `prettier-plugin-import-sort` ([#385](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/385))
+- Format quotes in `@source`, `@plugin`, and `@config` ([#387](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/387))
+- Support sorting in callable template literals ([#367](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/367))
+- Support sorting in function calls mixed with property accesses ([#367](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/367))
+
+## [0.6.14] - 2025-07-09
+
+- Add support for OXC + Hermes Prettier plugins ([#376](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/376), [#380](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/380))
+- Sort template literals in Angular expressions ([#377](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/377))
+- Don't repeatedly add backslashes to escape sequences when formatting ([#381](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/381))
+
+## [0.6.13] - 2025-06-19
+
+- Prevent Svelte files from breaking when there are duplicate classes ([#359](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/359))
+- Ensure `prettier-plugin-multiline-arrays` and `prettier-plugin-jsdoc` work when used together with this plugin ([#372](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/372))
+
+## [0.6.12] - 2025-05-30
+
+- Add internal (unsupported) option to load Tailwind CSS using a different package name ([#366](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/366))
 
 ## [0.6.11] - 2025-01-23
 
@@ -353,7 +372,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.11...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.14...HEAD
+[0.6.14]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.13...v0.6.14
+[0.6.13]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.12...v0.6.13
+[0.6.12]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.11...v0.6.12
 [0.6.11]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.10...v0.6.11
 [0.6.10]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.9...v0.6.10
 [0.6.9]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.8...v0.6.9

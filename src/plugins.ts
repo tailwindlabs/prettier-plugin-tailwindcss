@@ -49,6 +49,13 @@ export async function loadPlugins() {
     let path = maybeResolve(name)
 
     for (let plugin of options.plugins) {
+      if (plugin instanceof URL) {
+        if (plugin.protocol !== 'file:') continue
+        if (plugin.hostname !== '') continue
+
+        plugin = plugin.pathname
+      }
+
       if (typeof plugin === 'string') {
         if (plugin === name || plugin === path) {
           return mod
@@ -128,43 +135,57 @@ async function loadBuiltinPlugins(): Promise<PluginDetails> {
 }
 
 async function loadThirdPartyPlugins(): Promise<PluginDetails> {
-  // Commented out plugins do not currently work with Prettier v3.0
-  let [astro, liquid, marko, twig, pug, svelte] = await Promise.all([
-    loadIfExistsESM('prettier-plugin-astro'),
-    loadIfExistsESM('@shopify/prettier-plugin-liquid'),
-    loadIfExistsESM('prettier-plugin-marko'),
-    loadIfExistsESM('@zackad/prettier-plugin-twig'),
-    loadIfExistsESM('@prettier/plugin-pug'),
-    loadIfExistsESM('prettier-plugin-svelte'),
-  ])
+  let [astro, liquid, marko, twig, hermes, oxc, pug, svelte] =
+    await Promise.all([
+      loadIfExistsESM('prettier-plugin-astro'),
+      loadIfExistsESM('@shopify/prettier-plugin-liquid'),
+      loadIfExistsESM('prettier-plugin-marko'),
+      loadIfExistsESM('@zackad/prettier-plugin-twig'),
+      loadIfExistsESM('@prettier/plugin-hermes'),
+      loadIfExistsESM('@prettier/plugin-oxc'),
+      loadIfExistsESM('@prettier/plugin-pug'),
+      loadIfExistsESM('prettier-plugin-svelte'),
+    ])
+
   return {
     parsers: {
       ...astro.parsers,
       ...liquid.parsers,
       ...marko.parsers,
       ...twig.parsers,
+      ...hermes.parsers,
+      ...oxc.parsers,
       ...pug.parsers,
       ...svelte.parsers,
     },
     printers: {
+      ...hermes.printers,
+      ...oxc.printers,
       ...svelte.printers,
     },
   }
 }
 
 async function loadCompatiblePlugins() {
-  // Commented out plugins do not currently work with Prettier v3.0
+  // Plugins are loaded in a specific order for proper interoperability
   let plugins = [
-    '@ianvs/prettier-plugin-sort-imports',
-    '@trivago/prettier-plugin-sort-imports',
-    'prettier-plugin-organize-imports',
     'prettier-plugin-css-order',
-    'prettier-plugin-import-sort',
-    'prettier-plugin-jsdoc',
-    'prettier-plugin-multiline-arrays',
     'prettier-plugin-organize-attributes',
     'prettier-plugin-style-order',
+
+    // The following plugins must come *before* the jsdoc plugin for it to
+    // function correctly. Additionally `multiline-arrays` usually needs to be
+    // placed before import sorting plugins.
+    //
+    // https://github.com/electrovir/prettier-plugin-multiline-arrays#compatibility
+    'prettier-plugin-multiline-arrays',
+    '@ianvs/prettier-plugin-sort-imports',
+    '@trivago/prettier-plugin-sort-imports',
+    'prettier-plugin-import-sort',
+    'prettier-plugin-organize-imports',
     'prettier-plugin-sort-imports',
+
+    'prettier-plugin-jsdoc',
   ]
 
   // Load all the available compatible plugins up front

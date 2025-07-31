@@ -1,5 +1,7 @@
 import { createRequire } from 'node:module'
+import dedent from 'dedent'
 import { test } from 'vitest'
+import { javascript } from './tests.js'
 import type { TestEntry } from './utils.js'
 import { format, no, pluginPath, t, yes } from './utils.js'
 
@@ -163,6 +165,19 @@ let tests: PluginTest[] = [
           `<div class="{{ 'flex ' + ' underline' + ' block' }}"></div>`,
         ],
       ],
+    },
+  },
+  {
+    plugins: ['@prettier/plugin-hermes'],
+    tests: {
+      hermes: javascript,
+    },
+  },
+  {
+    plugins: ['@prettier/plugin-oxc'],
+    tests: {
+      oxc: javascript,
+      'oxc-ts': javascript,
     },
   },
   {
@@ -443,6 +458,77 @@ import Custom from '../components/Custom.astro'
         [
           `<div\n class={\`underline \n flex\`}></div>`,
           `<div\n  class={\`flex \n underline\`}\n></div>`,
+        ],
+
+        // Duplicates can be removed in simple attributes
+        [
+          `<div class="flex flex underline flex flex"></div>`,
+          `<div class="flex underline"></div>`,
+        ],
+
+        // Duplicates cannot be removed in string literals otherwise invalid
+        // code will be produced during printing.
+        [
+          `<div class={'flex underline flex'}></div>`,
+          `<div class={'flex flex underline'}></div>`,
+        ],
+
+        // Duplicates cannot be removed in template literals otherwise invalid
+        // code will be produced during printing.
+        [
+          `<div class={\`flex underline flex\`}></div>`,
+          `<div class={\`flex flex underline\`}></div>`,
+        ],
+      ],
+    },
+  },
+
+  // This test ensures that our plugin works with the multiline array, JSDoc,
+  // and import sorting plugins when used together.
+  //
+  // The plugins actually have to be *imported* in a specific order for
+  // them to function correctly *together*.
+  {
+    plugins: [
+      'prettier-plugin-multiline-arrays',
+      '@trivago/prettier-plugin-sort-imports',
+      'prettier-plugin-jsdoc',
+    ],
+    options: {
+      multilineArraysWrapThreshold: 0,
+      importOrder: ['^@one/(.*)$', '^@two/(.*)$', '^[./]'],
+      importOrderSortSpecifiers: true,
+    },
+    tests: {
+      babel: [
+        [
+          dedent`
+            import './three'
+            import '@two/file'
+            import '@one/file'
+
+            /**
+              * - Position
+              */
+            const position = {}
+            const arr = ['a', 'b', 'c', 'd', 'e', 'f']
+          `,
+          dedent`
+            import '@one/file'
+            import '@two/file'
+            import './three'
+
+            /** - Position */
+            const position = {}
+            const arr = [
+              'a',
+              'b',
+              'c',
+              'd',
+              'e',
+              'f',
+            ]
+          `,
         ],
       ],
     },

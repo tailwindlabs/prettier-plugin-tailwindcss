@@ -55,6 +55,13 @@ export const options: Record<string, SupportOption> = {
     category: 'Tailwind CSS',
     description: 'Preserve duplicate classes inside a class list when sorting',
   },
+
+  tailwindPackageName: {
+    type: 'string',
+    default: 'tailwindcss',
+    category: 'Tailwind CSS',
+    description: 'The package name to use when loading Tailwind CSS',
+  },
 }
 
 export function getCustomizations(

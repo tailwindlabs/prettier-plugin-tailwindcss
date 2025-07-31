@@ -1,5 +1,10 @@
 export interface InternalOptions {
   printer: Printer<any>
+
+  /**
+   * The package name to use when loading Tailwind CSS
+   */
+  tailwindPackageName?: string
 }
 
 export interface InternalPlugin {

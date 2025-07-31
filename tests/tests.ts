@@ -43,6 +43,14 @@ let css: TestEntry[] = [
     '@apply p-0\n   sm:p-0;',
     { tailwindPreserveWhitespace: true },
   ],
+
+  // Quote conversion for custom at-rules
+  [`@import "./file.css";`, `@import './file.css';`],
+  [`@plugin "./file.js";`, `@plugin './file.js';`],
+  [`@config "./file.js";`, `@config './file.js';`],
+  [`@source "./file.js";`, `@source './file.js';`],
+  [`@source not "./file.js";`, `@source not './file.js';`],
+  [`@source inline("./file.js");`, `@source inline('./file.js');`],
 ]
 
 export let javascript: TestEntry[] = [

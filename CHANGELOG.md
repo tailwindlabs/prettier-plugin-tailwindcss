@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Don't augment global Prettier `ParserOptions` and `RequiredOptions` types ([#354](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/354))
 - Drop support for `prettier-plugin-import-sort` ([#385](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/385))
+- Format quotes in `@source`, `@plugin`, and `@config` ([#387](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/387))
 
 ## [0.6.14] - 2025-07-09
 

@@ -166,31 +166,14 @@ let tests: PluginTest[] = [
           `<div class="{{ 'flex ' + ' underline' + ' block' }}"></div>`,
         ],
 
-        // Drupal attributes.addClass() tests
-        [
-          `<div {{ attributes.addClass("sm:p-0 p-0") }}></div>`,
-          `<div {{ attributes.addClass('p-0 sm:p-0') }}></div>`,
-        ],
-        [
-          `{{ attributes.addClass("sm:p-0 p-0") }}`,
-          `{{ attributes.addClass('p-0 sm:p-0') }}`,
-        ],
-        [
-          `{% set className = "p-0 sm:p-0" %}
-           {{ attributes.addClass(className) }}`,
-          `{% set className = 'p-0 sm:p-0' %}
-{{ attributes.addClass(className) }}`,
-        ],
+        // Function call tests
+        t`<div {{ attributes.addClass('${yes}') }}></div>`,
+        t`{{ attributes.addClass('${yes}') }}`,
+        t`{{ attributes.addClass('${yes}').addClass('${yes}').addClass('${yes}') }}`,
+        t`{% set className = '${no}' %} {{ attributes.addClass(className) }}`,
         [
           `{{ attributes.addClass("sm:p-0 " ~ variant ~ " p-0") }}`,
           `{{ attributes.addClass('sm:p-0 ' ~ variant ~ ' p-0') }}`,
-        ],
-        [
-          `{{ attributes
-                .addClass("sm:p-0 p-0")
-                .addClass("flex block")
-                .addClass("underline") }}`,
-          `{{ attributes.addClass('p-0 sm:p-0').addClass('block flex').addClass('underline') }}`,
         ],
       ],
     },

@@ -912,13 +912,25 @@ function transformTwig(ast: any, { env, changes }: TransformerContext) {
     },
 
     CallExpression(node, _path, meta) {
-      if (node.callee.type === 'MemberExpression') {
-        if (!node.callee.property) return
-        if (!functions.has(node.callee.property.name)) return
-      } else if (node.callee.type === 'Identifier') {
-        if (!functions.has(node.callee.name)) return
-      } else {
-        return
+      // Traverse property accesses and function calls to find the *trailing* ident
+      while (
+        node.type === 'CallExpression' ||
+        node.type === 'MemberExpression'
+      ) {
+        if (node.type === 'CallExpression') {
+          node = node.callee
+        } else if (node.type === 'MemberExpression') {
+          // TODO: This is *different* than `isSortableExpression` and that doesn't feel right
+          // but they're mutually exclusive implementations
+          //
+          // This is to handle foo.fnNameHere(…) where `isSortableExpression` is intentionally
+          // handling `fnNameHere.foo(…)`.
+          node = node.property
+        }
+      }
+
+      if (node.type === 'Identifier') {
+        if (!functions.has(node.name)) return
       }
 
       meta.sortTextNodes = true

@@ -1,57 +1,8 @@
-import type { LegacyTailwindContext, TransformerEnv } from './types'
-import './index'
-
-export function bigSign(bigIntValue: bigint) {
-  return Number(bigIntValue > 0n) - Number(bigIntValue < 0n)
-}
-
-function prefixCandidate(
-  context: LegacyTailwindContext,
-  selector: string,
-): string {
-  let prefix = context.tailwindConfig.prefix
-  return typeof prefix === 'function' ? prefix(selector) : prefix + selector
-}
-
-// Polyfill for older Tailwind CSS versions
-function getClassOrderPolyfill(
-  classes: string[],
-  { env }: { env: TransformerEnv },
-): [string, bigint | null][] {
-  // A list of utilities that are used by certain Tailwind CSS utilities but
-  // that don't exist on their own. This will result in them "not existing" and
-  // sorting could be weird since you still require them in order to make the
-  // host utitlies work properly. (Thanks Biology)
-  let parasiteUtilities = new Set([
-    prefixCandidate(env.context, 'group'),
-    prefixCandidate(env.context, 'peer'),
-  ])
-
-  let classNamesWithOrder: [string, bigint | null][] = []
-
-  for (let className of classes) {
-    let order: bigint | null =
-      env
-        .generateRules(new Set([className]), env.context)
-        .sort(([a], [z]) => bigSign(z - a))[0]?.[0] ?? null
-
-    if (order === null && parasiteUtilities.has(className)) {
-      // This will make sure that it is at the very beginning of the
-      // `components` layer which technically means 'before any
-      // components'.
-      order = env.context.layerOrder.components
-    }
-
-    classNamesWithOrder.push([className, order])
-  }
-
-  return classNamesWithOrder
-}
+import type { TransformerEnv } from './types'
+import { bigSign } from './utils'
 
 function reorderClasses(classList: string[], { env }: { env: TransformerEnv }) {
-  let orderedClasses = env.context.getClassOrder
-    ? env.context.getClassOrder(classList)
-    : getClassOrderPolyfill(classList, { env })
+  let orderedClasses = env.context.getClassOrder(classList)
 
   return orderedClasses.sort(([nameA, a], [nameZ, z]) => {
     // Move `...` to the end of the list

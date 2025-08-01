@@ -1,0 +1,15 @@
+{
+  "tailwindFunctions": ["tw"],
+  "overrides": [
+    {
+      "files": "package-1/**",
+      "options": {
+        "tailwindStylesheet": "./package-1/app.css"
+      }
+    },
+    {
+      "files": "package-2/**",
+      "options": {}
+    }
+  ]
+}

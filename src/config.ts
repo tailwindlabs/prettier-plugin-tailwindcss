@@ -40,7 +40,7 @@ export async function getTailwindConfig(options: ParserOptions): Promise<any> {
   // We resolve this like we're in `inputDir` for better monorepo support as
   // Prettier may be configured at the workspace root but Tailwind CSS is
   // installed for a workspace package rather than the entire monorepo
-  let [mod, pkgDir] = await resolveTailwindPath(options, configDir)
+  let [mod, pkgDir] = await resolveTailwindPath(options, inputDir)
 
   // Locate project stylesheet relative to the prettier config file
   //

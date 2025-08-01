@@ -71,7 +71,7 @@ export async function getTailwindConfig(options: ParserOptions): Promise<any> {
   // For the same reasons as the v4 stylesheet, it's important that the config
   // file be resolved relative to the file it's configured in.
   if (!stylesheet && !mod?.__unstable__loadDesignSystem) {
-    let jsConfig = resolveJsConfigPath(options, configDir)
+    let jsConfig = resolveJsConfigPath(options, configDir, inputDir)
     if (jsConfig) {
       return pathToApiMap.remember(`${pkgDir}:${jsConfig}`, () => loadV3(pkgDir, jsConfig))
     }
@@ -141,18 +141,18 @@ async function resolveTailwindPath(options: ParserOptions, baseDir: string): Pro
 }
 
 let configPathCache = new Map<string, string | null>()
-function resolveJsConfigPath(options: ParserOptions, configDir: string): string | null {
+function resolveJsConfigPath(options: ParserOptions, configDir: string, inputDir: string): string | null {
   if (options.tailwindConfig) {
     if (options.tailwindConfig.endsWith('.css')) return null
 
     return path.resolve(configDir, options.tailwindConfig)
   }
 
-  let configPath: string | null | undefined = configPathCache.get(configDir)
+  let configPath: string | null | undefined = configPathCache.get(inputDir)
 
   if (configPath === undefined) {
     try {
-      let foundPath = escalade(configDir, (_, names) => {
+      let foundPath = escalade(inputDir, (_, names) => {
         if (names.includes('tailwind.config.js')) return 'tailwind.config.js'
         if (names.includes('tailwind.config.cjs')) return 'tailwind.config.cjs'
         if (names.includes('tailwind.config.mjs')) return 'tailwind.config.mjs'
@@ -163,7 +163,7 @@ function resolveJsConfigPath(options: ParserOptions, configDir: string): string 
     } catch {}
 
     configPath ??= null
-    configPathCache.set(configDir, configPath)
+    configPathCache.set(inputDir, configPath)
   }
 
   return configPath

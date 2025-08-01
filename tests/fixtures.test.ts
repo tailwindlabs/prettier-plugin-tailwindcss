@@ -82,6 +82,17 @@ let fixtures = [
     dir: 'custom-pkg-name-v4',
     ext: 'html',
   },
+
+  {
+    name: 'monorepo / v4',
+    dir: 'monorepo/package-1',
+    ext: 'jsx',
+  },
+  {
+    name: 'monorepo / v3',
+    dir: 'monorepo/package-2',
+    ext: 'jsx',
+  },
 ]
 
 let configs = [

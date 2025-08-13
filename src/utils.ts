@@ -27,10 +27,7 @@ type Visitor<T, Meta extends Record<string, unknown>> = (
   meta: Partial<Meta>,
 ) => void | false
 
-type Visitors<T, Meta extends Record<string, unknown>> = Record<
-  string,
-  Visitor<T, Meta>
->
+type Visitors<T, Meta extends Record<string, unknown>> = Record<string, Visitor<T, Meta>>
 
 // https://lihautan.com/manipulating-ast-with-javascript/
 export function visit<T extends {}, Meta extends Record<string, unknown>>(

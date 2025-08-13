@@ -9,13 +9,14 @@ export function expiringMap<K, V>(duration: number): ExpiringMap<K, V> {
   return {
     get(key: K) {
       let result = map.get(key)
-      if (!result) return undefined
-      if (result.expiration <= new Date()) {
-        map.delete(key)
-        return undefined
+
+      if (result && result.expiration > new Date()) {
+        return result.value
       }
 
-      return result.value
+      map.delete(key)
+
+      return undefined
     },
 
     set(key: K, value: V) {

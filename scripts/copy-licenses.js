@@ -5,9 +5,7 @@ import checker from 'license-checker'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-const pkg = JSON.parse(
-  await fs.readFile(path.resolve(__dirname, '../package.json'), 'utf8'),
-)
+const pkg = JSON.parse(await fs.readFile(path.resolve(__dirname, '../package.json'), 'utf8'))
 
 let exclude = [
   'cpy-cli',
@@ -42,8 +40,5 @@ for (let key in packages) {
 
   let dir = path.resolve(__dirname, '../dist/licenses', name)
   await fs.mkdir(dir, { recursive: true })
-  await fs.copyFile(
-    dep.licenseFile,
-    path.resolve(dir, path.basename(dep.licenseFile)),
-  )
+  await fs.copyFile(dep.licenseFile, path.resolve(dir, path.basename(dep.licenseFile)))
 }

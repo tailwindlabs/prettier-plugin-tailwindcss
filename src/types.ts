@@ -2,9 +2,9 @@ import type { ParserOptions } from 'prettier'
 
 export interface TransformerMetadata {
   // Default customizations for a given transformer
+  functions?: string[]
   staticAttrs?: string[]
   dynamicAttrs?: string[]
-  functions?: string[]
 }
 
 export interface Customizations {

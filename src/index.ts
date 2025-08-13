@@ -42,7 +42,7 @@ function createParser(
     },
 
     async parse(text: string, options: ParserOptions) {
-      let { context, generateRules } = await getTailwindConfig(options)
+      let context = await getTailwindConfig(options)
 
       let original = base.originalParser(parserFormat, options)
 
@@ -58,7 +58,7 @@ function createParser(
       let changes: any[] = []
 
       transform(ast, {
-        env: { context, customizations, generateRules, parsers: {}, options },
+        env: { context, customizations, parsers: {}, options },
         changes,
       })
 

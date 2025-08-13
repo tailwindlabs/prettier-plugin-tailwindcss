@@ -98,10 +98,7 @@ let configs = [
 test.concurrent('explicit config path', async ({ expect }) => {
   expect(
     await format('<div class="sm:bg-tomato bg-red-500"></div>', {
-      tailwindConfig: path.resolve(
-        __dirname,
-        'fixtures/basic/tailwind.config.js',
-      ),
+      tailwindConfig: path.resolve(__dirname, 'fixtures/basic/tailwind.config.js'),
     }),
   ).toEqual('<div class="bg-red-500 sm:bg-tomato"></div>')
 })
@@ -127,9 +124,7 @@ describe('fixtures', () => {
     test.concurrent(name, async ({ expect }) => {
       let results = await execAsync(cmd)
       let formatted = results.stdout.replace(/\r\n/g, '\n')
-      let expected = await fs
-        .readFile(outputPath, 'utf-8')
-        .then((c) => c.replace(/\r\n/g, '\n'))
+      let expected = await fs.readFile(outputPath, 'utf-8').then((c) => c.replace(/\r\n/g, '\n'))
 
       expect(formatted.trim()).toEqual(expected.trim())
     })

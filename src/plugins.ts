@@ -166,7 +166,6 @@ async function loadCompatiblePlugins() {
   let plugins = [
     'prettier-plugin-css-order',
     'prettier-plugin-organize-attributes',
-    'prettier-plugin-style-order',
 
     // The following plugins must come *before* the jsdoc plugin for it to
     // function correctly. Additionally `multiline-arrays` usually needs to be

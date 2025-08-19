@@ -232,18 +232,6 @@ let tests: PluginTest[] = [
     },
   },
   {
-    // NOTE: This plugin doesn't officially support Prettier v3 but it appears to work
-    plugins: ['prettier-plugin-style-order'],
-    tests: {
-      css: [
-        [
-          `.foo {\n  color: red;\n  margin-left: 1px;\n  background-color: blue;\n  margin-right: 1px;\n  @apply sm:p-0 p-4 bg-blue-600;\n}`,
-          `.foo {\n  margin-right: 1px;\n  margin-left: 1px;\n  color: red;\n  background-color: blue;\n  @apply bg-blue-600 p-4 sm:p-0;\n}`,
-        ],
-      ],
-    },
-  },
-  {
     plugins: ['prettier-plugin-organize-attributes'],
     tests: {
       html: [

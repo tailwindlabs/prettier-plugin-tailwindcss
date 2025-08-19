@@ -2,12 +2,12 @@
 import * as path from 'path'
 import clearModule from 'clear-module'
 // @ts-ignore
-import { generateRules as generateRulesFallback } from 'tailwindcss/lib/lib/generateRules'
+import { generateRules as generateRulesFallback } from 'tailwindcss-v3/lib/lib/generateRules'
 // @ts-ignore
-import { createContext as createContextFallback } from 'tailwindcss/lib/lib/setupContextUtils'
-import loadConfigFallback from 'tailwindcss/loadConfig'
-import resolveConfigFallback from 'tailwindcss/resolveConfig'
-import type { RequiredConfig } from 'tailwindcss/types/config.js'
+import { createContext as createContextFallback } from 'tailwindcss-v3/lib/lib/setupContextUtils'
+import loadConfigFallback from 'tailwindcss-v3/loadConfig'
+import resolveConfigFallback from 'tailwindcss-v3/resolveConfig'
+import type { RequiredConfig } from 'tailwindcss-v3/types/config.js'
 import type { UnifiedApi } from '../types'
 import { bigSign } from '../utils'
 

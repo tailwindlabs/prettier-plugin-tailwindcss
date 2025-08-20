@@ -76,7 +76,7 @@ export async function getTailwindConfig(options: ParserOptions): Promise<any> {
   // For the same reasons as the v4 stylesheet, it's important that the config
   // file be resolved relative to the file it's configured in.
   if (!stylesheet && !mod?.__unstable__loadDesignSystem) {
-    jsConfig = jsConfig ?? findClosestJsConfig(configDir)
+    jsConfig = jsConfig ?? findClosestJsConfig(inputDir)
   }
 
   // We've found a JS config either because it was specified by the user

@@ -1,4 +1,5 @@
 import * as fs from 'node:fs'
+import { readFile } from 'node:fs/promises'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import esbuild from 'esbuild'
@@ -62,6 +63,47 @@ function patchCjsInterop() {
   }
 }
 
+/**
+ * @returns {import('esbuild').Plugin}
+ */
+function inlineCssImports() {
+  return {
+    name: 'inline-css-imports',
+    setup(build) {
+      // Inline CSS imports
+      build.onLoad({ filter: /\.css$/ }, async (args) => {
+        let content = await readFile(args.path, 'utf-8')
+
+        return {
+          loader: 'js',
+          contents: `export default ${JSON.stringify(content)}`,
+        }
+      })
+
+      // Inline preflight in v3
+      // TODO: This needs a test
+      build.onLoad({ filter: /corePlugins\.js$/ }, async (args) => {
+        let preflightPath = path.resolve(path.dirname(args.path), './css/preflight.css')
+        let preflightContent = await readFile(preflightPath, 'utf-8')
+
+        let content = await readFile(args.path, 'utf-8')
+
+        // This is a bit fragile but this is to inline preflight for the
+        // *bundled* version which means a failing test should be enough
+        content = content.replace(
+          `_fs.default.readFileSync(_path.join(__dirname, "./css/preflight.css"), "utf8")`,
+          JSON.stringify(preflightContent),
+        )
+
+        return {
+          loader: 'js',
+          contents: content,
+        }
+      })
+    },
+  }
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 let context = await esbuild.context({
@@ -73,7 +115,7 @@ let context = await esbuild.context({
   entryPoints: [path.resolve(__dirname, './src/index.js')],
   outfile: path.resolve(__dirname, './dist/index.mjs'),
   format: 'esm',
-  plugins: [patchRecast(), patchCjsInterop()],
+  plugins: [patchRecast(), patchCjsInterop(), inlineCssImports()],
 })
 
 await context.rebuild()

@@ -41,11 +41,7 @@ export async function loadPlugins() {
     ...thirdparty.printers,
   }
 
-  function findEnabledPlugin(
-    options: ParserOptions<any>,
-    name: string,
-    mod: any,
-  ) {
+  function findEnabledPlugin(options: ParserOptions<any>, name: string, mod: any) {
     let path = maybeResolve(name)
 
     for (let plugin of options.plugins) {
@@ -135,17 +131,16 @@ async function loadBuiltinPlugins(): Promise<PluginDetails> {
 }
 
 async function loadThirdPartyPlugins(): Promise<PluginDetails> {
-  let [astro, liquid, marko, twig, hermes, oxc, pug, svelte] =
-    await Promise.all([
-      loadIfExistsESM('prettier-plugin-astro'),
-      loadIfExistsESM('@shopify/prettier-plugin-liquid'),
-      loadIfExistsESM('prettier-plugin-marko'),
-      loadIfExistsESM('@zackad/prettier-plugin-twig'),
-      loadIfExistsESM('@prettier/plugin-hermes'),
-      loadIfExistsESM('@prettier/plugin-oxc'),
-      loadIfExistsESM('@prettier/plugin-pug'),
-      loadIfExistsESM('prettier-plugin-svelte'),
-    ])
+  let [astro, liquid, marko, twig, hermes, oxc, pug, svelte] = await Promise.all([
+    loadIfExistsESM('prettier-plugin-astro'),
+    loadIfExistsESM('@shopify/prettier-plugin-liquid'),
+    loadIfExistsESM('prettier-plugin-marko'),
+    loadIfExistsESM('@zackad/prettier-plugin-twig'),
+    loadIfExistsESM('@prettier/plugin-hermes'),
+    loadIfExistsESM('@prettier/plugin-oxc'),
+    loadIfExistsESM('@prettier/plugin-pug'),
+    loadIfExistsESM('prettier-plugin-svelte'),
+  ])
 
   return {
     parsers: {
@@ -171,7 +166,6 @@ async function loadCompatiblePlugins() {
   let plugins = [
     'prettier-plugin-css-order',
     'prettier-plugin-organize-attributes',
-    'prettier-plugin-style-order',
 
     // The following plugins must come *before* the jsdoc plugin for it to
     // function correctly. Additionally `multiline-arrays` usually needs to be

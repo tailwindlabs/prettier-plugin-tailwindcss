@@ -12,9 +12,7 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-const pkg = JSON.parse(
-  await fs.readFile(path.resolve(__dirname, '../package.json'), 'utf8'),
-)
+const pkg = JSON.parse(await fs.readFile(path.resolve(__dirname, '../package.json'), 'utf8'))
 
 let version = process.argv[2] || process.env.npm_package_version || pkg.version
 

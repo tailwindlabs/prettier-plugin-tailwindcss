@@ -75,7 +75,7 @@ export async function getTailwindConfig(options: ParserOptions): Promise<any> {
   //
   // For the same reasons as the v4 stylesheet, it's important that the config
   // file be resolved relative to the file it's configured in.
-  if (!stylesheet && !mod?.__unstable__loadDesignSystem) {
+  if (!stylesheet && mod && !mod.__unstable__loadDesignSystem) {
     jsConfig = jsConfig ?? findClosestJsConfig(inputDir)
   }
 
@@ -110,14 +110,6 @@ export async function getTailwindConfig(options: ParserOptions): Promise<any> {
   // its included theme as the stylesheet if the user didn't give us one.
   if (mod && mod.__unstable__loadDesignSystem && pkgDir) {
     stylesheet ??= `${pkgDir}/theme.css`
-  }
-
-  // No stylesheet was given or otherwise found in a local v4 installation
-  // nor was a tailwind config given or found.
-  //
-  // Fallback to v3
-  if (!stylesheet) {
-    return pathToApiMap.remember(null, () => loadV3(null, null))
   }
 
   return pathToApiMap.remember(`${pkgDir}:${stylesheet}`, () => loadV4(mod, stylesheet))

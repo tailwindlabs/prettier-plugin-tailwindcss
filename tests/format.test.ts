@@ -26,6 +26,12 @@ describe('other', () => {
 
     expect(result).toEqual('<div class="unknown-class group peer container p-0"></div>')
   })
+
+  test('parasite utilities', async ({ expect }) => {
+    let result = await format('<div class="group peer unknown-class p-0 container"></div>')
+
+    expect(result).toEqual('<div class="group peer unknown-class container p-0"></div>')
+  })
 })
 
 describe('whitespace', () => {
@@ -61,6 +67,6 @@ describe('whitespace', () => {
   test('duplicate classes are dropped', async ({ expect }) => {
     let result = await format('<div class="underline line-through underline flex"></div>')
 
-    expect(result).toEqual('<div class="flex underline line-through"></div>')
+    expect(result).toEqual('<div class="flex line-through underline"></div>')
   })
 })

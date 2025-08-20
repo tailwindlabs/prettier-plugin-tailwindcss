@@ -9,7 +9,7 @@ const esmResolver = ResolverFactory.createResolver({
   fileSystem,
   useSyncFileSystemCalls: true,
   extensions: ['.mjs', '.js'],
-  mainFields: ['module'],
+  mainFields: ['module', 'main'],
   conditionNames: ['node', 'import'],
 })
 

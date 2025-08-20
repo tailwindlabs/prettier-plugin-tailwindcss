@@ -1,11 +1,10 @@
-// @ts-check
 import * as fs from 'fs/promises'
 import * as path from 'path'
 import { pathToFileURL } from 'url'
 import { createJiti, type Jiti } from 'jiti'
-import postcss from 'postcss'
+import { __unstable__loadDesignSystem } from 'tailwindcss'
 // @ts-ignore
-import postcssImport from 'postcss-import'
+import themeCss from 'tailwindcss/theme.css'
 import { resolveCssFrom, resolveJsFrom } from '../resolve'
 import type { UnifiedApi } from '../types'
 
@@ -44,9 +43,7 @@ interface ApiV4 {
 export async function loadV4(mod: ApiV4 | null, stylesheet: string | null): Promise<UnifiedApi> {
   // This is not Tailwind v4
   if (!mod || !mod.__unstable__loadDesignSystem) {
-    throw new Error('TODO')
-    // TODO
-    // mod = (await import('tailwindcss-v4')) as ApiV4
+    mod = (await import('tailwindcss')) as ApiV4
   }
 
   // Create a Jiti instance that can be used to load plugins and config files
@@ -65,9 +62,7 @@ export async function loadV4(mod: ApiV4 | null, stylesheet: string | null): Prom
   } else {
     importBasePath = process.cwd()
     stylesheet = path.join(importBasePath, 'fake.css')
-
-    // TODO: bundled theme.css file?
-    css = ''
+    css = themeCss
   }
 
   // Load the design system and set up a compatible context object that is

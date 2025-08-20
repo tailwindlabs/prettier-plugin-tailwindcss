@@ -1,10 +1,11 @@
-// @ts-check
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { createJiti, type Jiti } from 'jiti'
+import * as v4 from 'tailwindcss-v4'
 import { resolveCssFrom, resolveJsFrom } from '../resolve'
 import type { UnifiedApi } from '../types'
+import { assets } from './assets'
 
 interface DesignSystem {
   getClassOrder(classList: string[]): [string, bigint | null][]
@@ -40,11 +41,10 @@ interface ApiV4 {
 
 export async function loadV4(mod: ApiV4 | null, stylesheet: string | null): Promise<UnifiedApi> {
   // This is not Tailwind v4
+  let isFallback = false
   if (!mod || !mod.__unstable__loadDesignSystem) {
-    throw new Error('Unable to load Tailwind CSS v4: Your installation of Tailwind CSS is not v4')
-
-    // TODO
-    // mod = (await import('tailwindcss-v4')) as ApiV4
+    mod = v4 as ApiV4
+    isFallback = true
   }
 
   // Create a Jiti instance that can be used to load plugins and config files
@@ -63,9 +63,7 @@ export async function loadV4(mod: ApiV4 | null, stylesheet: string | null): Prom
   } else {
     importBasePath = process.cwd()
     stylesheet = path.join(importBasePath, 'fake.css')
-
-    // TODO: bundled theme.css file?
-    css = ''
+    css = assets['tailwindcss/theme.css']
   }
 
   // Load the design system and set up a compatible context object that is
@@ -90,11 +88,19 @@ export async function loadV4(mod: ApiV4 | null, stylesheet: string | null): Prom
     }),
 
     loadStylesheet: async (id: string, base: string) => {
-      let resolved = resolveCssFrom(base, id)
+      try {
+        let resolved = resolveCssFrom(base, id)
 
-      return {
-        base: path.dirname(resolved),
-        content: await fs.readFile(resolved, 'utf-8'),
+        return {
+          base: path.dirname(resolved),
+          content: await fs.readFile(resolved, 'utf-8'),
+        }
+      } catch (err) {
+        if (isFallback && id in assets) {
+          return { base, content: assets[id] }
+        }
+
+        throw err
       }
     },
 

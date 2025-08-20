@@ -26,6 +26,20 @@ describe('other', () => {
 
     expect(result).toEqual('<div class="unknown-class group peer container p-0"></div>')
   })
+
+  test('parasite utilities (v4)', async ({ expect }) => {
+    let result = await format('<div class="group peer unknown-class p-0 container"></div>', {
+      tailwindPackageName: 'tailwindcss-v4',
+    })
+
+    expect(result).toEqual('<div class="group peer unknown-class container p-0"></div>')
+  })
+
+  test('parasite utilities (no install == v4)', async ({ expect }) => {
+    let result = await format('<div class="group peer unknown-class p-0 container"></div>')
+
+    expect(result).toEqual('<div class="group peer unknown-class container p-0"></div>')
+  })
 })
 
 describe('whitespace', () => {
@@ -61,7 +75,7 @@ describe('whitespace', () => {
   test('duplicate classes are dropped', async ({ expect }) => {
     let result = await format('<div class="underline line-through underline flex"></div>')
 
-    expect(result).toEqual('<div class="flex underline line-through"></div>')
+    expect(result).toEqual('<div class="flex line-through underline"></div>')
   })
 })
 
@@ -90,6 +104,6 @@ describe('errors', () => {
       tailwindPackageName: 'tailwindcss-v3',
     })
 
-    await expect(result).rejects.toThrowError(/Unable to load Tailwind CSS v4/)
+    await expect(result).rejects.toThrowError(/no such file or directory/)
   })
 })

@@ -117,14 +117,6 @@ export async function getTailwindConfig(options: ParserOptions): Promise<any> {
     stylesheet ??= `${pkgDir}/theme.css`
   }
 
-  // No stylesheet was given or otherwise found in a local v4 installation
-  // nor was a tailwind config given or found.
-  //
-  // Fallback to v3
-  if (!stylesheet) {
-    return pathToApiMap.remember(null, () => loadV3(null, null))
-  }
-
   return pathToApiMap.remember(`${pkgDir}:${stylesheet}`, () => loadV4(mod, stylesheet))
 }
 

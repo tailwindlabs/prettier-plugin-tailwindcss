@@ -810,7 +810,24 @@ function transformCss(ast: any, { env }: TransformerContext) {
         node.params,
       )
 
-      node.params = sortClasses(node.params, {
+      let classList = node.params
+
+      let prefix = ''
+      let suffix = ''
+
+      if (classList.startsWith('~"') && classList.endsWith('"')) {
+        prefix = '~"'
+        suffix = '"'
+        classList = classList.slice(2, -1)
+        isImportant = false
+      } else if (classList.startsWith("~'") && classList.endsWith("'")) {
+        prefix = "~'"
+        suffix = "'"
+        classList = classList.slice(2, -1)
+        isImportant = false
+      }
+
+      classList = sortClasses(classList, {
         env,
         ignoreLast: isImportant,
         collapseWhitespace: {
@@ -818,6 +835,8 @@ function transformCss(ast: any, { env }: TransformerContext) {
           end: !isImportant,
         },
       })
+
+      node.params = `${prefix}${classList}${suffix}`
     }
   })
 }

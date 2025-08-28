@@ -266,7 +266,7 @@ export let tests: Record<string, TestEntry[]> = {
     t`@apply ${yes} #{'''!important'''};`,
     t`@apply ${yes} #{"'"'"!important"'"'"};`,
   ],
-  less: [...css, t`@apply ${yes} !important;`],
+  less: [...css, t`@apply ${yes} !important;`, t`@apply ~"${yes}";`, t`@apply ~'${yes}';`],
   babel: javascript,
   typescript: javascript,
   'babel-ts': javascript,

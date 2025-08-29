@@ -41,7 +41,8 @@ interface ApiV4 {
 export async function loadV4(mod: ApiV4 | null, stylesheet: string | null): Promise<UnifiedApi> {
   // This is not Tailwind v4
   if (!mod || !mod.__unstable__loadDesignSystem) {
-    throw new Error('TODO')
+    throw new Error('Unable to load Tailwind CSS v4: Your installation of Tailwind CSS is not v4')
+
     // TODO
     // mod = (await import('tailwindcss-v4')) as ApiV4
   }

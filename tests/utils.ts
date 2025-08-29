@@ -20,10 +20,7 @@ export type TestEntry = [
   },
 ]
 
-export function t(
-  strings: TemplateStringsArray,
-  ...values: string[]
-): TestEntry {
+export function t(strings: TemplateStringsArray, ...values: string[]): TestEntry {
   let input = ''
   strings.forEach((string, i) => {
     input += string + (values[i] ? testClassName : '')

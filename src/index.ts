@@ -1,8 +1,5 @@
 // @ts-ignore
-import type {
-  AttrDoubleQuoted,
-  AttrSingleQuoted,
-} from '@shopify/prettier-plugin-liquid/dist/types.js'
+import type { AttrDoubleQuoted, AttrSingleQuoted } from '@shopify/prettier-plugin-liquid/dist/types.js'
 import * as astTypes from 'ast-types'
 // @ts-ignore
 import jsesc from 'jsesc'
@@ -17,13 +14,7 @@ import { getTailwindConfig } from './config.js'
 import { getCustomizations } from './options.js'
 import { loadPlugins } from './plugins.js'
 import { sortClasses, sortClassList } from './sorting.js'
-import type {
-  Customizations,
-  StringChange,
-  TransformerContext,
-  TransformerEnv,
-  TransformerMetadata,
-} from './types'
+import type { Customizations, StringChange, TransformerContext, TransformerEnv, TransformerMetadata } from './types'
 import { spliceChangesIntoString, visit } from './utils.js'
 
 let base = await loadPlugins()
@@ -51,7 +42,7 @@ function createParser(
     },
 
     async parse(text: string, options: ParserOptions) {
-      let { context, generateRules } = await getTailwindConfig(options)
+      let context = await getTailwindConfig(options)
 
       let original = base.originalParser(parserFormat, options)
 
@@ -62,16 +53,12 @@ function createParser(
       // @ts-ignore: We pass three options in the case of plugins that support Prettier 2 _and_ 3.
       let ast = await original.parse(text, options, options)
 
-      let customizations = getCustomizations(
-        options,
-        parserFormat,
-        customizationDefaults,
-      )
+      let customizations = getCustomizations(options, parserFormat, customizationDefaults)
 
       let changes: any[] = []
 
       transform(ast, {
-        env: { context, customizations, generateRules, parsers: {}, options },
+        env: { context, customizations, parsers: {}, options },
         changes,
       })
 
@@ -123,11 +110,7 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
       if (!node.value) return
 
       let concat = path.find((entry) => {
-        return (
-          entry.parent &&
-          entry.parent.type === 'BinaryExpression' &&
-          entry.parent.operator === '+'
-        )
+        return entry.parent && entry.parent.type === 'BinaryExpression' && entry.parent.operator === '+'
       })
 
       changes.push({
@@ -148,11 +131,7 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
       if (!node.quasis.length) return
 
       let concat = path.find((entry) => {
-        return (
-          entry.parent &&
-          entry.parent.type === 'BinaryExpression' &&
-          entry.parent.operator === '+'
-        )
+        return entry.parent && entry.parent.type === 'BinaryExpression' && entry.parent.operator === '+'
       })
 
       for (let i = 0; i < node.quasis.length; i++) {
@@ -170,8 +149,7 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
 
             // Is between two expressions
             // And does not end with a space
-            ignoreLast:
-              i < node.expressions.length && !/\s$/.test(quasi.value.raw),
+            ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.raw),
 
             collapseWhitespace: {
               start: concat?.key !== 'right' && i === 0,
@@ -193,9 +171,7 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
     parser: prettierParserBabel.parsers['babel-ts'],
   })
 
-  function* ancestors<N, V>(
-    path: import('ast-types/lib/node-path').NodePath<N, V>,
-  ) {
+  function* ancestors<N, V>(path: import('ast-types/lib/node-path').NodePath<N, V>) {
     yield path
 
     while (path.parentPath) {
@@ -369,11 +345,7 @@ function transformGlimmer(ast: any, { env }: TransformerContext) {
       }
 
       let concat = path.find((entry) => {
-        return (
-          entry.parent &&
-          entry.parent.type === 'SubExpression' &&
-          entry.parent.path.original === 'concat'
-        )
+        return entry.parent && entry.parent.type === 'SubExpression' && entry.parent.path.original === 'concat'
       })
 
       node.value = sortClasses(node.value, {
@@ -391,13 +363,9 @@ function transformGlimmer(ast: any, { env }: TransformerContext) {
 function transformLiquid(ast: any, { env }: TransformerContext) {
   let { staticAttrs } = env.customizations
 
-  function isClassAttr(node: {
-    name: string | { type: string; value: string }[]
-  }) {
+  function isClassAttr(node: { name: string | { type: string; value: string }[] }) {
     return Array.isArray(node.name)
-      ? node.name.every(
-          (n) => n.type === 'TextNode' && staticAttrs.has(n.value),
-        )
+      ? node.name.every((n) => n.type === 'TextNode' && staticAttrs.has(n.value))
       : staticAttrs.has(node.name)
   }
 
@@ -545,10 +513,7 @@ function sortStringLiteral(
 }
 
 function isStringLiteral(node: any) {
-  return (
-    node.type === 'StringLiteral' ||
-    (node.type === 'Literal' && typeof node.value === 'string')
-  )
+  return node.type === 'StringLiteral' || (node.type === 'Literal' && typeof node.value === 'string')
 }
 
 function sortTemplateLiteral(
@@ -583,10 +548,7 @@ function sortTemplateLiteral(
 
       collapseWhitespace: collapseWhitespace && {
         start: collapseWhitespace && collapseWhitespace.start && i === 0,
-        end:
-          collapseWhitespace &&
-          collapseWhitespace.end &&
-          i >= node.expressions.length,
+        end: collapseWhitespace && collapseWhitespace.end && i >= node.expressions.length,
       },
     })
 
@@ -595,22 +557,15 @@ function sortTemplateLiteral(
       : sortClasses(quasi.value.cooked, {
           env,
           ignoreFirst: i > 0 && !/^\s/.test(quasi.value.cooked),
-          ignoreLast:
-            i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
+          ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
           removeDuplicates,
           collapseWhitespace: collapseWhitespace && {
             start: collapseWhitespace && collapseWhitespace.start && i === 0,
-            end:
-              collapseWhitespace &&
-              collapseWhitespace.end &&
-              i >= node.expressions.length,
+            end: collapseWhitespace && collapseWhitespace.end && i >= node.expressions.length,
           },
         })
 
-    if (
-      quasi.value.raw !== originalRaw ||
-      quasi.value.cooked !== originalCooked
-    ) {
+    if (quasi.value.raw !== originalRaw || quasi.value.cooked !== originalCooked) {
       didChange = true
     }
   }
@@ -619,18 +574,14 @@ function sortTemplateLiteral(
 }
 
 function isSortableTemplateExpression(
-  node:
-    | import('@babel/types').TaggedTemplateExpression
-    | import('ast-types').namedTypes.TaggedTemplateExpression,
+  node: import('@babel/types').TaggedTemplateExpression | import('ast-types').namedTypes.TaggedTemplateExpression,
   functions: Set<string>,
 ): boolean {
   return isSortableExpression(node.tag, functions)
 }
 
 function isSortableCallExpression(
-  node:
-    | import('@babel/types').CallExpression
-    | import('ast-types').namedTypes.CallExpression,
+  node: import('@babel/types').CallExpression | import('ast-types').namedTypes.CallExpression,
   functions: Set<string>,
 ): boolean {
   if (!node.arguments?.length) return false
@@ -665,20 +616,13 @@ function isSortableExpression(
 //
 // We cross several parsers that share roughly the same shape so things are
 // good enough. The actual AST we should be using is probably estree + ts.
-function transformJavaScript(
-  ast: import('@babel/types').Node,
-  { env }: TransformerContext,
-) {
+function transformJavaScript(ast: import('@babel/types').Node, { env }: TransformerContext) {
   let { staticAttrs, functions } = env.customizations
 
   function sortInside(ast: import('@babel/types').Node) {
     visit(ast, (node, path) => {
       let concat = path.find((entry) => {
-        return (
-          entry.parent &&
-          entry.parent.type === 'BinaryExpression' &&
-          entry.parent.operator === '+'
-        )
+        return entry.parent && entry.parent.type === 'BinaryExpression' && entry.parent.operator === '+'
       })
 
       if (isStringLiteral(node)) {
@@ -754,11 +698,7 @@ function transformJavaScript(
       }
 
       let concat = path.find((entry) => {
-        return (
-          entry.parent &&
-          entry.parent.type === 'BinaryExpression' &&
-          entry.parent.operator === '+'
-        )
+        return entry.parent && entry.parent.type === 'BinaryExpression' && entry.parent.operator === '+'
       })
 
       sortTemplateLiteral(node.quasi, {
@@ -797,18 +737,12 @@ function transformCss(ast: any, { env }: TransformerContext) {
   }
 
   ast.walk((node: any) => {
-    if (
-      node.name === 'plugin' ||
-      node.name === 'config' ||
-      node.name === 'source'
-    ) {
+    if (node.name === 'plugin' || node.name === 'config' || node.name === 'source') {
       node.params = tryParseAtRuleParams(node.name, node.params)
     }
 
     if (node.type === 'css-atrule' && node.name === 'apply') {
-      let isImportant = /\s+(?:!important|#{(['"]*)!important\1})\s*$/.test(
-        node.params,
-      )
+      let isImportant = /\s+(?:!important|#{(['"]*)!important\1})\s*$/.test(node.params)
 
       let classList = node.params
 
@@ -844,17 +778,9 @@ function transformCss(ast: any, { env }: TransformerContext) {
 function transformAstro(ast: any, { env, changes }: TransformerContext) {
   let { staticAttrs, dynamicAttrs } = env.customizations
 
-  if (
-    ast.type === 'element' ||
-    ast.type === 'custom-element' ||
-    ast.type === 'component'
-  ) {
+  if (ast.type === 'element' || ast.type === 'custom-element' || ast.type === 'component') {
     for (let attr of ast.attributes ?? []) {
-      if (
-        staticAttrs.has(attr.name) &&
-        attr.type === 'attribute' &&
-        attr.kind === 'quoted'
-      ) {
+      if (staticAttrs.has(attr.name) && attr.type === 'attribute' && attr.kind === 'quoted') {
         attr.value = sortClasses(attr.value, {
           env,
         })
@@ -938,8 +864,7 @@ function transformTwig(ast: any, { env, changes }: TransformerContext) {
       const concat = path.find((entry) => {
         return (
           entry.parent &&
-          (entry.parent.type === 'BinaryConcatExpression' ||
-            entry.parent.type === 'BinaryAddExpression')
+          (entry.parent.type === 'BinaryConcatExpression' || entry.parent.type === 'BinaryAddExpression')
         )
       })
 
@@ -967,11 +892,7 @@ function transformPug(ast: any, { env }: TransformerContext) {
   // First sort the classes in attributes
   for (const token of ast.tokens) {
     if (token.type === 'attribute' && staticAttrs.has(token.name)) {
-      token.val = [
-        token.val.slice(0, 1),
-        sortClasses(token.val.slice(1, -1), { env }),
-        token.val.slice(-1),
-      ].join('')
+      token.val = [token.val.slice(0, 1), sortClasses(token.val.slice(1, -1), { env }), token.val.slice(-1)].join('')
     }
   }
 
@@ -1001,9 +922,7 @@ function transformPug(ast: any, { env }: TransformerContext) {
 
   // Sort the lists of class tokens
   for (const [startIdx, endIdx] of ranges) {
-    const classes = ast.tokens
-      .slice(startIdx, endIdx + 1)
-      .map((token: any) => token.val)
+    const classes = ast.tokens.slice(startIdx, endIdx + 1).map((token: any) => token.val)
 
     const { classList } = sortClassList(classes, {
       env,
@@ -1138,10 +1057,7 @@ export const printers: Record<string, Printer> = (function () {
           }
         })
 
-        options.originalText = spliceChangesIntoString(
-          options.originalText,
-          changes,
-        )
+        options.originalText = spliceChangesIntoString(options.originalText, changes)
       }
     }
 
@@ -1247,14 +1163,10 @@ export const parsers: Record<string, Parser> = {
     : {}),
   ...(base.parsers.astroExpressionParser
     ? {
-        astroExpressionParser: createParser(
-          'astroExpressionParser',
-          transformJavaScript,
-          {
-            staticAttrs: ['class'],
-            dynamicAttrs: ['class:list'],
-          },
-        ),
+        astroExpressionParser: createParser('astroExpressionParser', transformJavaScript, {
+          staticAttrs: ['class'],
+          dynamicAttrs: ['class:list'],
+        }),
       }
     : {}),
   ...(base.parsers.marko

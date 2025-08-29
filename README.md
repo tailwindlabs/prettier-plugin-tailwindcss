@@ -230,7 +230,6 @@ This plugin uses Prettier APIs that can only be used by one plugin at a time, ma
 - `prettier-plugin-multiline-arrays`
 - `prettier-plugin-organize-attributes`
 - `prettier-plugin-organize-imports`
-- `prettier-plugin-style-order`
 - `prettier-plugin-svelte`
 - `prettier-plugin-sort-imports`
 

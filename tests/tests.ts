@@ -38,11 +38,7 @@ let css: TestEntry[] = [
   t`@apply ${yes};`,
   t`/* @apply ${no}; */`,
   t`@not-apply ${no};`,
-  [
-    '@apply sm:p-0\n   p-0;',
-    '@apply p-0\n   sm:p-0;',
-    { tailwindPreserveWhitespace: true },
-  ],
+  ['@apply sm:p-0\n   p-0;', '@apply p-0\n   sm:p-0;', { tailwindPreserveWhitespace: true }],
 
   // Quote conversion for custom at-rules
   [`@import "./file.css";`, `@import './file.css';`],
@@ -69,10 +65,7 @@ export let javascript: TestEntry[] = [
   t`;<div class={{ '${yes}': '${yes}' }['${yes}']} />`,
   t`;<div class />`,
   t`;<div class="" />`,
-  [
-    `;<div class={\`sm:block inline flex\${someVar}\`} />`,
-    `;<div class={\`inline sm:block flex\${someVar}\`} />`,
-  ],
+  [`;<div class={\`sm:block inline flex\${someVar}\`} />`, `;<div class={\`inline sm:block flex\${someVar}\`} />`],
   [
     `;<div class={\`\${someVar}sm:block md:inline flex\`} />`,
     `;<div class={\`\${someVar}sm:block flex md:inline\`} />`,
@@ -81,35 +74,17 @@ export let javascript: TestEntry[] = [
     `;<div class={\`sm:p-0 p-0 \${someVar}sm:block md:inline flex\`} />`,
     `;<div class={\`p-0 sm:p-0 \${someVar}sm:block flex md:inline\`} />`,
   ],
-  [
-    `;<div class="block px-1\u3000py-2" />`,
-    `;<div class="px-1\u3000py-2 block" />`,
-  ],
+  [`;<div class="block px-1\u3000py-2" />`, `;<div class="px-1\u3000py-2 block" />`],
 
   // Whitespace is normalized and duplicates are removed
-  [
-    ';<div class="   m-0  sm:p-0  p-0   " />',
-    ';<div class="m-0 p-0 sm:p-0" />',
-  ],
-  [
-    ";<div class={'   m-0  sm:p-0  p-0   '} />",
-    ";<div class={'m-0 p-0 sm:p-0'} />",
-  ],
+  [';<div class="   m-0  sm:p-0  p-0   " />', ';<div class="m-0 p-0 sm:p-0" />'],
+  [";<div class={'   m-0  sm:p-0  p-0   '} />", ";<div class={'m-0 p-0 sm:p-0'} />"],
   [';<div class={` sm:p-0\n  p-0   `} />', ';<div class={`p-0 sm:p-0`} />'],
   [';<div class="flex flex" />', ';<div class="flex" />'],
   [';<div class={`   flex  flex `} />', ';<div class={`flex`} />'],
-  [
-    ';<div class={`   flex  flex flex${someVar}block block`} />',
-    ';<div class={`flex flex${someVar}block block`} />',
-  ],
-  [
-    ';<div class={`flex ` + `text-red-500`} />',
-    ';<div class={`flex ` + `text-red-500`} />',
-  ],
-  [
-    ';<div class={`flex ` + `  ` + `text-red-500`} />',
-    ';<div class={`flex ` + ` ` + `text-red-500`} />',
-  ],
+  [';<div class={`   flex  flex flex${someVar}block block`} />', ';<div class={`flex flex${someVar}block block`} />'],
+  [';<div class={`flex ` + `text-red-500`} />', ';<div class={`flex ` + `text-red-500`} />'],
+  [';<div class={`flex ` + `  ` + `text-red-500`} />', ';<div class={`flex ` + ` ` + `text-red-500`} />'],
 
   t`;<div class={"before:content-['\\\\2248']"} />`,
   t`;<div class={\`before:content-['\\\\2248']\`} />`,
@@ -125,11 +100,7 @@ export let javascript: TestEntry[] = [
   ],
 ]
 javascript = javascript.concat(
-  javascript.map((test) => [
-    test[0].replace(/class/g, 'className'),
-    test[1].replace(/class/g, 'className'),
-    test[2],
-  ]),
+  javascript.map((test) => [test[0].replace(/class/g, 'className'), test[1].replace(/class/g, 'className'), test[2]]),
 )
 
 let vue: TestEntry[] = [
@@ -163,19 +134,13 @@ let vue: TestEntry[] = [
 
   [`<div :class="'   flex  flex '"></div>`, `<div :class="'flex'"></div>`],
   [`<div :class="\`   flex  flex \`"></div>`, `<div :class="\`flex\`"></div>`],
-  [
-    `<div :class="' flex ' + ' underline '"></div>`,
-    `<div :class="'flex ' + ' underline'"></div>`,
-  ],
+  [`<div :class="' flex ' + ' underline '"></div>`, `<div :class="'flex ' + ' underline'"></div>`],
   [
     `<div :class="' sm:p-5 ' + ' flex ' + ' underline ' + ' sm:m-5 '"></div>`,
     `<div :class="'sm:p-5 ' + ' flex' + ' underline' + ' sm:m-5'"></div>`,
   ],
 
-  [
-    `<div :class="'before:content-[\\'\\\\2248\\']'" />`,
-    `<div :class="'before:content-[\\'\\\\2248\\']'" />`,
-  ],
+  [`<div :class="'before:content-[\\'\\\\2248\\']'" />`, `<div :class="'before:content-[\\'\\\\2248\\']'" />`],
 ]
 
 let glimmer: TestEntry[] = [
@@ -185,10 +150,7 @@ let glimmer: TestEntry[] = [
   t`<div class='${yes} {{"${yes}"}} ${yes}'></div>`,
   t`<div class='${yes} {{"${yes}"}} {{if someVar "${yes}" "${yes}"}}'></div>`,
   t`<div class='${yes} {{"${yes}"}} {{if someVar "${yes}" "${yes}"}}' {{if someVar "attr='${no}'" "attr='${no}'"}}></div>`,
-  [
-    `<div class='md:inline flex sm:block{{someVar}}'></div>`,
-    `<div class='flex md:inline sm:block{{someVar}}'></div>`,
-  ],
+  [`<div class='md:inline flex sm:block{{someVar}}'></div>`, `<div class='flex md:inline sm:block{{someVar}}'></div>`],
   [
     `<div class='sm:p-0 p-0 {{someVar}}sm:block md:inline flex'></div>`,
     `<div class='p-0 sm:p-0 {{someVar}}sm:block flex md:inline'></div>`,
@@ -200,8 +162,8 @@ let glimmer: TestEntry[] = [
   t`{{link 'Some page' href=person.url class='${no}'}}`,
   t`<div class='{{if @isTrue (concat "border-l-4 border-" @borderColor)}}'></div>`,
   [
-    `<div class='{{if @isTrue (concat "border-opacity-30 border-l-4 border-" @borderColor)}}'></div>`,
-    `<div class='{{if @isTrue (concat "border-l-4 border-opacity-30 border-" @borderColor)}}'></div>`,
+    `<div class='{{if @isTrue (concat "border-l-4 border-x-4 border-" @borderColor)}}'></div>`,
+    `<div class='{{if @isTrue (concat "border-x-4 border-l-4 border-" @borderColor)}}'></div>`,
   ],
   [
     `<div class='{{if @isTrue (concat "border-l-4 border " @borderColor)}}'></div>`,
@@ -225,6 +187,7 @@ export let tests: Record<string, TestEntry[]> = {
   glimmer,
   lwc: html,
   vue: [
+    //
     ...vue,
     t`<div :class="\`${yes} \${someVar} ${yes} \${'${yes}'}\`"></div>`,
   ],
@@ -253,7 +216,11 @@ export let tests: Record<string, TestEntry[]> = {
 
     t`<div [ngClass]="\`${yes}\`"></div>`,
   ],
-  css: [...css, t`@apply ${yes} !important;`],
+  css: [
+    //
+    ...css,
+    t`@apply ${yes} !important;`,
+  ],
   scss: [
     ...css,
     t`@apply ${yes} #{!important};`,
@@ -266,7 +233,13 @@ export let tests: Record<string, TestEntry[]> = {
     t`@apply ${yes} #{'''!important'''};`,
     t`@apply ${yes} #{"'"'"!important"'"'"};`,
   ],
-  less: [...css, t`@apply ${yes} !important;`, t`@apply ~"${yes}";`, t`@apply ~'${yes}';`],
+  less: [
+    //
+    ...css,
+    t`@apply ${yes} !important;`,
+    t`@apply ~"${yes}";`,
+    t`@apply ~'${yes}';`
+  ],
   babel: javascript,
   typescript: javascript,
   'babel-ts': javascript,
@@ -275,12 +248,6 @@ export let tests: Record<string, TestEntry[]> = {
   acorn: javascript,
   meriyah: javascript,
   mdx: javascript
-    .filter((test) => {
-      return !/^\/\*/.test(test[0]) && !/^\/\*/.test(test[1])
-    })
-    .map((test) => [
-      test[0].replace(/^;/, ''),
-      test[1].replace(/^;/, ''),
-      test[2],
-    ]),
+    .filter((test) => !/^\/\*/.test(test[0]) && !/^\/\*/.test(test[1]))
+    .map((test) => [test[0].replace(/^;/, ''), test[1].replace(/^;/, ''), test[2]]),
 }

@@ -12,11 +12,7 @@ describe('spliceChangesIntoString', () => {
 
   function buildFixture(repeatCount: number, changeCount: number) {
     // A large set of changes across random places in the string
-    let indxes = new Set(
-      Array.from({ length: changeCount }, (_, i) =>
-        Math.ceil(Math.random() * repeatCount),
-      ),
-    )
+    let indxes = new Set(Array.from({ length: changeCount }, (_, i) => Math.ceil(Math.random() * repeatCount)))
 
     let changes: StringChange[] = Array.from(indxes).flatMap((idx) => {
       return changesTemplate.map((change) => ({

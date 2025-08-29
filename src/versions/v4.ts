@@ -1,11 +1,8 @@
 // @ts-check
-import * as fs from 'fs/promises'
-import * as path from 'path'
-import { pathToFileURL } from 'url'
+import * as fs from 'node:fs/promises'
+import * as path from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { createJiti, type Jiti } from 'jiti'
-import postcss from 'postcss'
-// @ts-ignore
-import postcssImport from 'postcss-import'
 import { resolveCssFrom, resolveJsFrom } from '../resolve'
 import type { UnifiedApi } from '../types'
 

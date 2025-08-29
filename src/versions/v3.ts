@@ -1,5 +1,5 @@
 // @ts-check
-import * as path from 'path'
+import * as path from 'node:path'
 import clearModule from 'clear-module'
 // @ts-ignore
 import { generateRules as generateRulesFallback } from 'tailwindcss-v3/lib/lib/generateRules'

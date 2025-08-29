@@ -1,6 +1,6 @@
 // @ts-check
-import * as path from 'path'
-import { pathToFileURL } from 'url'
+import * as path from 'node:path'
+import { pathToFileURL } from 'node:url'
 import escalade from 'escalade/sync'
 import prettier from 'prettier'
 import type { ParserOptions } from 'prettier'

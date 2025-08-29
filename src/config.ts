@@ -34,7 +34,7 @@ export async function getTailwindConfig(options: ParserOptions): Promise<any> {
   //
   // These lookups can take a bit so we cache them. This is especially important
   // for files with lots of embedded languages (e.g. Vue bindings).
-  let configDir = await resolvePrettierConfigPath(options.filepath)
+  let [configDir, configPath] = await resolvePrettierConfigPath(options.filepath)
 
   // Locate Tailwind CSS itself
   //
@@ -48,7 +48,7 @@ export async function getTailwindConfig(options: ParserOptions): Promise<any> {
   // We resolve this relative to the config file because it is *required*
   // to work with a project's custom config. Given that, resolving it
   // relative to where the path is defined makes the most sense.
-  let stylesheet = resolveStylesheet(options, configDir)
+  let stylesheet = resolveStylesheet(options, configDir, configPath)
 
   // Locate *explicit* v3 configs relative to the prettier config file
   //
@@ -91,7 +91,8 @@ export async function getTailwindConfig(options: ParserOptions): Promise<any> {
     // Warn them about this and use the bundled v4.
     console.error(
       'explicit-stylesheet-and-config-together',
-      'You have specified a Tailwind CSS stylesheet and a Tailwind CSS config at the same time. Use tailwindStylesheet unless you are using v3. Preferring the stylesheet.',
+      configPath ?? '',
+      `You have specified a Tailwind CSS stylesheet and a Tailwind CSS config at the same time. Use tailwindStylesheet unless you are using v3. Preferring the stylesheet.`,
     )
   }
 
@@ -105,6 +106,7 @@ export async function getTailwindConfig(options: ParserOptions): Promise<any> {
     mod = null
     console.error(
       'stylesheet-unsupported',
+      configPath ?? '',
       'You have specified a Tailwind CSS stylesheet but your installed version of Tailwind CSS does not support this feature.',
     )
   }
@@ -128,7 +130,7 @@ export async function getTailwindConfig(options: ParserOptions): Promise<any> {
 
 let prettierConfigCache = expiringMap<string, Promise<string | null>>(10_000)
 
-async function resolvePrettierConfigPath(filePath: string): Promise<string> {
+async function resolvePrettierConfigPath(filePath: string): Promise<[string, string | null]> {
   let prettierConfig = await prettierConfigCache.remember(filePath, async () => {
     try {
       return await prettier.resolveConfigFile(filePath)
@@ -139,7 +141,7 @@ async function resolvePrettierConfigPath(filePath: string): Promise<string> {
     }
   })
 
-  return prettierConfig ? path.dirname(prettierConfig) : process.cwd()
+  return prettierConfig ? [path.dirname(prettierConfig), prettierConfig] : [process.cwd(), null]
 }
 
 let resolvedModCache = expiringMap<string, Promise<[any | null, string | null]>>(10_000)
@@ -193,7 +195,7 @@ function findClosestJsConfig(inputDir: string): string | null {
   return configPath
 }
 
-function resolveStylesheet(options: ParserOptions, baseDir: string): string | null {
+function resolveStylesheet(options: ParserOptions, baseDir: string, configPath: string | null): string | null {
   if (options.tailwindStylesheet) {
     if (
       options.tailwindStylesheet.endsWith('.js') ||
@@ -205,6 +207,7 @@ function resolveStylesheet(options: ParserOptions, baseDir: string): string | nu
     ) {
       console.error(
         'stylesheet-is-js-file',
+        configPath ?? '',
         "Your `tailwindStylesheet` option points to a JS/TS config file. You must point to your project's `.css` file for v4 projects.",
       )
     } else if (
@@ -215,11 +218,13 @@ function resolveStylesheet(options: ParserOptions, baseDir: string): string | nu
     ) {
       console.error(
         'stylesheet-is-preprocessor-file',
+        configPath ?? '',
         'Your `tailwindStylesheet` option points to a preprocessor file. This is unsupported and you may get unexpected results.',
       )
     } else if (!options.tailwindStylesheet.endsWith('.css')) {
       console.error(
         'stylesheet-is-not-css-file',
+        configPath ?? '',
         'Your `tailwindStylesheet` option does not point to a CSS file. This is unsupported and you may get unexpected results.',
       )
     }
@@ -230,6 +235,7 @@ function resolveStylesheet(options: ParserOptions, baseDir: string): string | nu
   if (options.tailwindEntryPoint) {
     console.warn(
       'entrypoint-is-deprecated',
+      configPath ?? '',
       'Deprecated: Use the `tailwindStylesheet` option for v4 projects instead of `tailwindEntryPoint`.',
     )
 
@@ -239,6 +245,7 @@ function resolveStylesheet(options: ParserOptions, baseDir: string): string | nu
   if (options.tailwindConfig && options.tailwindConfig.endsWith('.css')) {
     console.warn(
       'config-as-css-is-deprecated',
+      configPath ?? '',
       'Deprecated: Use the `tailwindStylesheet` option for v4 projects instead of `tailwindConfig`.',
     )
 

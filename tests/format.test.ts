@@ -64,3 +64,32 @@ describe('whitespace', () => {
     expect(result).toEqual('<div class="flex underline line-through"></div>')
   })
 })
+
+describe('errors', () => {
+  test('when the given JS config does not exist', async ({ expect }) => {
+    let result = format('<div></div>', {
+      tailwindConfig: 'i-do-not-exist.js',
+      tailwindPackageName: 'tailwindcss-v3',
+    })
+
+    await expect(result).rejects.toThrowError(/Cannot find module/)
+  })
+
+  test('when the given stylesheet does not exist', async ({ expect }) => {
+    let result = format('<div></div>', {
+      tailwindStylesheet: 'i-do-not-exist.css',
+      tailwindPackageName: 'tailwindcss-v4',
+    })
+
+    await expect(result).rejects.toThrowError(/no such file or directory/)
+  })
+
+  test('when using a stylesheet and the local install is not v4', async ({ expect }) => {
+    let result = format('<div></div>', {
+      tailwindStylesheet: 'i-do-not-exist.css',
+      tailwindPackageName: 'tailwindcss-v3',
+    })
+
+    await expect(result).rejects.toThrowError(/Unable to load Tailwind CSS v4/)
+  })
+})

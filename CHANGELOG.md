@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Format quotes in `@source`, `@plugin`, and `@config` ([#387](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/387))
 - Support sorting in callable template literals ([#367](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/367))
 - Support sorting in function calls mixed with property accesses ([#367](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/367))
+- Handle quote escapes in LESS when sorting `@apply` ([#392](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/392))
 
 ## [0.6.14] - 2025-07-09
 

@@ -4,6 +4,7 @@ import { pathToFileURL } from 'url'
 import escalade from 'escalade/sync'
 import prettier from 'prettier'
 import type { ParserOptions } from 'prettier'
+import * as console from './console'
 import { expiringMap } from './expiring-map.js'
 import { resolveJsFrom } from './resolve'
 import type { UnifiedApi } from './types'
@@ -89,6 +90,7 @@ export async function getTailwindConfig(options: ParserOptions): Promise<any> {
     // In this case the user explicitly gave us a stylesheet and a config.
     // Warn them about this and use the bundled v4.
     console.error(
+      'explicit-stylesheet-and-config-together',
       'You have specified a Tailwind CSS stylesheet and a Tailwind CSS config at the same time. Use tailwindStylesheet unless you are using v3. Preferring the stylesheet.',
     )
   }
@@ -102,6 +104,7 @@ export async function getTailwindConfig(options: ParserOptions): Promise<any> {
     // installation is not v4. We'll fallback to the bundled v4 in this case.
     mod = null
     console.error(
+      'stylesheet-unsupported',
       'You have specified a Tailwind CSS stylesheet but your installed version of Tailwind CSS does not support this feature.',
     )
   }
@@ -130,8 +133,8 @@ async function resolvePrettierConfigPath(filePath: string): Promise<string> {
     try {
       return await prettier.resolveConfigFile(filePath)
     } catch (err) {
-      console.error('Failed to resolve Prettier Config')
-      console.error(err)
+      console.error('prettier-config-not-found', 'Failed to resolve Prettier Config')
+      console.error('prettier-config-not-found-err', err)
       return null
     }
   })
@@ -201,6 +204,7 @@ function resolveStylesheet(options: ParserOptions, baseDir: string): string | nu
       options.tailwindStylesheet.endsWith('.cts')
     ) {
       console.error(
+        'stylesheet-is-js-file',
         "Your `tailwindStylesheet` option points to a JS/TS config file. You must point to your project's `.css` file for v4 projects.",
       )
     } else if (
@@ -210,10 +214,12 @@ function resolveStylesheet(options: ParserOptions, baseDir: string): string | nu
       options.tailwindStylesheet.endsWith('.styl')
     ) {
       console.error(
+        'stylesheet-is-preprocessor-file',
         'Your `tailwindStylesheet` option points to a preprocessor file. This is unsupported and you may get unexpected results.',
       )
     } else if (!options.tailwindStylesheet.endsWith('.css')) {
       console.error(
+        'stylesheet-is-not-css-file',
         'Your `tailwindStylesheet` option does not point to a CSS file. This is unsupported and you may get unexpected results.',
       )
     }
@@ -222,13 +228,19 @@ function resolveStylesheet(options: ParserOptions, baseDir: string): string | nu
   }
 
   if (options.tailwindEntryPoint) {
-    console.warn('Deprecated: Use the `tailwindStylesheet` option for v4 projects instead of `tailwindEntryPoint`.')
+    console.warn(
+      'entrypoint-is-deprecated',
+      'Deprecated: Use the `tailwindStylesheet` option for v4 projects instead of `tailwindEntryPoint`.',
+    )
 
     return path.resolve(baseDir, options.tailwindEntryPoint)
   }
 
   if (options.tailwindConfig && options.tailwindConfig.endsWith('.css')) {
-    console.warn('Deprecated: Use the `tailwindStylesheet` option for v4 projects instead of `tailwindConfig`.')
+    console.warn(
+      'config-as-css-is-deprecated',
+      'Deprecated: Use the `tailwindStylesheet` option for v4 projects instead of `tailwindConfig`.',
+    )
 
     return path.resolve(baseDir, options.tailwindConfig)
   }

@@ -630,10 +630,8 @@ function transformJavaScript(ast: import('@babel/types').Node, { env }: Transfor
         // Nodes inside concat expressions shouldn't collapse whitespace
         // depending on which side they're part of.
         if (entry.parent.type === 'BinaryExpression' && entry.parent.operator === '+') {
-          start = entry.key !== 'right'
-          end = entry.key !== 'left'
-
-          break
+          start &&= entry.key !== 'right'
+          end &&= entry.key !== 'left'
         }
       }
 

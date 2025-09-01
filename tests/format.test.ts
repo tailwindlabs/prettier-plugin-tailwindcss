@@ -66,6 +66,14 @@ describe('whitespace', () => {
     expect(result).toEqual(";<div className={a + ' p-4 ' + b}></div>")
   })
 
+  test('whitespace is not trimmed inside concat expressions (angular)', async ({ expect }) => {
+    let result = await format(`<ul [class]="'pagination' + (size ? ' pagination-' + size : '')"></ul>`, {
+      parser: 'angular',
+    })
+
+    expect(result).toEqual(`<ul [class]="'pagination' + (size ? ' pagination-' + size : '')"></ul>`)
+  })
+
   test('whitespace is not trimmed inside adjacent-before/after template expressions', async ({ expect }) => {
     let result = await format(";<div className={`header${isExtendable ? ' header-extendable' : ''}`} />", {
       parser: 'babel',

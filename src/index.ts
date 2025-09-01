@@ -109,9 +109,7 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
     StringLiteral(node, path) {
       if (!node.value) return
 
-      let concat = path.find((entry) => {
-        return entry.parent && entry.parent.type === 'BinaryExpression' && entry.parent.operator === '+'
-      })
+      let collapseWhitespace = canCollapseWhitespaceIn(path)
 
       changes.push({
         start: node.start + 1,
@@ -119,10 +117,7 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
         before: node.value,
         after: sortClasses(node.value, {
           env,
-          collapseWhitespace: {
-            start: concat?.key !== 'right',
-            end: concat?.key !== 'left',
-          },
+          collapseWhitespace,
         }),
       })
     },
@@ -130,9 +125,7 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
     TemplateLiteral(node, path) {
       if (!node.quasis.length) return
 
-      let concat = path.find((entry) => {
-        return entry.parent && entry.parent.type === 'BinaryExpression' && entry.parent.operator === '+'
-      })
+      let collapseWhitespace = canCollapseWhitespaceIn(path)
 
       for (let i = 0; i < node.quasis.length; i++) {
         let quasi = node.quasis[i]
@@ -720,16 +713,11 @@ function transformJavaScript(ast: import('@babel/types').Node, { env }: Transfor
         return
       }
 
-      let concat = path.find((entry) => {
-        return entry.parent && entry.parent.type === 'BinaryExpression' && entry.parent.operator === '+'
-      })
+      let collapseWhitespace = canCollapseWhitespaceIn(path)
 
       sortTemplateLiteral(node.quasi, {
         env,
-        collapseWhitespace: {
-          start: concat?.key !== 'right',
-          end: concat?.key !== 'left',
-        },
+        collapseWhitespace,
       })
     },
   })

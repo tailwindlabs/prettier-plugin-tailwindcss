@@ -621,34 +621,37 @@ function transformJavaScript(ast: import('@babel/types').Node, { env }: Transfor
 
   function sortInside(ast: import('@babel/types').Node) {
     visit(ast, (node, path) => {
-      let concat = path.find((entry) => {
-        return entry.parent && entry.parent.type === 'BinaryExpression' && entry.parent.operator === '+'
-      })
+      let start = true
+      let end = true
+
+      for (let entry of path) {
+        if (!entry.parent) continue
+
+        // Nodes inside concat expressions shouldn't collapse whitespace
+        // depending on which side they're part of.
+        if (entry.parent.type === 'BinaryExpression' && entry.parent.operator === '+') {
+          start = entry.key !== 'right'
+          end = entry.key !== 'left'
+
+          break
+        }
+      }
 
       if (isStringLiteral(node)) {
         sortStringLiteral(node, {
           env,
-          collapseWhitespace: {
-            start: concat?.key !== 'right',
-            end: concat?.key !== 'left',
-          },
+          collapseWhitespace: { start, end },
         })
       } else if (node.type === 'TemplateLiteral') {
         sortTemplateLiteral(node, {
           env,
-          collapseWhitespace: {
-            start: concat?.key !== 'right',
-            end: concat?.key !== 'left',
-          },
+          collapseWhitespace: { start, end },
         })
       } else if (node.type === 'TaggedTemplateExpression') {
         if (isSortableTemplateExpression(node, functions)) {
           sortTemplateLiteral(node.quasi, {
             env,
-            collapseWhitespace: {
-              start: concat?.key !== 'right',
-              end: concat?.key !== 'left',
-            },
+            collapseWhitespace: { start, end },
           })
         }
       }

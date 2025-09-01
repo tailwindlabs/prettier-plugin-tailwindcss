@@ -633,6 +633,31 @@ function transformJavaScript(ast: import('@babel/types').Node, { env }: Transfor
           start &&= entry.key !== 'right'
           end &&= entry.key !== 'left'
         }
+
+        // This is probably expression *inside* of a template literal. To collapse whitespace
+        // `Expression`s adjacent-before a quasi must start with whitespace
+        // `Expression`s adjacent-after a quasi must end with whitespace
+        //
+        // Note this check will bail out on more than it really should as it
+        // could be reset somewhere along the way by having whitespace around a
+        // string further up but not at the "root" but that complicates things
+        if (entry.parent.type === 'TemplateLiteral') {
+          let nodeStart = entry.node.start ?? null
+          let nodeEnd = entry.node.end ?? null
+
+          for (let quasi of entry.parent.quasis) {
+            let quasiStart = quasi.end ?? null
+            let quasiEnd = quasi.end ?? null
+
+            if (nodeStart !== null && quasiEnd !== null && nodeStart - quasiEnd <= 2) {
+              start &&= /^\s/.test(quasi.value.raw)
+            }
+
+            if (nodeEnd !== null && quasiStart !== null && nodeEnd - quasiStart <= 2) {
+              end &&= /\s$/.test(quasi.value.raw)
+            }
+          }
+        }
       }
 
       if (isStringLiteral(node)) {

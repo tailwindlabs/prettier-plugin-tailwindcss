@@ -66,6 +66,14 @@ describe('whitespace', () => {
     expect(result).toEqual(";<div className={a + ' p-4 ' + b}></div>")
   })
 
+  test('whitespace is not trimmed inside adjacent-before/after template expressions', async ({ expect }) => {
+    let result = await format(";<div className={`header${isExtendable ? ' header-extendable' : ''}`} />", {
+      parser: 'babel',
+    })
+
+    expect(result).toEqual(";<div className={`header${isExtendable ? ' header-extendable' : ''}`} />")
+  })
+
   test('duplicate classes are dropped', async ({ expect }) => {
     let result = await format('<div class="underline line-through underline flex"></div>')
 

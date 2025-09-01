@@ -17,6 +17,16 @@ let fixtures = [
     ext: 'html',
   },
   {
+    name: 'no local install of Tailwind CSS (uses v4)',
+    dir: 'no-local-version',
+    ext: 'html',
+  },
+  {
+    name: 'no stylesheet given (uses v4)',
+    dir: 'no-stylesheet-given',
+    ext: 'html',
+  },
+  {
     name: 'inferred config path',
     dir: 'basic',
     ext: 'html',

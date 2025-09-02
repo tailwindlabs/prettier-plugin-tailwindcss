@@ -207,8 +207,8 @@ export let tests: Record<string, TestEntry[]> = {
     t`<div [ngClass]="{ '${yes}': foo && bar?.['baz'] }" class="${yes}"></div>`,
 
     [
-      `<div [ngClass]="' flex ' + ' underline ' + ' block '"></div>`,
-      `<div [ngClass]="'flex ' + ' underline ' + ' block'"></div>`,
+      `<div [ngClass]="' flex ' + ' italic      underline ' + ' block '"></div>`,
+      `<div [ngClass]="'flex ' + ' italic underline ' + ' block'"></div>`,
     ],
 
     // TODO: Enable this test — it causes console noise but not a failure

@@ -47,11 +47,11 @@ function patchCjsInterop() {
         let code = [
           `import {createRequire as __global__createRequire__} from 'module'`,
           `import {dirname as __global__dirname__} from 'path'`,
-          `import {fileURLToPath} from 'url'`,
+          `import {fileURLToPath as __global__fileURLToPath__} from 'url'`,
 
           // CJS interop fixes
           `const require=__global__createRequire__(import.meta.url)`,
-          `const __filename=fileURLToPath(import.meta.url)`,
+          `const __filename=__global__fileURLToPath__(import.meta.url)`,
           `const __dirname=__global__dirname__(__filename)`,
         ]
 

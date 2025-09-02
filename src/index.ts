@@ -15,7 +15,7 @@ import { getCustomizations } from './options.js'
 import { loadPlugins } from './plugins.js'
 import { sortClasses, sortClassList } from './sorting.js'
 import type { Customizations, StringChange, TransformerContext, TransformerEnv, TransformerMetadata } from './types'
-import { spliceChangesIntoString, visit } from './utils.js'
+import { spliceChangesIntoString, visit, type Path } from './utils.js'
 
 let base = await loadPlugins()
 
@@ -109,9 +109,7 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
     StringLiteral(node, path) {
       if (!node.value) return
 
-      let concat = path.find((entry) => {
-        return entry.parent && entry.parent.type === 'BinaryExpression' && entry.parent.operator === '+'
-      })
+      let collapseWhitespace = canCollapseWhitespaceIn(path)
 
       changes.push({
         start: node.start + 1,
@@ -119,10 +117,7 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
         before: node.value,
         after: sortClasses(node.value, {
           env,
-          collapseWhitespace: {
-            start: concat?.key !== 'right',
-            end: concat?.key !== 'left',
-          },
+          collapseWhitespace,
         }),
       })
     },
@@ -130,9 +125,7 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
     TemplateLiteral(node, path) {
       if (!node.quasis.length) return
 
-      let concat = path.find((entry) => {
-        return entry.parent && entry.parent.type === 'BinaryExpression' && entry.parent.operator === '+'
-      })
+      let collapseWhitespace = canCollapseWhitespaceIn(path)
 
       for (let i = 0; i < node.quasis.length; i++) {
         let quasi = node.quasis[i]
@@ -152,8 +145,8 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
             ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.raw),
 
             collapseWhitespace: {
-              start: concat?.key !== 'right' && i === 0,
-              end: concat?.key !== 'left' && i >= node.expressions.length,
+              start: collapseWhitespace.start && i === 0,
+              end: collapseWhitespace.end && i >= node.expressions.length,
             },
           }),
         })
@@ -612,6 +605,49 @@ function isSortableExpression(
   return false
 }
 
+function canCollapseWhitespaceIn(path: Path<import('@babel/types').Node, any>) {
+  let start = true
+  let end = true
+
+  for (let entry of path) {
+    if (!entry.parent) continue
+
+    // Nodes inside concat expressions shouldn't collapse whitespace
+    // depending on which side they're part of.
+    if (entry.parent.type === 'BinaryExpression' && entry.parent.operator === '+') {
+      start &&= entry.key !== 'right'
+      end &&= entry.key !== 'left'
+    }
+
+    // This is probably expression *inside* of a template literal. To collapse whitespace
+    // `Expression`s adjacent-before a quasi must start with whitespace
+    // `Expression`s adjacent-after a quasi must end with whitespace
+    //
+    // Note this check will bail out on more than it really should as it
+    // could be reset somewhere along the way by having whitespace around a
+    // string further up but not at the "root" but that complicates things
+    if (entry.parent.type === 'TemplateLiteral') {
+      let nodeStart = entry.node.start ?? null
+      let nodeEnd = entry.node.end ?? null
+
+      for (let quasi of entry.parent.quasis) {
+        let quasiStart = quasi.end ?? null
+        let quasiEnd = quasi.end ?? null
+
+        if (nodeStart !== null && quasiEnd !== null && nodeStart - quasiEnd <= 2) {
+          start &&= /^\s/.test(quasi.value.raw)
+        }
+
+        if (nodeEnd !== null && quasiStart !== null && nodeEnd - quasiStart <= 2) {
+          end &&= /\s$/.test(quasi.value.raw)
+        }
+      }
+    }
+  }
+
+  return { start, end }
+}
+
 // TODO: The `ast` types here aren't strictly correct.
 //
 // We cross several parsers that share roughly the same shape so things are
@@ -621,35 +657,15 @@ function transformJavaScript(ast: import('@babel/types').Node, { env }: Transfor
 
   function sortInside(ast: import('@babel/types').Node) {
     visit(ast, (node, path) => {
-      let concat = path.find((entry) => {
-        return entry.parent && entry.parent.type === 'BinaryExpression' && entry.parent.operator === '+'
-      })
+      let collapseWhitespace = canCollapseWhitespaceIn(path)
 
       if (isStringLiteral(node)) {
-        sortStringLiteral(node, {
-          env,
-          collapseWhitespace: {
-            start: concat?.key !== 'right',
-            end: concat?.key !== 'left',
-          },
-        })
+        sortStringLiteral(node, { env, collapseWhitespace })
       } else if (node.type === 'TemplateLiteral') {
-        sortTemplateLiteral(node, {
-          env,
-          collapseWhitespace: {
-            start: concat?.key !== 'right',
-            end: concat?.key !== 'left',
-          },
-        })
+        sortTemplateLiteral(node, { env, collapseWhitespace })
       } else if (node.type === 'TaggedTemplateExpression') {
         if (isSortableTemplateExpression(node, functions)) {
-          sortTemplateLiteral(node.quasi, {
-            env,
-            collapseWhitespace: {
-              start: concat?.key !== 'right',
-              end: concat?.key !== 'left',
-            },
-          })
+          sortTemplateLiteral(node.quasi, { env, collapseWhitespace })
         }
       }
     })
@@ -697,16 +713,11 @@ function transformJavaScript(ast: import('@babel/types').Node, { env }: Transfor
         return
       }
 
-      let concat = path.find((entry) => {
-        return entry.parent && entry.parent.type === 'BinaryExpression' && entry.parent.operator === '+'
-      })
+      let collapseWhitespace = canCollapseWhitespaceIn(path)
 
       sortTemplateLiteral(node.quasi, {
         env,
-        collapseWhitespace: {
-          start: concat?.key !== 'right',
-          end: concat?.key !== 'left',
-        },
+        collapseWhitespace,
       })
     },
   })

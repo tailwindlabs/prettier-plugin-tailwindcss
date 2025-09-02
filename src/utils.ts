@@ -19,7 +19,7 @@ interface PathEntry<T, Meta> {
   meta: Meta
 }
 
-type Path<T, Meta> = PathEntry<T, Meta>[]
+export type Path<T, Meta> = PathEntry<T, Meta>[]
 
 type Visitor<T, Meta extends Record<string, unknown>> = (
   node: T,

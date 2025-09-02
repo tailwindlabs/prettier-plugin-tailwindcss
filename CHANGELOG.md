@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Handle quote escapes in LESS when sorting `@apply` ([#392](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/392))
 - Improved monorepo support by loading Tailwind CSS relative to the input file instead of prettier config file ([#386](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/386))
 - Improved monorepo support by loading v3 configs relative to the input file instead of prettier config file ([#386](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/386))
+- Fix whitespace removal inside nested concat and template expressions ([#396](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/396))
 - Fallback to Tailwind CSS v4 instead of v3 by default ([#390](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/390))
 
 ## [0.6.14] - 2025-07-09

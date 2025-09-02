@@ -207,8 +207,8 @@ export let tests: Record<string, TestEntry[]> = {
     t`<div [ngClass]="{ '${yes}': foo && bar?.['baz'] }" class="${yes}"></div>`,
 
     [
-      `<div [ngClass]="' flex ' + ' underline ' + ' block '"></div>`,
-      `<div [ngClass]="'flex ' + ' underline' + ' block'"></div>`,
+      `<div [ngClass]="' flex ' + ' italic      underline ' + ' block '"></div>`,
+      `<div [ngClass]="'flex ' + ' italic underline ' + ' block'"></div>`,
     ],
 
     // TODO: Enable this test — it causes console noise but not a failure
@@ -238,7 +238,7 @@ export let tests: Record<string, TestEntry[]> = {
     ...css,
     t`@apply ${yes} !important;`,
     t`@apply ~"${yes}";`,
-    t`@apply ~'${yes}';`
+    t`@apply ~'${yes}';`,
   ],
   babel: javascript,
   typescript: javascript,

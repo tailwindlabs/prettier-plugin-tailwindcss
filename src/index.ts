@@ -279,9 +279,7 @@ function transformHtml(ast: any, { env, changes }: TransformerContext) {
   let { parser } = env.options
 
   for (let attr of ast.attrs ?? []) {
-    if (isSortableAttribute(attr.name, env.customizations)) {
-      attr.value = sortClasses(attr.value, { env })
-    } else if (dynamicAttrs.has(attr.name)) {
+    if (dynamicAttrs.has(attr.name)) {
       if (!/[`'"]/.test(attr.value)) {
         continue
       }
@@ -291,6 +289,8 @@ function transformHtml(ast: any, { env, changes }: TransformerContext) {
       } else {
         transformDynamicJsAttribute(attr, env)
       }
+    } else if (isSortableAttribute(attr.name, env.customizations)) {
+      attr.value = sortClasses(attr.value, { env })
     }
   }
 

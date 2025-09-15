@@ -1247,12 +1247,12 @@ export interface PluginOptions {
   /**
    * List of prefixes to match attributes that contain classes.
    */
-  tailwindAttributesStartsWith?: string[]
+  tailwindAttributesStartWith?: string[]
 
   /**
    * List of suffixes to match attributes that contain classes.
    */
-  tailwindAttributesEndsWith?: string[]
+  tailwindAttributesEndWith?: string[]
 
   /**
    * Preserve whitespace around Tailwind classes when sorting.

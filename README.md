@@ -73,8 +73,8 @@ By default this plugin sorts classes in the `class` attribute, any framework-spe
 You can extend this behavior to sort classes in any attribute using the following options:
 
 - `tailwindAttributes`: An array of exact attribute names to sort.
-- `tailwindAttributesStartsWith`: An array of prefixes to match attributes that begin with a certain string.
-- `tailwindAttributesEndsWith`: An array of suffixes to match attributes that end with a certain string.
+- `tailwindAttributesStartWith`: An array of prefixes to match attributes that begin with a certain string.
+- `tailwindAttributesEndWith`: An array of suffixes to match attributes that end with a certain string.
 
 #### Example 1
 
@@ -102,7 +102,7 @@ function MyButton({ children }) {
 ```json5
 // .prettierrc
 {
-  "tailwindAttributesEndsWith": ["ClassName"]
+  "tailwindAttributesEndWith": ["ClassName"]
 }
 ```
 

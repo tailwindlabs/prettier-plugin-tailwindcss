@@ -70,7 +70,13 @@ If a local configuration file cannot be found the plugin will fallback to the de
 
 By default this plugin sorts classes in the `class` attribute, any framework-specific equivalents like `className`, `:class`, `[ngClass]`, and any Tailwind `@apply` directives.
 
-You can sort additional attributes using the `tailwindAttributes` option, which takes an array of attribute names:
+You can extend this behavior to sort classes in any attribute using the following options:
+
+- `tailwindAttributes`: An array of exact attribute names to sort.
+- `tailwindAttributesStartsWith`: An array of prefixes to match attributes that begin with a certain string.
+- `tailwindAttributesEndsWith`: An array of suffixes to match attributes that end with a certain string.
+
+#### Example 1
 
 ```json5
 // .prettierrc
@@ -91,17 +97,16 @@ function MyButton({ children }) {
 }
 ```
 
-#### Matching attributes with a prefix or suffix
+#### Example 2
 
 ```json5
 // .prettierrc
 {
-  "tailwindAttributesStartsWith": ["data"],
   "tailwindAttributesEndsWith": ["ClassName"]
 }
 ```
 
-With this configuration, attributes like `data-active-classes` and `buttonClassName` will be sorted:
+With this configuration, any class found with suffix `ClassName` will be sorted:
 
 ```jsx
 function MyButton({ children }) {

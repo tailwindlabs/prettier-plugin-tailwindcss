@@ -279,7 +279,7 @@ function transformHtml(ast: any, { env, changes }: TransformerContext) {
   let { parser } = env.options
 
   for (let attr of ast.attrs ?? []) {
-    if (isSortableAttribute(env.customizations, attr.name)) {
+    if (isSortableAttribute(attr.name, env.customizations)) {
       attr.value = sortClasses(attr.value, { env })
     } else if (dynamicAttrs.has(attr.name)) {
       if (!/[`'"]/.test(attr.value)) {
@@ -302,7 +302,7 @@ function transformHtml(ast: any, { env, changes }: TransformerContext) {
 function transformGlimmer(ast: any, { env }: TransformerContext) {
   visit(ast, {
     AttrNode(attr, _path, meta) {
-      if (isSortableAttribute(env.customizations, attr.name) && attr.value) {
+      if (isSortableAttribute(attr.name, env.customizations) && attr.value) {
         meta.sortTextNodes = true
       }
     },
@@ -356,8 +356,8 @@ function transformGlimmer(ast: any, { env }: TransformerContext) {
 function transformLiquid(ast: any, { env }: TransformerContext) {
   function isClassAttr(node: { name: string | { type: string; value: string }[] }) {
     return Array.isArray(node.name)
-      ? node.name.every((n) => n.type === 'TextNode' && isSortableAttribute(env.customizations, n.value))
-      : isSortableAttribute(env.customizations, node.name)
+      ? node.name.every((n) => n.type === 'TextNode' && isSortableAttribute(n.value, env.customizations))
+      : isSortableAttribute(node.name, env.customizations)
   }
 
   function hasSurroundingQuotes(str: string) {
@@ -564,7 +564,7 @@ function sortTemplateLiteral(
   return didChange
 }
 
-function isSortableAttribute(customizations: Customizations, name: string) {
+function isSortableAttribute(name: string, customizations: Customizations) {
   const { staticAttrs, suffixAttrs, prefixAttrs } = customizations
 
   if (staticAttrs.has(name)) return true
@@ -699,7 +699,7 @@ function transformJavaScript(ast: import('@babel/types').Node, { env }: Transfor
         return
       }
 
-      if (!isSortableAttribute(env.customizations, node.name.name)) {
+      if (!isSortableAttribute(node.name.name, env.customizations)) {
         return
       }
 
@@ -805,7 +805,7 @@ function transformAstro(ast: any, { env, changes }: TransformerContext) {
 
   if (ast.type === 'element' || ast.type === 'custom-element' || ast.type === 'component') {
     for (let attr of ast.attributes ?? []) {
-      if (isSortableAttribute(env.customizations, attr.name) && attr.type === 'attribute' && attr.kind === 'quoted') {
+      if (isSortableAttribute(attr.name, env.customizations) && attr.type === 'attribute' && attr.kind === 'quoted') {
         attr.value = sortClasses(attr.value, {
           env,
         })
@@ -844,7 +844,7 @@ function transformMarko(ast: any, { env }: TransformerContext) {
         nodesToVisit.push(...currentNode.body)
         break
       case 'MarkoAttribute':
-        if (!isSortableAttribute(env.customizations, currentNode.name)) break
+        if (!isSortableAttribute(currentNode.name, env.customizations)) break
         switch (currentNode.value.type) {
           case 'ArrayExpression':
             const classList = currentNode.value.elements
@@ -866,15 +866,13 @@ function transformMarko(ast: any, { env }: TransformerContext) {
 }
 
 function transformTwig(ast: any, { env, changes }: TransformerContext) {
-  let { staticAttrs } = env.customizations
-
   for (let child of ast.expressions ?? []) {
     transformTwig(child, { env, changes })
   }
 
   visit(ast, {
     Attribute(node, _path, meta) {
-      if (!isSortableAttribute(env.customizations, node.name.name)) return
+      if (!isSortableAttribute(node.name.name, env.customizations)) return
 
       meta.sortTextNodes = true
     },
@@ -912,7 +910,7 @@ function transformPug(ast: any, { env }: TransformerContext) {
 
   // First sort the classes in attributes
   for (const token of ast.tokens) {
-    if (token.type === 'attribute' && isSortableAttribute(env.customizations, token.name)) {
+    if (token.type === 'attribute' && isSortableAttribute(token.name, env.customizations)) {
       token.val = [token.val.slice(0, 1), sortClasses(token.val.slice(1, -1), { env }), token.val.slice(-1)].join('')
     }
   }
@@ -958,7 +956,7 @@ function transformPug(ast: any, { env }: TransformerContext) {
 
 function transformSvelte(ast: any, { env, changes }: TransformerContext) {
   for (let attr of ast.attributes ?? []) {
-    if (!isSortableAttribute(env.customizations, attr.name) || attr.type !== 'Attribute') {
+    if (!isSortableAttribute(attr.name, env.customizations) || attr.type !== 'Attribute') {
       continue
     }
 

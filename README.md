@@ -91,6 +91,28 @@ function MyButton({ children }) {
 }
 ```
 
+#### Matching attributes with a prefix or suffix
+
+```json5
+// .prettierrc
+{
+  "tailwindAttributesStartsWith": ["data"],
+  "tailwindAttributesEndsWith": ["ClassName"]
+}
+```
+
+With this configuration, attributes like `data-active-classes` and `buttonClassName` will be sorted:
+
+```jsx
+function MyButton({ children }) {
+  return (
+    <button buttonClassName="bg-blue-600 text-white">
+      {children}
+    </button>
+  );
+}
+```
+
 ## Sorting classes in function calls
 
 In addition to sorting classes in attributes, you can also sort classes in strings provided to function calls. This is useful when working with libraries like [clsx](https://github.com/lukeed/clsx) or [cva](https://cva.style/).

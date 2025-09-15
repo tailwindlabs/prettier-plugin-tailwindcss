@@ -4,12 +4,16 @@ export interface TransformerMetadata {
   // Default customizations for a given transformer
   functions?: string[]
   staticAttrs?: string[]
+  prefixAttrs?: string[]
+  suffixAttrs?: string[]
   dynamicAttrs?: string[]
 }
 
 export interface Customizations {
   functions: Set<string>
   staticAttrs: Set<string>
+  prefixAttrs: Set<string>
+  suffixAttrs: Set<string>
   dynamicAttrs: Set<string>
 }
 

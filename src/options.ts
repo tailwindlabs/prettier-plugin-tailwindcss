@@ -31,6 +31,22 @@ export const options: Record<string, SupportOption> = {
     description: 'List of attributes/props that contain sortable Tailwind classes',
   },
 
+  tailwindAttributesStartsWith: {
+    type: 'string',
+    array: true,
+    default: [{ value: [] }],
+    category: 'Tailwind CSS',
+    description: 'List of prefixes for attributes that contain sortable Tailwind classes',
+  },
+
+  tailwindAttributesEndsWith: {
+    type: 'string',
+    array: true,
+    default: [{ value: [] }],
+    category: 'Tailwind CSS',
+    description: 'List of suffixes for attributes that contain sortable Tailwind classes',
+  },
+
   tailwindFunctions: {
     type: 'string',
     array: true,
@@ -63,6 +79,8 @@ export const options: Record<string, SupportOption> = {
 
 export function getCustomizations(options: RequiredOptions, parser: string, defaults: Customizations): Customizations {
   let staticAttrs = new Set<string>(defaults.staticAttrs)
+  let prefixAttrs = new Set<string>(defaults.prefixAttrs)
+  let suffixAttrs = new Set<string>(defaults.suffixAttrs)
   let dynamicAttrs = new Set<string>(defaults.dynamicAttrs)
   let functions = new Set<string>(defaults.functions)
 
@@ -96,9 +114,19 @@ export function getCustomizations(options: RequiredOptions, parser: string, defa
     functions.add(fn)
   }
 
+  for (let attr of options.tailwindAttributesStartsWith ?? []) {
+    prefixAttrs.add(attr)
+  }
+
+  for (let attr of options.tailwindAttributesEndsWith ?? []) {
+    suffixAttrs.add(attr)
+  }
+
   return {
     functions,
     staticAttrs,
     dynamicAttrs,
+    prefixAttrs,
+    suffixAttrs,
   }
 }

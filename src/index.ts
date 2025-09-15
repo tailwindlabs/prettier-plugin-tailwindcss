@@ -28,6 +28,8 @@ function createParser(
 ) {
   let customizationDefaults: Customizations = {
     staticAttrs: new Set(meta.staticAttrs ?? []),
+    prefixAttrs: new Set(meta.prefixAttrs ?? []),
+    suffixAttrs: new Set(meta.suffixAttrs ?? []),
     dynamicAttrs: new Set(meta.dynamicAttrs ?? []),
     functions: new Set(meta.functions ?? []),
   }
@@ -273,11 +275,11 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
 }
 
 function transformHtml(ast: any, { env, changes }: TransformerContext) {
-  let { staticAttrs, dynamicAttrs } = env.customizations
+  let { dynamicAttrs } = env.customizations
   let { parser } = env.options
 
   for (let attr of ast.attrs ?? []) {
-    if (staticAttrs.has(attr.name)) {
+    if (isSortableAttribute(env.customizations, attr.name)) {
       attr.value = sortClasses(attr.value, { env })
     } else if (dynamicAttrs.has(attr.name)) {
       if (!/[`'"]/.test(attr.value)) {
@@ -298,11 +300,9 @@ function transformHtml(ast: any, { env, changes }: TransformerContext) {
 }
 
 function transformGlimmer(ast: any, { env }: TransformerContext) {
-  let { staticAttrs } = env.customizations
-
   visit(ast, {
     AttrNode(attr, _path, meta) {
-      if (staticAttrs.has(attr.name) && attr.value) {
+      if (isSortableAttribute(env.customizations, attr.name) && attr.value) {
         meta.sortTextNodes = true
       }
     },
@@ -354,12 +354,10 @@ function transformGlimmer(ast: any, { env }: TransformerContext) {
 }
 
 function transformLiquid(ast: any, { env }: TransformerContext) {
-  let { staticAttrs } = env.customizations
-
   function isClassAttr(node: { name: string | { type: string; value: string }[] }) {
     return Array.isArray(node.name)
-      ? node.name.every((n) => n.type === 'TextNode' && staticAttrs.has(n.value))
-      : staticAttrs.has(node.name)
+      ? node.name.every((n) => n.type === 'TextNode' && isSortableAttribute(env.customizations, n.value))
+      : isSortableAttribute(env.customizations, node.name)
   }
 
   function hasSurroundingQuotes(str: string) {
@@ -566,6 +564,22 @@ function sortTemplateLiteral(
   return didChange
 }
 
+function isSortableAttribute(customizations: Customizations, name: string) {
+  const { staticAttrs, suffixAttrs, prefixAttrs } = customizations
+
+  if (staticAttrs.has(name)) return true
+
+  for (const prefix of prefixAttrs) {
+    if (name.startsWith(prefix)) return true
+  }
+
+  for (const suffix of suffixAttrs) {
+    if (name.endsWith(suffix)) return true
+  }
+
+  return false
+}
+
 function isSortableTemplateExpression(
   node: import('@babel/types').TaggedTemplateExpression | import('ast-types').namedTypes.TaggedTemplateExpression,
   functions: Set<string>,
@@ -653,7 +667,7 @@ function canCollapseWhitespaceIn(path: Path<import('@babel/types').Node, any>) {
 // We cross several parsers that share roughly the same shape so things are
 // good enough. The actual AST we should be using is probably estree + ts.
 function transformJavaScript(ast: import('@babel/types').Node, { env }: TransformerContext) {
-  let { staticAttrs, functions } = env.customizations
+  let { functions } = env.customizations
 
   function sortInside(ast: import('@babel/types').Node) {
     visit(ast, (node, path) => {
@@ -685,7 +699,7 @@ function transformJavaScript(ast: import('@babel/types').Node, { env }: Transfor
         return
       }
 
-      if (!staticAttrs.has(node.name.name)) {
+      if (!isSortableAttribute(env.customizations, node.name.name)) {
         return
       }
 
@@ -787,11 +801,11 @@ function transformCss(ast: any, { env }: TransformerContext) {
 }
 
 function transformAstro(ast: any, { env, changes }: TransformerContext) {
-  let { staticAttrs, dynamicAttrs } = env.customizations
+  let { dynamicAttrs } = env.customizations
 
   if (ast.type === 'element' || ast.type === 'custom-element' || ast.type === 'component') {
     for (let attr of ast.attributes ?? []) {
-      if (staticAttrs.has(attr.name) && attr.type === 'attribute' && attr.kind === 'quoted') {
+      if (isSortableAttribute(env.customizations, attr.name) && attr.type === 'attribute' && attr.kind === 'quoted') {
         attr.value = sortClasses(attr.value, {
           env,
         })
@@ -812,8 +826,6 @@ function transformAstro(ast: any, { env, changes }: TransformerContext) {
 }
 
 function transformMarko(ast: any, { env }: TransformerContext) {
-  let { staticAttrs } = env.customizations
-
   const nodesToVisit = [ast]
   while (nodesToVisit.length > 0) {
     const currentNode = nodesToVisit.pop()
@@ -832,7 +844,7 @@ function transformMarko(ast: any, { env }: TransformerContext) {
         nodesToVisit.push(...currentNode.body)
         break
       case 'MarkoAttribute':
-        if (!staticAttrs.has(currentNode.name)) break
+        if (!isSortableAttribute(env.customizations, currentNode.name)) break
         switch (currentNode.value.type) {
           case 'ArrayExpression':
             const classList = currentNode.value.elements
@@ -862,7 +874,7 @@ function transformTwig(ast: any, { env, changes }: TransformerContext) {
 
   visit(ast, {
     Attribute(node, _path, meta) {
-      if (!staticAttrs.has(node.name.name)) return
+      if (!isSortableAttribute(env.customizations, node.name.name)) return
 
       meta.sortTextNodes = true
     },
@@ -893,8 +905,6 @@ function transformTwig(ast: any, { env, changes }: TransformerContext) {
 }
 
 function transformPug(ast: any, { env }: TransformerContext) {
-  let { staticAttrs } = env.customizations
-
   // This isn't optimal
   // We should merge the classes together across class attributes and class tokens
   // And then we sort them
@@ -902,7 +912,7 @@ function transformPug(ast: any, { env }: TransformerContext) {
 
   // First sort the classes in attributes
   for (const token of ast.tokens) {
-    if (token.type === 'attribute' && staticAttrs.has(token.name)) {
+    if (token.type === 'attribute' && isSortableAttribute(env.customizations, token.name)) {
       token.val = [token.val.slice(0, 1), sortClasses(token.val.slice(1, -1), { env }), token.val.slice(-1)].join('')
     }
   }
@@ -947,10 +957,8 @@ function transformPug(ast: any, { env }: TransformerContext) {
 }
 
 function transformSvelte(ast: any, { env, changes }: TransformerContext) {
-  let { staticAttrs } = env.customizations
-
   for (let attr of ast.attributes ?? []) {
-    if (!staticAttrs.has(attr.name) || attr.type !== 'Attribute') {
+    if (!isSortableAttribute(env.customizations, attr.name) || attr.type !== 'Attribute') {
       continue
     }
 
@@ -1237,6 +1245,16 @@ export interface PluginOptions {
    * List of custom attributes that contain classes.
    */
   tailwindAttributes?: string[]
+
+  /**
+   * List of prefixes to match attributes that contain classes.
+   */
+  tailwindAttributesStartsWith?: string[]
+
+  /**
+   * List of suffixes to match attributes that contain classes.
+   */
+  tailwindAttributesEndsWith?: string[]
 
   /**
    * Preserve whitespace around Tailwind classes when sorting.

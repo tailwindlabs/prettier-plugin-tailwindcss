@@ -735,7 +735,12 @@ function transformCss(ast: any, { env }: TransformerContext) {
     // based on postcss-value parser.
     try {
       let parser = base.parsers.css
-      let root = parser.parse(`@import ${params};`, env.options)
+
+      let root = parser.parse(`@import ${params};`, {
+        // We can't pass env.options directly because css.parse overwrites
+        // options.originalText which is used during the printing phase
+        ...env.options,
+      })
 
       return root.nodes[0].params
     } catch (err) {

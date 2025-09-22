@@ -47,6 +47,11 @@ let css: TestEntry[] = [
   [`@source "./file.js";`, `@source './file.js';`],
   [`@source not "./file.js";`, `@source not './file.js';`],
   [`@source inline("flex");`, `@source inline('flex');`],
+
+  [
+    `@import "tailwindcss";\n\n@use "tailwindcss";\n\n@source "./file.js";\n\n.foo {\n  color: red;\n}`,
+    `@import 'tailwindcss';\n\n@use 'tailwindcss';\n\n@source './file.js';\n\n.foo {\n  color: red;\n}`,
+  ],
 ]
 
 export let javascript: TestEntry[] = [

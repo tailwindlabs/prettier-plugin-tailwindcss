@@ -46,7 +46,7 @@ let css: TestEntry[] = [
   [`@config "./file.js";`, `@config './file.js';`],
   [`@source "./file.js";`, `@source './file.js';`],
   [`@source not "./file.js";`, `@source not './file.js';`],
-  [`@source inline("./file.js");`, `@source inline('./file.js');`],
+  [`@source inline("flex");`, `@source inline('flex');`],
 ]
 
 export let javascript: TestEntry[] = [

@@ -46,7 +46,20 @@ let css: TestEntry[] = [
   [`@config "./file.js";`, `@config './file.js';`],
   [`@source "./file.js";`, `@source './file.js';`],
   [`@source not "./file.js";`, `@source not './file.js';`],
-  [`@source inline("./file.js");`, `@source inline('./file.js');`],
+  [`@source inline("flex");`, `@source inline('flex');`],
+
+  [
+    `@import "tailwindcss";\n\n@import "./theme.css";\n\n@source "./file.js";\n\n.foo {\n  color: red;\n}`,
+    `@import 'tailwindcss';\n\n@import './theme.css';\n\n@source './file.js';\n\n.foo {\n  color: red;\n}`,
+  ],
+  [
+    `@import "tailwindcss";\n\n@import "./theme.css";\n\n@plugin "./file.js";\n\n.foo {\n  color: red;\n}`,
+    `@import 'tailwindcss';\n\n@import './theme.css';\n\n@plugin './file.js';\n\n.foo {\n  color: red;\n}`,
+  ],
+  [
+    `@import "tailwindcss";\n\n@import "./theme.css";\n\n@config "./file.js";\n\n.foo {\n  color: red;\n}`,
+    `@import 'tailwindcss';\n\n@import './theme.css';\n\n@config './file.js';\n\n.foo {\n  color: red;\n}`,
+  ],
 ]
 
 export let javascript: TestEntry[] = [

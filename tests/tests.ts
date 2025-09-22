@@ -49,8 +49,16 @@ let css: TestEntry[] = [
   [`@source inline("flex");`, `@source inline('flex');`],
 
   [
-    `@import "tailwindcss";\n\n@use "tailwindcss";\n\n@source "./file.js";\n\n.foo {\n  color: red;\n}`,
-    `@import 'tailwindcss';\n\n@use 'tailwindcss';\n\n@source './file.js';\n\n.foo {\n  color: red;\n}`,
+    `@import "tailwindcss";\n\n@import "./theme.css";\n\n@source "./file.js";\n\n.foo {\n  color: red;\n}`,
+    `@import 'tailwindcss';\n\n@import './theme.css';\n\n@source './file.js';\n\n.foo {\n  color: red;\n}`,
+  ],
+  [
+    `@import "tailwindcss";\n\n@import "./theme.css";\n\n@plugin "./file.js";\n\n.foo {\n  color: red;\n}`,
+    `@import 'tailwindcss';\n\n@import './theme.css';\n\n@plugin './file.js';\n\n.foo {\n  color: red;\n}`,
+  ],
+  [
+    `@import "tailwindcss";\n\n@import "./theme.css";\n\n@config "./file.js";\n\n.foo {\n  color: red;\n}`,
+    `@import 'tailwindcss';\n\n@import './theme.css';\n\n@config './file.js';\n\n.foo {\n  color: red;\n}`,
   ],
 ]
 

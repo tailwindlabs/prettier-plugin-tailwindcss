@@ -51,7 +51,7 @@
     "esbuild": "^0.25.9",
     "escalade": "^3.2.0",
     "import-sort-style-module": "^6.0.0",
-    "jiti": "^2.5.1",
+    "jiti": "^2.6.0",
     "jsesc": "^3.1.0",
     "license-checker": "^25.0.1",
     "line-column": "^1.0.2",

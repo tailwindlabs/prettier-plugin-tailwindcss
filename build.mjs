@@ -34,6 +34,28 @@ function patchRecast() {
 /**
  * @returns {import('esbuild').Plugin}
  */
+function patchJiti() {
+  return {
+    name: 'patch-jiti',
+    setup(build) {
+      // TODO: Switch to rolldown and see if we can chunk split this instead?
+      build.onLoad({ filter: /jiti\/lib\/jiti\.mjs$/ }, async (args) => {
+        let original = await fs.promises.readFile(args.path, 'utf8')
+
+        return {
+          contents: original.replace(
+            'createRequire(import.meta.url)("../dist/babel.cjs")',
+            'require("../dist/babel.cjs")',
+          ),
+        }
+      })
+    },
+  }
+}
+
+/**
+ * @returns {import('esbuild').Plugin}
+ */
 function patchCjsInterop() {
   return {
     name: 'patch-cjs-interop',
@@ -115,7 +137,7 @@ let context = await esbuild.context({
   entryPoints: [path.resolve(__dirname, './src/index.js')],
   outfile: path.resolve(__dirname, './dist/index.mjs'),
   format: 'esm',
-  plugins: [patchRecast(), patchCjsInterop(), inlineCssImports()],
+  plugins: [patchRecast(), patchJiti(), patchCjsInterop(), inlineCssImports()],
 })
 
 await context.rebuild()

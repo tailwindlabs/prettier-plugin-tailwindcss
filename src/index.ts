@@ -859,7 +859,7 @@ function transformMarko(ast: any, { env }: TransformerContext) {
 }
 
 function transformTwig(ast: any, { env, changes }: TransformerContext) {
-  let { staticAttrs } = env.customizations
+  let { staticAttrs, functions } = env.customizations
 
   for (let child of ast.expressions ?? []) {
     transformTwig(child, { env, changes })
@@ -868,6 +868,31 @@ function transformTwig(ast: any, { env, changes }: TransformerContext) {
   visit(ast, {
     Attribute(node, _path, meta) {
       if (!staticAttrs.has(node.name.name)) return
+
+      meta.sortTextNodes = true
+    },
+
+    CallExpression(node, _path, meta) {
+      // Traverse property accesses and function calls to find the *trailing* ident
+      while (
+        node.type === 'CallExpression' ||
+        node.type === 'MemberExpression'
+      ) {
+        if (node.type === 'CallExpression') {
+          node = node.callee
+        } else if (node.type === 'MemberExpression') {
+          // TODO: This is *different* than `isSortableExpression` and that doesn't feel right
+          // but they're mutually exclusive implementations
+          //
+          // This is to handle foo.fnNameHere(…) where `isSortableExpression` is intentionally
+          // handling `fnNameHere.foo(…)`.
+          node = node.property
+        }
+      }
+
+      if (node.type === 'Identifier') {
+        if (!functions.has(node.name)) return
+      }
 
       meta.sortTextNodes = true
     },

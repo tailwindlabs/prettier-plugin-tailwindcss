@@ -136,6 +136,7 @@ let tests: PluginTest[] = [
     plugins: ['@zackad/prettier-plugin-twig'],
     options: {
       twigAlwaysBreakObjects: false,
+      tailwindFunctions: ['addClass', 'tw'],
     },
     tests: {
       twig: [
@@ -160,6 +161,22 @@ let tests: PluginTest[] = [
         [
           `<div class="{{ ' flex ' + ' underline ' + ' block ' }}"></div>`,
           `<div class="{{ 'flex ' + ' underline' + ' block' }}"></div>`,
+        ],
+
+        // Function call tests
+        t`<div {{ tw('${yes}') }}></div>`,
+        t`<div {{ attributes.addClass('${yes}') }}></div>`,
+
+        t`{{ tw('${yes}') }}`,
+        t`{{ attributes.addClass('${yes}') }}`,
+
+        t`{{ tw('${yes}').tw('${yes}').tw('${yes}') }}`,
+        t`{{ attributes.addClass('${yes}').addClass('${yes}').addClass('${yes}') }}`,
+
+        t`{% set className = '${no}' %} {{ attributes.addClass(className) }}`,
+        [
+          `{{ attributes.addClass("sm:p-0 " ~ variant ~ " p-0") }}`,
+          `{{ attributes.addClass('sm:p-0 ' ~ variant ~ ' p-0') }}`,
         ],
       ],
     },

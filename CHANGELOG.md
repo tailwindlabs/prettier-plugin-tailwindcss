@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved monorepo support by loading v3 configs relative to the input file instead of prettier config file ([#386](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/386))
 - Fix whitespace removal inside nested concat and template expressions ([#396](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/396))
 - Fallback to Tailwind CSS v4 instead of v3 by default ([#390](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/390))
+- Support sorting in function calls in Twig ([#358](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/358))
 
 ## [0.6.14] - 2025-07-09
 

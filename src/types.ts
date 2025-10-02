@@ -2,9 +2,9 @@ import type { ParserOptions } from 'prettier'
 
 export interface TransformerMetadata {
   // Default customizations for a given transformer
+  functions?: string[]
   staticAttrs?: string[]
   dynamicAttrs?: string[]
-  functions?: string[]
 }
 
 export interface Customizations {
@@ -18,32 +18,15 @@ export interface TransformerContext {
   changes: StringChange[]
 }
 
-export interface LegacyTailwindContext {
-  tailwindConfig: {
-    prefix: string | ((selector: string) => string)
-  }
-
-  getClassOrder?: (classList: string[]) => [string, bigint | null][]
-
-  layerOrder: {
-    components: bigint
-  }
+export interface UnifiedApi {
+  getClassOrder(classList: string[]): [string, bigint | null][]
 }
 
 export interface TransformerEnv {
-  context: LegacyTailwindContext
+  context: UnifiedApi
   customizations: Customizations
-  generateRules: (
-    classes: Iterable<string>,
-    context: LegacyTailwindContext,
-  ) => [bigint][]
   parsers: any
   options: ParserOptions
-}
-
-export interface ContextContainer {
-  context: any
-  generateRules: () => any
 }
 
 export interface StringChange {

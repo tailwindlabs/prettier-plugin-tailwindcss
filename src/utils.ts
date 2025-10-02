@@ -19,7 +19,7 @@ interface PathEntry<T, Meta> {
   meta: Meta
 }
 
-type Path<T, Meta> = PathEntry<T, Meta>[]
+export type Path<T, Meta> = PathEntry<T, Meta>[]
 
 type Visitor<T, Meta extends Record<string, unknown>> = (
   node: T,
@@ -27,10 +27,7 @@ type Visitor<T, Meta extends Record<string, unknown>> = (
   meta: Partial<Meta>,
 ) => void | false
 
-type Visitors<T, Meta extends Record<string, unknown>> = Record<
-  string,
-  Visitor<T, Meta>
->
+type Visitors<T, Meta extends Record<string, unknown>> = Record<string, Visitor<T, Meta>>
 
 // https://lihautan.com/manipulating-ast-with-javascript/
 export function visit<T extends {}, Meta extends Record<string, unknown>>(
@@ -136,4 +133,8 @@ export function spliceChangesIntoString(str: string, changes: StringChange[]) {
   result += str.slice(previous.end)
 
   return result
+}
+
+export function bigSign(bigIntValue: bigint) {
+  return Number(bigIntValue > 0n) - Number(bigIntValue < 0n)
 }

@@ -28,8 +28,7 @@ export const options: Record<string, SupportOption> = {
     array: true,
     default: [{ value: [] }],
     category: 'Tailwind CSS',
-    description:
-      'List of attributes/props that contain sortable Tailwind classes',
+    description: 'List of attributes/props that contain sortable Tailwind classes',
   },
 
   tailwindFunctions: {
@@ -37,8 +36,7 @@ export const options: Record<string, SupportOption> = {
     array: true,
     default: [{ value: [] }],
     category: 'Tailwind CSS',
-    description:
-      'List of functions and tagged templates that contain sortable Tailwind classes',
+    description: 'List of functions and tagged templates that contain sortable Tailwind classes',
   },
 
   tailwindPreserveWhitespace: {
@@ -63,11 +61,7 @@ export const options: Record<string, SupportOption> = {
   },
 }
 
-export function getCustomizations(
-  options: RequiredOptions,
-  parser: string,
-  defaults: Customizations,
-): Customizations {
+export function getCustomizations(options: RequiredOptions, parser: string, defaults: Customizations): Customizations {
   let staticAttrs = new Set<string>(defaults.staticAttrs)
   let dynamicAttrs = new Set<string>(defaults.dynamicAttrs)
   let functions = new Set<string>(defaults.functions)
@@ -80,11 +74,7 @@ export function getCustomizations(
       staticAttrs.add(attr.slice(7))
     } else if (parser === 'vue' && attr.startsWith('v-')) {
       dynamicAttrs.add(attr)
-    } else if (
-      parser === 'angular' &&
-      attr.startsWith('[') &&
-      attr.endsWith(']')
-    ) {
+    } else if (parser === 'angular' && attr.startsWith('[') && attr.endsWith(']')) {
       staticAttrs.add(attr.slice(1, -1))
     } else {
       staticAttrs.add(attr)

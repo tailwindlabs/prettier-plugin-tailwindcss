@@ -1,4 +1,5 @@
 import * as fs from 'node:fs'
+import { readFile } from 'node:fs/promises'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import esbuild from 'esbuild'
@@ -33,6 +34,28 @@ function patchRecast() {
 /**
  * @returns {import('esbuild').Plugin}
  */
+function patchJiti() {
+  return {
+    name: 'patch-jiti',
+    setup(build) {
+      // TODO: Switch to rolldown and see if we can chunk split this instead?
+      build.onLoad({ filter: /jiti\/lib\/jiti\.mjs$/ }, async (args) => {
+        let original = await fs.promises.readFile(args.path, 'utf8')
+
+        return {
+          contents: original.replace(
+            'createRequire(import.meta.url)("../dist/babel.cjs")',
+            'require("../dist/babel.cjs")',
+          ),
+        }
+      })
+    },
+  }
+}
+
+/**
+ * @returns {import('esbuild').Plugin}
+ */
 function patchCjsInterop() {
   return {
     name: 'patch-cjs-interop',
@@ -46,17 +69,58 @@ function patchCjsInterop() {
         let code = [
           `import {createRequire as __global__createRequire__} from 'module'`,
           `import {dirname as __global__dirname__} from 'path'`,
-          `import {fileURLToPath} from 'url'`,
+          `import {fileURLToPath as __global__fileURLToPath__} from 'url'`,
 
           // CJS interop fixes
           `const require=__global__createRequire__(import.meta.url)`,
-          `const __filename=fileURLToPath(import.meta.url)`,
+          `const __filename=__global__fileURLToPath__(import.meta.url)`,
           `const __dirname=__global__dirname__(__filename)`,
         ]
 
         content = `${code.join('\n')}\n${content}`
 
         fs.promises.writeFile(outfile, content)
+      })
+    },
+  }
+}
+
+/**
+ * @returns {import('esbuild').Plugin}
+ */
+function inlineCssImports() {
+  return {
+    name: 'inline-css-imports',
+    setup(build) {
+      // Inline CSS imports
+      build.onLoad({ filter: /\.css$/ }, async (args) => {
+        let content = await readFile(args.path, 'utf-8')
+
+        return {
+          loader: 'js',
+          contents: `export default ${JSON.stringify(content)}`,
+        }
+      })
+
+      // Inline preflight in v3
+      // TODO: This needs a test
+      build.onLoad({ filter: /corePlugins\.js$/ }, async (args) => {
+        let preflightPath = path.resolve(path.dirname(args.path), './css/preflight.css')
+        let preflightContent = await readFile(preflightPath, 'utf-8')
+
+        let content = await readFile(args.path, 'utf-8')
+
+        // This is a bit fragile but this is to inline preflight for the
+        // *bundled* version which means a failing test should be enough
+        content = content.replace(
+          `_fs.default.readFileSync(_path.join(__dirname, "./css/preflight.css"), "utf8")`,
+          JSON.stringify(preflightContent),
+        )
+
+        return {
+          loader: 'js',
+          contents: content,
+        }
       })
     },
   }
@@ -73,7 +137,7 @@ let context = await esbuild.context({
   entryPoints: [path.resolve(__dirname, './src/index.js')],
   outfile: path.resolve(__dirname, './dist/index.mjs'),
   format: 'esm',
-  plugins: [patchRecast(), patchCjsInterop()],
+  plugins: [patchRecast(), patchJiti(), patchCjsInterop(), inlineCssImports()],
 })
 
 await context.rebuild()

@@ -157,10 +157,7 @@ let tests: PluginTest[] = [
         t`<section class="text-center{{ i }} ${yes}"></section>`,
         t`<section class="{{ i }}text-center ${yes}"></section>`,
 
-        [
-          `<div class=" sm:flex   underline  block"></div>`,
-          `<div class="block underline sm:flex"></div>`,
-        ],
+        [`<div class=" sm:flex   underline  block"></div>`, `<div class="block underline sm:flex"></div>`],
         [
           `<div class="{{ ' flex ' + ' underline ' + ' block ' }}"></div>`,
           `<div class="{{ 'flex ' + ' underline' + ' block' }}"></div>`,
@@ -252,18 +249,6 @@ let tests: PluginTest[] = [
     },
   },
   {
-    // NOTE: This plugin doesn't officially support Prettier v3 but it appears to work
-    plugins: ['prettier-plugin-style-order'],
-    tests: {
-      css: [
-        [
-          `.foo {\n  color: red;\n  margin-left: 1px;\n  background-color: blue;\n  margin-right: 1px;\n  @apply sm:p-0 p-4 bg-blue-600;\n}`,
-          `.foo {\n  margin-right: 1px;\n  margin-left: 1px;\n  color: red;\n  background-color: blue;\n  @apply bg-blue-600 p-4 sm:p-0;\n}`,
-        ],
-      ],
-    },
-  },
-  {
     plugins: ['prettier-plugin-organize-attributes'],
     tests: {
       html: [
@@ -296,10 +281,7 @@ let tests: PluginTest[] = [
         // Whitespace removal is disabled for Liquid
         // due to the way Liquid prints the AST
         // (the length of the output MUST NOT change)
-        [
-          `<div class=' sm:flex   underline  block'></div>`,
-          `<div class=' block   underline  sm:flex'></div>`,
-        ],
+        [`<div class=' sm:flex   underline  block'></div>`, `<div class=' block   underline  sm:flex'></div>`],
         [
           `<div class='{{ ' flex ' + ' underline ' + ' block ' }}'></div>`,
           `<div class='{{ ' flex ' + ' underline ' + ' block ' }}'></div>`,
@@ -336,17 +318,11 @@ let tests: PluginTest[] = [
 ]/>`,
         t`<div class=['${yes}', 'underline', someVariable]/>`,
 
-        [
-          `<div class=' sm:flex   underline  block'/>`,
-          `<div class='block underline sm:flex'/>`,
-        ],
+        [`<div class=' sm:flex   underline  block'/>`, `<div class='block underline sm:flex'/>`],
 
         // TODO: An improvement to the plugin would be to remove the whitespace
         // in this scenario:
-        [
-          `<div class=[' flex ' + ' underline ' + ' block ']/>`,
-          `<div class=[' flex ' + ' underline ' + ' block ']/>`,
-        ],
+        [`<div class=[' flex ' + ' underline ' + ' block ']/>`, `<div class=[' flex ' + ' underline ' + ' block ']/>`],
       ],
     },
   },
@@ -355,10 +331,7 @@ let tests: PluginTest[] = [
     tests: {
       astro: [
         // ...html, // TODO:
-        [
-          `{<div class="p-20 bg-red-100 w-full"></div>}`,
-          `{(<div class="w-full bg-red-100 p-20" />)}`,
-        ],
+        [`{<div class="p-20 bg-red-100 w-full"></div>}`, `{(<div class="w-full bg-red-100 p-20" />)}`],
         [
           `<style>
   h1 {
@@ -390,10 +363,7 @@ import Custom from '../components/Custom.astro'
         t`<MyReactComponent className="${yes}" />`,
         t`<MyReactComponent className={'${yes}'} />`,
 
-        [
-          `<div class=" sm:flex   underline  block"></div>`,
-          `<div class="block underline sm:flex"></div>`,
-        ],
+        [`<div class=" sm:flex   underline  block"></div>`, `<div class="block underline sm:flex"></div>`],
         [
           `<div class:list={[' flex ' + ' underline ' + ' block ']}></div>`,
           `<div class:list={['flex ' + ' underline' + ' block']}></div>`,
@@ -419,14 +389,8 @@ import Custom from '../components/Custom.astro'
         t`<div class="${yes} {\`${yes}\`}" />`,
         t`<div let:class={clazz} class="${yes} {clazz}" />`,
         t`{#if something} <div class="${yes}" /> {:else} <div class="${yes}" /> {/if}`,
-        [
-          `<div class="sm:block uppercase flex{someVar}" />`,
-          `<div class="uppercase sm:block flex{someVar}" />`,
-        ],
-        [
-          `<div class="{someVar}sm:block md:inline flex" />`,
-          `<div class="{someVar}sm:block flex md:inline" />`,
-        ],
+        [`<div class="sm:block uppercase flex{someVar}" />`, `<div class="uppercase sm:block flex{someVar}" />`],
+        [`<div class="{someVar}sm:block md:inline flex" />`, `<div class="{someVar}sm:block flex md:inline" />`],
         [
           `<div class="sm:p-0 p-0 {someVar}sm:block md:inline flex" />`,
           `<div class="p-0 sm:p-0 {someVar}sm:block flex md:inline" />`,
@@ -435,10 +399,7 @@ import Custom from '../components/Custom.astro'
         t`{#await promise() then} <div class="${yes}" /> {/await}`,
 
         // Whitespace removal is applied by Svelte itself
-        [
-          `<div class=" sm:flex   underline  block"></div>`,
-          `<div class=" block underline sm:flex"></div>`,
-        ],
+        [`<div class=" sm:flex   underline  block"></div>`, `<div class=" block underline sm:flex"></div>`],
 
         // Whitespace removal does not work in Svelte
         // due to how Svelte's parser and printer work
@@ -455,30 +416,18 @@ import Custom from '../components/Custom.astro'
         // This test has lots of whitespace to ensure that the Svelte
         // parser doesn't produce invalid syntax as output since it breaks
         // when changing the length of the text.
-        [
-          `<div\n class={\`underline \n flex\`}></div>`,
-          `<div\n  class={\`flex \n underline\`}\n></div>`,
-        ],
+        [`<div\n class={\`underline \n flex\`}></div>`, `<div\n  class={\`flex \n underline\`}\n></div>`],
 
         // Duplicates can be removed in simple attributes
-        [
-          `<div class="flex flex underline flex flex"></div>`,
-          `<div class="flex underline"></div>`,
-        ],
+        [`<div class="flex flex underline flex flex"></div>`, `<div class="flex underline"></div>`],
 
         // Duplicates cannot be removed in string literals otherwise invalid
         // code will be produced during printing.
-        [
-          `<div class={'flex underline flex'}></div>`,
-          `<div class={'flex flex underline'}></div>`,
-        ],
+        [`<div class={'flex underline flex'}></div>`, `<div class={'flex flex underline'}></div>`],
 
         // Duplicates cannot be removed in template literals otherwise invalid
         // code will be produced during printing.
-        [
-          `<div class={\`flex underline flex\`}></div>`,
-          `<div class={\`flex flex underline\`}></div>`,
-        ],
+        [`<div class={\`flex underline flex\`}></div>`, `<div class={\`flex flex underline\`}></div>`],
       ],
     },
   },
@@ -489,11 +438,7 @@ import Custom from '../components/Custom.astro'
   // The plugins actually have to be *imported* in a specific order for
   // them to function correctly *together*.
   {
-    plugins: [
-      'prettier-plugin-multiline-arrays',
-      '@trivago/prettier-plugin-sort-imports',
-      'prettier-plugin-jsdoc',
-    ],
+    plugins: ['prettier-plugin-multiline-arrays', '@trivago/prettier-plugin-sort-imports', 'prettier-plugin-jsdoc'],
     options: {
       multilineArraysWrapThreshold: 0,
       importOrder: ['^@one/(.*)$', '^@two/(.*)$', '^[./]'],
@@ -547,10 +492,7 @@ for (const group of tests) {
         pug.logger.level = 'off'
       }
 
-      let plugins = [
-        ...group.plugins.map((name) => require.resolve(name)),
-        pluginPath,
-      ]
+      let plugins = [...group.plugins.map((name) => require.resolve(name)), pluginPath]
 
       for (const [input, expected] of group.tests[parser]) {
         let output = await format(input, { parser, plugins, ...group.options })

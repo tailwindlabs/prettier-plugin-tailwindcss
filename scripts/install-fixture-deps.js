@@ -7,7 +7,7 @@ import glob from 'fast-glob'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const fixtures = glob.sync(
-  ['tests/fixtures/*/package.json', 'tests/fixtures/v4/*/package.json'],
+  ['tests/fixtures/*/package.json', 'tests/fixtures/v4/*/package.json', 'tests/fixtures/monorepo/*/package.json'],
   {
     cwd: path.resolve(__dirname, '..'),
   },

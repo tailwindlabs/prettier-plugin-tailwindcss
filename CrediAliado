@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Créditos Personales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="app"></div>
+
+    <script>
+        // Datos del sistema
+        let state = {
+            activeTab: 'dashboard',
+            searchTerm: '',
+            showNewCreditForm: false,
+            clients: [
+                { id: 1, name: 'Juan Pérez', phone: '555-0101', credits: 2, total: 15000, status: 'activo' },
+                { id: 2, name: 'María García', phone: '555-0102', credits: 1, total: 8000, status: 'activo' },
+                { id: 3, name: 'Carlos López', phone: '555-0103', credits: 3, total: 25000, status: 'vencido' },
+                { id: 4, name: 'Ana Martínez', phone: '555-0104', credits: 1, total: 5000, status: 'activo' },
+            ],
+            credits: [
+                { id: 'C001', clientId: 1, amount: 10000, balance: 8500, rate: 3.5, term: 12, status: 'vigente', date: '2025-09-15' },
+                { id: 'C002', clientId: 1, amount: 5000, balance: 2500, rate: 3.5, term: 6, status: 'vigente', date: '2025-10-01' },
+                { id: 'C003', clientId: 2, amount: 8000, balance: 7200, rate: 4.0, term: 8, status: 'vigente', date: '2025-09-20' },
+                { id: 'C004', clientId: 3, amount: 15000, balance: 15800, rate: 3.0, term: 12, status: 'vencido', date: '2025-08-10' },
+            ],
+            newCredit: {
+                clientId: '',
+                amount: '',
+                rate: '3.5',
+                term: '12',
+                frequency: 'mensual',
+                interestType: 'normal'
+            }
+        };
+
+        // Funciones auxiliares
+        function calcStats() {
+            const totalCredits = state.credits.length;
+            const activeCredits = state.credits.filter(c => c.status === 'vigente').length;
+            const overdueCredits = state.credits.filter(c => c.status === 'vencido').length;
+            const totalPortfolio = state.credits.reduce((sum, c) => sum + c.balance, 0);
+            const totalDisbursed = state.credits.reduce((sum, c) => sum + c.amount, 0);
+            return { totalCredits, activeCredits, overdueCredits, totalPortfolio, totalDisbursed };
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
+        }
+
+        function getFilteredClients() {
+            return state.clients.filter(client =>
+                client.name.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
+                client.phone.includes(state.searchTerm)
+            );
+        }
+
+        function handleNewCredit(e) {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            
+            if (!formData.get('clientId') || !formData.get('amount')) {
+                alert('Por favor complete los campos requeridos');
+                return;
+            }
+
+            const creditId = `C${String(state.credits.length + 1).padStart(3, '0')}`;
+            const credit = {
+                id: creditId,
+                clientId: parseInt(formData.get('clientId')),
+                amount: parseFloat(formData.get('amount')),
+                balance: parseFloat(formData.get('amount')),
+                rate: parseFloat(formData.get('rate')),
+                term: parseInt(formData.get('term')),
+                status: 'vigente',
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            state.credits.push(credit);
+            state.showNewCreditForm = false;
+            state.newCredit = { clientId: '', amount: '', rate: '3.5', term: '12', frequency: 'mensual', interestType: 'normal' };
+            alert('¡Crédito otorgado exitosamente!');
+            render();
+        }
+
+        // Componentes de la interfaz
+        function Header() {
+            return `
+                <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 shadow-lg">
+                    <div class="max-w-7xl mx-auto">
+                        <h1 class="text-3xl font-bold flex items-center gap-3">
+                            <svg class="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <rect x="2" y="5" width="20" height="14" rx="2" stroke-width="2"/>
+                                <path d="M2 10h20" stroke-width="2"/>
+                            </svg>
+                            Sistema de Créditos Personales
+                        </h1>
+                        <p class="text-blue-100 mt-2">Gestión completa de préstamos personales</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function Navigation() {
+            const tabs = [
+                { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+                { id: 'credits', label: 'Créditos', icon: '💳' },
+                { id: 'clients', label: 'Clientes', icon: '👥' },
+                { id: 'reports', label: 'Reportes', icon: '📄' },
+            ];
+
+            return `
+                <div class="bg-white border-b border-gray-200 shadow-sm">
+                    <div class="max-w-7xl mx-auto px-6">
+                        <nav class="flex gap-8">
+                            ${tabs.map(tab => `
+                                <button
+                                    onclick="state.activeTab = '${tab.id}'; render();"
+                                    class="flex items-center gap-2 py-4 px-2 border-b-2 transition ${
+                                        state.activeTab === tab.id
+                                            ? 'border-blue-600 text-blue-600 font-medium'
+                                            : 'border-transparent text-gray-600 hover:text-gray-900'
+                                    }"
+                                >
+                                    <span class="text-xl">${tab.icon}</span>
+                                    ${tab.label}
+                                </button>
+                            `).join('')}
+                        </nav>
+                    </div>
+                </div>
+            `;
+        }
+
+        function DashboardView() {
+            const stats = calcStats();
+            return `
+                <div class="space-y-6 fade-in">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                            <p class="text-sm text-blue-600 font-medium">Créditos Activos</p>
+                            <p class="text-3xl font-bold text-blue-900 mt-2">${stats.activeCredits}</p>
+                        </div>
+                        <div class="bg-red-50 p-6 rounded-lg border border-red-200">
+                            <p class="text-sm text-red-600 font-medium">Créditos Vencidos</p>
+                            <p class="text-3xl font-bold text-red-900 mt-2">${stats.overdueCredits}</p>
+                        </div>
+                        <div class="bg-green-50 p-6 rounded-lg border border-green-200">
+                            <p class="text-sm text-green-600 font-medium">Cartera Total</p>
+                            <p class="text-3xl font-bold text-green-900 mt-2">${formatCurrency(stats.totalPortfolio)}</p>
+                        </div>
+                        <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
+                            <p class="text-sm text-purple-600 font-medium">Total Otorgado</p>
+                            <p class="text-3xl font-bold text-purple-900 mt-2">${formatCurrency(stats.totalDisbursed)}</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg border border-gray-200 p-6">
+                        <h3 class="text-lg font-semibold mb-4">⏰ Créditos Recientes</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">ID</th>
+                                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Cliente</th>
+                                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Monto</th>
+                                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Saldo</th>
+                                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    ${state.credits.slice(0, 5).map(credit => {
+                                        const client = state.clients.find(c => c.id === credit.clientId);
+                                        return `
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="px-4 py-3 text-sm font-medium">${credit.id}</td>
+                                                <td class="px-4 py-3 text-sm">${client?.name || 'N/A'}</td>
+                                                <td class="px-4 py-3 text-sm">${formatCurrency(credit.amount)}</td>
+                                                <td class="px-4 py-3 text-sm">${formatCurrency(credit.balance)}</td>
+                                                <td class="px-4 py-3 text-sm">
+                                                    <span class="px-3 py-1 rounded-full text-xs font-medium ${
+                                                        credit.status === 'vigente' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                                    }">
+                                                        ${credit.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function ClientsView() {
+            const filteredClients = getFilteredClients();
+            return `
+                <div class="space-y-4 fade-in">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="relative flex-1">
+                            <input
+                                type="text"
+                                placeholder="Buscar cliente por nombre o teléfono..."
+                                class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                value="${state.searchTerm}"
+                                oninput="state.searchTerm = this.value; render();"
+                            />
+                        </div>
+                        <button class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                            ➕ Nuevo Cliente
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-600">Cliente</th>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-600">Teléfono</th>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-600">Créditos</th>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-600">Monto Total</th>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-600">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                ${filteredClients.map(client => `
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 text-sm font-medium text-gray-900">${client.name}</td>
+                                        <td class="px-6 py-4 text-sm text-gray-600">${client.phone}</td>
+                                        <td class="px-6 py-4 text-sm text-gray-600">${client.credits}</td>
+                                        <td class="px-6 py-4 text-sm text-gray-600">${formatCurrency(client.total)}</td>
+                                        <td class="px-6 py-4 text-sm">
+                                            <span class="px-3 py-1 rounded-full text-xs font-medium ${
+                                                client.status === 'activo' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                            }">
+                                                ${client.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function CreditsView() {
+            return `
+                <div class="space-y-4 fade-in">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Gestión de Créditos</h2>
+                        <button 
+                            onclick="state.showNewCreditForm = !state.showNewCreditForm; render();"
+                            class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                        >
+                            💳 Otorgar Crédito
+                        </button>
+                    </div>
+
+                    ${state.showNewCreditForm ? `
+                        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                            <h3 class="text-lg font-semibold mb-4">Nuevo Crédito Personal</h3>
+                            <form onsubmit="handleNewCredit(event)">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Cliente *</label>
+                                        <select name="clientId" required class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                            <option value="">Seleccionar cliente</option>
+                                            ${state.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Monto *</label>
+                                        <input type="number" name="amount" required class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="10000">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Tasa (%)</label>
+                                        <input type="number" step="0.1" name="rate" value="3.5" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Plazo</label>
+                                        <select name="term" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                            <option value="3">3 meses</option>
+                                            <option value="6">6 meses</option>
+                                            <option value="12" selected>12 meses</option>
+                                            <option value="18">18 meses</option>
+                                            <option value="24">24 meses</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="flex gap-3 mt-6">
+                                    <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                                        Otorgar Crédito
+                                    </button>
+                                    <button type="button" onclick="state.showNewCreditForm = false; render();" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    ` : ''}
+
+                    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-600">ID</th>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-600">Cliente</th>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-600">Monto Original</th>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-600">Saldo</th>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-600">Tasa</th>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-600">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                ${state.credits.map(credit => {
+                                    const client = state.clients.find(c => c.id === credit.clientId);
+                                    return `
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 text-sm font-medium">${credit.id}</td>
+                                            <td class="px-6 py-4 text-sm">${client?.name || 'N/A'}</td>
+                                            <td class="px-6 py-4 text-sm">${formatCurrency(credit.amount)}</td>
+                                            <td class="px-6 py-4 text-sm">${formatCurrency(credit.balance)}</td>
+                                            <td class="px-6 py-4 text-sm">${credit.rate}%</td>
+                                            <td class="px-6 py-4 text-sm">
+                                                <span class="px-3 py-1 rounded-full text-xs font-medium ${
+                                                    credit.status === 'vigente' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                                }">
+                                                    ${credit.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function ReportsView() {
+            const reports = [
+                'Reporte de Cartera Vencida',
+                'Análisis de Cobranza',
+                'Proyección de Ingresos',
+                'Reporte de Desembolsos',
+                'Estado de Cuenta',
+                'Reporte de Morosidad',
+            ];
+
+            return `
+                <div class="space-y-6 fade-in">
+                    <h2 class="text-2xl font-bold text-gray-800">📊 Reportes y Estadísticas</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        ${reports.map(report => `
+                            <button class="p-6 bg-white border border-gray-200 rounded-lg hover:shadow-lg transition text-left">
+                                <div class="text-blue-600 text-3xl mb-3">📄</div>
+                                <h3 class="font-semibold text-gray-800">${report}</h3>
+                                <p class="text-sm text-gray-500 mt-2">Generar reporte detallado</p>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Renderizar la aplicación
+        function render() {
+            const views = {
+                dashboard: DashboardView,
+                clients: ClientsView,
+                credits: CreditsView,
+                reports: ReportsView,
+            };
+
+            const currentView = views[state.activeTab] || DashboardView;
+
+            document.getElementById('app').innerHTML = `
+                ${Header()}
+                ${Navigation()}
+                <div class="max-w-7xl mx-auto p-6">
+                    ${currentView()}
+                </div>
+            `;
+        }
+
+        // Inicializar
+        render();
+    </script>
+</body>
+</html>

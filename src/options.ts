@@ -87,7 +87,6 @@ export function getCustomizations(options: RequiredOptions, parser: string, defa
 
   // Create a list of "static" attributes
   for (let attr of options.tailwindAttributes ?? []) {
-    console.log(options.tailwindAttributes, { attr })
     // Check if it's a regex pattern
     if (isRegexPattern(attr)) {
       const regex = parseRegex(attr)

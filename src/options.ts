@@ -61,6 +61,21 @@ export const options: Record<string, SupportOption> = {
   },
 }
 
+function parseRegex(str: string): RegExp | null {
+  if (!str.startsWith('/')) return null
+
+  let lastSlash = str.lastIndexOf('/')
+  if (str.lastIndexOf('/') <= 0) return null
+
+  try {
+    let pattern = str.slice(1, lastSlash)
+    let flags = str.slice(lastSlash + 1)
+    return new RegExp(pattern, flags)
+  } catch {
+    return null
+  }
+}
+
 export function getCustomizations(options: RequiredOptions, parser: string, defaults: Customizations): Customizations {
   let staticAttrs = new Set<string>(defaults.staticAttrs)
   let dynamicAttrs = new Set<string>(defaults.dynamicAttrs)
@@ -68,35 +83,13 @@ export function getCustomizations(options: RequiredOptions, parser: string, defa
   let staticAttrsRegex: RegExp[] = [...defaults.staticAttrsRegex]
   let dynamicAttrsRegex: RegExp[] = [...defaults.dynamicAttrsRegex]
 
-  // Helper function to detect if a string is a regex pattern
-  function isRegexPattern(str: string): boolean {
-    return str.startsWith('/') && str.lastIndexOf('/') > 0
-  }
-
-  // Helper function to parse a regex pattern string
-  function parseRegex(str: string): RegExp | null {
-    try {
-      const lastSlash = str.lastIndexOf('/')
-      const pattern = str.slice(1, lastSlash)
-      const flags = str.slice(lastSlash + 1)
-      return new RegExp(pattern, flags)
-    } catch {
-      return null
-    }
-  }
-
   // Create a list of "static" attributes
   for (let attr of options.tailwindAttributes ?? []) {
-    // Check if it's a regex pattern
-    if (isRegexPattern(attr)) {
-      const regex = parseRegex(attr)
-      if (regex) {
-        staticAttrsRegex.push(regex)
-        continue
-      }
-    }
+    let regex = parseRegex(attr)
 
-    if (parser === 'vue' && attr.startsWith(':')) {
+    if (regex) {
+      staticAttrsRegex.push(regex)
+    } else if (parser === 'vue' && attr.startsWith(':')) {
       staticAttrs.add(attr.slice(1))
     } else if (parser === 'vue' && attr.startsWith('v-bind:')) {
       staticAttrs.add(attr.slice(7))
@@ -119,19 +112,12 @@ export function getCustomizations(options: RequiredOptions, parser: string, defa
     }
   }
 
-  // For regex patterns, generate dynamic versions if needed
   for (let regex of staticAttrsRegex) {
     if (parser === 'vue') {
-      // Add dynamic versions for Vue
-      const pattern = regex.source
-      const flags = regex.flags
-      dynamicAttrsRegex.push(new RegExp(`:${pattern}`, flags))
-      dynamicAttrsRegex.push(new RegExp(`v-bind:${pattern}`, flags))
+      dynamicAttrsRegex.push(new RegExp(`:${regex.source}`, regex.flags))
+      dynamicAttrsRegex.push(new RegExp(`v-bind:${regex.source}`, regex.flags))
     } else if (parser === 'angular') {
-      // Add dynamic versions for Angular
-      const pattern = regex.source
-      const flags = regex.flags
-      dynamicAttrsRegex.push(new RegExp(`\\[${pattern}\\]`, flags))
+      dynamicAttrsRegex.push(new RegExp(`\\[${regex.source}\\]`, regex.flags))
     }
   }
 

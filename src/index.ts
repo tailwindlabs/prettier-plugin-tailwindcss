@@ -21,25 +21,6 @@ let base = await loadPlugins()
 
 const ESCAPE_SEQUENCE_PATTERN = /\\(['"\\nrtbfv0-7xuU])/g
 
-/**
- * Helper function to check if an attribute name matches either exact strings or regex patterns
- */
-function matchesAttribute(attrName: string, attrs: Set<string>, regexes: RegExp[]): boolean {
-  // First check for exact match
-  if (attrs.has(attrName)) {
-    return true
-  }
-
-  // Then check regex patterns
-  for (const regex of regexes) {
-    if (regex.test(attrName)) {
-      return true
-    }
-  }
-
-  return false
-}
-
 function createParser(
   parserFormat: string,
   transform: (ast: any, context: TransformerContext) => void,
@@ -298,9 +279,9 @@ function transformHtml(ast: any, { env, changes }: TransformerContext) {
   let { parser } = env.options
 
   for (let attr of ast.attrs ?? []) {
-    if (matchesAttribute(attr.name, staticAttrs, staticAttrsRegex)) {
+    if (hasMatch(attr.name, staticAttrs, staticAttrsRegex)) {
       attr.value = sortClasses(attr.value, { env })
-    } else if (matchesAttribute(attr.name, dynamicAttrs, dynamicAttrsRegex)) {
+    } else if (hasMatch(attr.name, dynamicAttrs, dynamicAttrsRegex)) {
       if (!/[`'"]/.test(attr.value)) {
         continue
       }
@@ -323,7 +304,7 @@ function transformGlimmer(ast: any, { env }: TransformerContext) {
 
   visit(ast, {
     AttrNode(attr, _path, meta) {
-      if (matchesAttribute(attr.name, staticAttrs, staticAttrsRegex) && attr.value) {
+      if (hasMatch(attr.name, staticAttrs, staticAttrsRegex) && attr.value) {
         meta.sortTextNodes = true
       }
     },
@@ -379,8 +360,8 @@ function transformLiquid(ast: any, { env }: TransformerContext) {
 
   function isClassAttr(node: { name: string | { type: string; value: string }[] }) {
     return Array.isArray(node.name)
-      ? node.name.every((n) => n.type === 'TextNode' && matchesAttribute(n.value, staticAttrs, staticAttrsRegex))
-      : matchesAttribute(node.name, staticAttrs, staticAttrsRegex)
+      ? node.name.every((n) => n.type === 'TextNode' && hasMatch(n.value, staticAttrs, staticAttrsRegex))
+      : hasMatch(node.name, staticAttrs, staticAttrsRegex)
   }
 
   function hasSurroundingQuotes(str: string) {
@@ -620,7 +601,7 @@ function isSortableExpression(
   }
 
   if (node.type === 'Identifier') {
-    return functions.has(node.name)
+    return hasMatch(node.name, functions, [])
   }
 
   return false
@@ -706,7 +687,7 @@ function transformJavaScript(ast: import('@babel/types').Node, { env }: Transfor
         return
       }
 
-      if (!matchesAttribute(node.name.name, staticAttrs, staticAttrsRegex)) {
+      if (!hasMatch(node.name.name, staticAttrs, staticAttrsRegex)) {
         return
       }
 
@@ -909,7 +890,7 @@ function transformTwig(ast: any, { env, changes }: TransformerContext) {
       }
 
       if (node.type === 'Identifier') {
-        if (!functions.has(node.name)) return
+        if (!hasMatch(node.name, functions, [])) return
       }
 
       meta.sortTextNodes = true
@@ -1088,6 +1069,19 @@ function transformSvelte(ast: any, { env, changes }: TransformerContext) {
   if (ast.html) {
     transformSvelte(ast.html, { env, changes })
   }
+}
+
+/**
+ * Check for matches against a static list or possible regex patterns
+ */
+function hasMatch(name: string, list: Set<string>, patterns: RegExp[]): boolean {
+  if (list.has(name)) return true
+
+  for (let regex of patterns) {
+    if (regex.test(name)) return true
+  }
+
+  return false
 }
 
 export { options } from './options.js'

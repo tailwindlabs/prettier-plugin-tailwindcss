@@ -328,9 +328,17 @@ let tests: PluginTest[] = [
   },
   {
     plugins: ['prettier-plugin-astro'],
+    options: {
+      tailwindAttributes: ['/(styles|classes)/'],
+    },
     tests: {
       astro: [
         // ...html, // TODO:
+        [
+          '<div styles="sm:p-0 p-0" classes="sm:p-0 p-0" other="sm:p-0 p-0"></div>',
+          '<div styles="p-0 sm:p-0" classes="p-0 sm:p-0" other="sm:p-0 p-0"></div>',
+        ],
+
         [`{<div class="p-20 bg-red-100 w-full"></div>}`, `{(<div class="w-full bg-red-100 p-20" />)}`],
         [
           `<style>

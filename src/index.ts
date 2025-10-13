@@ -21,6 +21,25 @@ let base = await loadPlugins()
 
 const ESCAPE_SEQUENCE_PATTERN = /\\(['"\\nrtbfv0-7xuU])/g
 
+/**
+ * Helper function to check if an attribute name matches either exact strings or regex patterns
+ */
+function matchesAttribute(attrName: string, attrs: Set<string>, regexes: RegExp[]): boolean {
+  // First check for exact match
+  if (attrs.has(attrName)) {
+    return true
+  }
+
+  // Then check regex patterns
+  for (const regex of regexes) {
+    if (regex.test(attrName)) {
+      return true
+    }
+  }
+
+  return false
+}
+
 function createParser(
   parserFormat: string,
   transform: (ast: any, context: TransformerContext) => void,
@@ -30,6 +49,8 @@ function createParser(
     staticAttrs: new Set(meta.staticAttrs ?? []),
     dynamicAttrs: new Set(meta.dynamicAttrs ?? []),
     functions: new Set(meta.functions ?? []),
+    staticAttrsRegex: [],
+    dynamicAttrsRegex: [],
   }
 
   return {
@@ -273,13 +294,13 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
 }
 
 function transformHtml(ast: any, { env, changes }: TransformerContext) {
-  let { staticAttrs, dynamicAttrs } = env.customizations
+  let { staticAttrs, dynamicAttrs, staticAttrsRegex, dynamicAttrsRegex } = env.customizations
   let { parser } = env.options
 
   for (let attr of ast.attrs ?? []) {
-    if (staticAttrs.has(attr.name)) {
+    if (matchesAttribute(attr.name, staticAttrs, staticAttrsRegex)) {
       attr.value = sortClasses(attr.value, { env })
-    } else if (dynamicAttrs.has(attr.name)) {
+    } else if (matchesAttribute(attr.name, dynamicAttrs, dynamicAttrsRegex)) {
       if (!/[`'"]/.test(attr.value)) {
         continue
       }
@@ -298,11 +319,11 @@ function transformHtml(ast: any, { env, changes }: TransformerContext) {
 }
 
 function transformGlimmer(ast: any, { env }: TransformerContext) {
-  let { staticAttrs } = env.customizations
+  let { staticAttrs, staticAttrsRegex } = env.customizations
 
   visit(ast, {
     AttrNode(attr, _path, meta) {
-      if (staticAttrs.has(attr.name) && attr.value) {
+      if (matchesAttribute(attr.name, staticAttrs, staticAttrsRegex) && attr.value) {
         meta.sortTextNodes = true
       }
     },
@@ -354,12 +375,12 @@ function transformGlimmer(ast: any, { env }: TransformerContext) {
 }
 
 function transformLiquid(ast: any, { env }: TransformerContext) {
-  let { staticAttrs } = env.customizations
+  let { staticAttrs, staticAttrsRegex } = env.customizations
 
   function isClassAttr(node: { name: string | { type: string; value: string }[] }) {
     return Array.isArray(node.name)
-      ? node.name.every((n) => n.type === 'TextNode' && staticAttrs.has(n.value))
-      : staticAttrs.has(node.name)
+      ? node.name.every((n) => n.type === 'TextNode' && matchesAttribute(n.value, staticAttrs, staticAttrsRegex))
+      : matchesAttribute(node.name, staticAttrs, staticAttrsRegex)
   }
 
   function hasSurroundingQuotes(str: string) {
@@ -653,7 +674,7 @@ function canCollapseWhitespaceIn(path: Path<import('@babel/types').Node, any>) {
 // We cross several parsers that share roughly the same shape so things are
 // good enough. The actual AST we should be using is probably estree + ts.
 function transformJavaScript(ast: import('@babel/types').Node, { env }: TransformerContext) {
-  let { staticAttrs, functions } = env.customizations
+  let { staticAttrs, functions, staticAttrsRegex } = env.customizations
 
   function sortInside(ast: import('@babel/types').Node) {
     visit(ast, (node, path) => {
@@ -685,7 +706,7 @@ function transformJavaScript(ast: import('@babel/types').Node, { env }: Transfor
         return
       }
 
-      if (!staticAttrs.has(node.name.name)) {
+      if (!matchesAttribute(node.name.name, staticAttrs, staticAttrsRegex)) {
         return
       }
 
@@ -874,10 +895,7 @@ function transformTwig(ast: any, { env, changes }: TransformerContext) {
 
     CallExpression(node, _path, meta) {
       // Traverse property accesses and function calls to find the *trailing* ident
-      while (
-        node.type === 'CallExpression' ||
-        node.type === 'MemberExpression'
-      ) {
+      while (node.type === 'CallExpression' || node.type === 'MemberExpression') {
         if (node.type === 'CallExpression') {
           node = node.callee
         } else if (node.type === 'MemberExpression') {

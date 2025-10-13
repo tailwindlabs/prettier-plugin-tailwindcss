@@ -65,9 +65,38 @@ export function getCustomizations(options: RequiredOptions, parser: string, defa
   let staticAttrs = new Set<string>(defaults.staticAttrs)
   let dynamicAttrs = new Set<string>(defaults.dynamicAttrs)
   let functions = new Set<string>(defaults.functions)
+  let staticAttrsRegex: RegExp[] = [...defaults.staticAttrsRegex]
+  let dynamicAttrsRegex: RegExp[] = [...defaults.dynamicAttrsRegex]
+
+  // Helper function to detect if a string is a regex pattern
+  function isRegexPattern(str: string): boolean {
+    return str.startsWith('/') && str.lastIndexOf('/') > 0
+  }
+
+  // Helper function to parse a regex pattern string
+  function parseRegex(str: string): RegExp | null {
+    try {
+      const lastSlash = str.lastIndexOf('/')
+      const pattern = str.slice(1, lastSlash)
+      const flags = str.slice(lastSlash + 1)
+      return new RegExp(pattern, flags)
+    } catch {
+      return null
+    }
+  }
 
   // Create a list of "static" attributes
   for (let attr of options.tailwindAttributes ?? []) {
+    console.log(options.tailwindAttributes, { attr })
+    // Check if it's a regex pattern
+    if (isRegexPattern(attr)) {
+      const regex = parseRegex(attr)
+      if (regex) {
+        staticAttrsRegex.push(regex)
+        continue
+      }
+    }
+
     if (parser === 'vue' && attr.startsWith(':')) {
       staticAttrs.add(attr.slice(1))
     } else if (parser === 'vue' && attr.startsWith('v-bind:')) {
@@ -91,6 +120,22 @@ export function getCustomizations(options: RequiredOptions, parser: string, defa
     }
   }
 
+  // For regex patterns, generate dynamic versions if needed
+  for (let regex of staticAttrsRegex) {
+    if (parser === 'vue') {
+      // Add dynamic versions for Vue
+      const pattern = regex.source
+      const flags = regex.flags
+      dynamicAttrsRegex.push(new RegExp(`:${pattern}`, flags))
+      dynamicAttrsRegex.push(new RegExp(`v-bind:${pattern}`, flags))
+    } else if (parser === 'angular') {
+      // Add dynamic versions for Angular
+      const pattern = regex.source
+      const flags = regex.flags
+      dynamicAttrsRegex.push(new RegExp(`\\[${pattern}\\]`, flags))
+    }
+  }
+
   // Generate a list of supported functions
   for (let fn of options.tailwindFunctions ?? []) {
     functions.add(fn)
@@ -100,5 +145,7 @@ export function getCustomizations(options: RequiredOptions, parser: string, defa
     functions,
     staticAttrs,
     dynamicAttrs,
+    staticAttrsRegex,
+    dynamicAttrsRegex,
   }
 }

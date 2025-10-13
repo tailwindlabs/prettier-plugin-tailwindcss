@@ -91,6 +91,40 @@ function MyButton({ children }) {
 }
 ```
 
+### Using regex patterns
+
+You can also use regular expressions to match multiple attributes dynamically. Regex patterns should be enclosed in forward slashes:
+
+```json5
+// .prettierrc
+{
+  "tailwindAttributes": ["myClassList", "/data-.*/"]
+}
+```
+
+This example will sort classes in the `myClassList` attribute as well as any attribute starting with `data-`:
+
+```jsx
+function MyButton({ children }) {
+  return (
+    <button
+      myClassList="rounded bg-blue-500 px-4 py-2 text-base text-white"
+      data-theme="dark:bg-gray-800 bg-white"
+      data-classes="flex items-center"
+    >
+      {children}
+    </button>
+  );
+}
+```
+
+**Common regex patterns:**
+
+- `"/data-.*/"` - Match all data attributes (data-class, data-theme, etc.)
+- `"/.*List$/"` - Match attributes ending with "List" (classList, styleList, etc.)
+- `"/my-prefix-.*/i"` - Case-insensitive match for attributes starting with "my-prefix-"
+- `"/(styleNames|classNames)/"` - Match multiple specific attribute names
+
 ## Sorting classes in function calls
 
 In addition to sorting classes in attributes, you can also sort classes in strings provided to function calls. This is useful when working with libraries like [clsx](https://github.com/lukeed/clsx) or [cva](https://cva.style/).

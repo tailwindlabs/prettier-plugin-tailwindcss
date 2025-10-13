@@ -794,16 +794,16 @@ function transformCss(ast: any, { env }: TransformerContext) {
 }
 
 function transformAstro(ast: any, { env, changes }: TransformerContext) {
-  let { staticAttrs, dynamicAttrs } = env.customizations
+  let { staticAttrs, dynamicAttrs, staticAttrsRegex, dynamicAttrsRegex } = env.customizations
 
   if (ast.type === 'element' || ast.type === 'custom-element' || ast.type === 'component') {
     for (let attr of ast.attributes ?? []) {
-      if (staticAttrs.has(attr.name) && attr.type === 'attribute' && attr.kind === 'quoted') {
+      if (hasMatch(attr.name, staticAttrs, staticAttrsRegex) && attr.type === 'attribute' && attr.kind === 'quoted') {
         attr.value = sortClasses(attr.value, {
           env,
         })
       } else if (
-        dynamicAttrs.has(attr.name) &&
+        hasMatch(attr.name, dynamicAttrs, dynamicAttrsRegex) &&
         attr.type === 'attribute' &&
         attr.kind === 'expression' &&
         typeof attr.value === 'string'

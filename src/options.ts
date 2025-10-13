@@ -39,6 +39,13 @@ export const options: Record<string, SupportOption> = {
     description: 'List of functions and tagged templates that contain sortable Tailwind classes',
   },
 
+  tailwindPreserveSortOrder: {
+    type: 'boolean',
+    default: false,
+    category: 'Tailwind CSS',
+    description: 'Disable sorting of Tailwind classes',
+  },
+
   tailwindPreserveWhitespace: {
     type: 'boolean',
     default: false,

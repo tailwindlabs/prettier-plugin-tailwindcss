@@ -216,6 +216,28 @@ With this configuration, anything we perceive as duplicate classes will be prese
 </div>
 ```
 
+## Disabling sorting
+
+This plugin automatically sorts classes by default. If you want to disable sorting, you can use the `tailwindPreserveSortOrder` option:
+
+```json5
+// .prettierrc
+{
+  "tailwindPreserveSortOrder": true,
+}
+```
+With this configuration, classes will not be sorted:
+
+```jsx
+function MyButton({ children }) {
+  return (
+    <button className="rounded px-4 py-2 text-base text-white bg-blue-500">
+      {children}
+    </button>
+  )
+}
+```
+
 ## Compatibility with other Prettier plugins
 
 This plugin uses Prettier APIs that can only be used by one plugin at a time, making it incompatible with other Prettier plugins implemented the same way. To solve this we've added explicit per-plugin workarounds that enable compatibility with the following Prettier plugins:

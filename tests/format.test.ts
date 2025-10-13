@@ -103,6 +103,83 @@ describe('whitespace', () => {
   })
 })
 
+describe('sort order', () => {
+  test('is disabled by default', async ({ expect }) => {
+    let result = await format('<div class="sm:lowercase uppercase potato text-sm"></div>')
+
+    expect(result).toEqual('<div class="potato text-sm uppercase sm:lowercase"></div>')
+  })
+  test('is disabled with explicit option', async ({ expect }) => {
+    let result = await format('<div class="sm:lowercase uppercase potato text-sm"></div>', {
+      tailwindPreserveSortOrder: false,
+    })
+
+    expect(result).toEqual('<div class="potato text-sm uppercase sm:lowercase"></div>')
+  })
+
+  test('can be preserved', async ({ expect }) => {
+    let result = await format('<div class="sm:lowercase uppercase potato text-sm"></div>', {
+      tailwindPreserveSortOrder: true,
+    })
+
+    expect(result).toEqual('<div class="sm:lowercase uppercase potato text-sm"></div>')
+  })
+
+  test('can be preserved with duplicates', async ({ expect }) => {
+    let result = await format('<div class="underline line-through underline flex"></div>', {
+      tailwindPreserveSortOrder: true,
+      tailwindPreserveDuplicates: true,
+    })
+
+    expect(result).toEqual('<div class="underline line-through underline flex"></div>')
+  })
+
+  test('can be preserved with whitespace', async ({ expect }) => {
+    let result = await format(`;<div className={' underline text-red-500  flex '}></div>`, {
+      parser: 'babel',
+      tailwindPreserveSortOrder: true,
+      tailwindPreserveWhitespace: true,
+    })
+
+    expect(result).toEqual(`;<div className={' underline text-red-500  flex '}></div>`)
+  })
+
+  test('can be preserved with duplicates and whitespace', async ({ expect }) => {
+    let result = await format(`;<div className={' underline line-through underline text-red-500  flex '}></div>`, {
+      parser: 'babel',
+      tailwindPreserveSortOrder: true,
+      tailwindPreserveWhitespace: true,
+      tailwindPreserveDuplicates: true,
+    })
+
+    expect(result).toEqual(`;<div className={' underline line-through underline text-red-500  flex '}></div>`)
+  })
+
+  test('is disabled by default with duplicates', async ({ expect }) => {
+    let result = await format('<div class="underline line-through underline flex"></div>')
+
+    expect(result).toEqual('<div class="flex line-through underline"></div>')
+  })
+
+  test('is disabled by default with whitespace', async ({ expect }) => {
+    let result = await format('<div class=" underline text-red-500  flex "></div>', {
+      tailwindPreserveWhitespace: true,
+    })
+
+    expect(result).toEqual('<div class="flex text-red-500 underline"></div>')
+  })
+
+  test('is disabled by default with duplicates and whitespace', async ({ expect }) => {
+    let result = await format(';<div class=" underline line-through underline text-red-500  flex "></div>', {
+      parser: 'babel',
+      tailwindPreserveWhitespace: true,
+      tailwindPreserveDuplicates: true,
+    })
+
+    expect(result).toEqual(';<div class=" flex text-red-500 line-through underline  underline "></div>')
+  })
+})
+
 describe('errors', () => {
   test('when the given JS config does not exist', async ({ expect }) => {
     let result = format('<div></div>', {

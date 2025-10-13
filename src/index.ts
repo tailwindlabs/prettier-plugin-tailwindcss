@@ -1269,6 +1269,11 @@ export interface PluginOptions {
   tailwindAttributes?: string[]
 
   /**
+   * Preserve sort-order of Tailwind classes.
+   */
+  tailwindPreserveSortOrder?: boolean
+
+  /**
    * Preserve whitespace around Tailwind classes when sorting.
    */
   tailwindPreserveWhitespace?: boolean

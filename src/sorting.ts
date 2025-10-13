@@ -4,6 +4,10 @@ import { bigSign } from './utils'
 function reorderClasses(classList: string[], { env }: { env: TransformerEnv }) {
   let orderedClasses = env.context.getClassOrder(classList)
 
+  if (env.options.tailwindPreserveSortOrder) {
+    return orderedClasses
+  }
+
   return orderedClasses.sort(([nameA, a], [nameZ, z]) => {
     // Move `...` to the end of the list
     if (nameA === '...' || nameA === '…') return 1

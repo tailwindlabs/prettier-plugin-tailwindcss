@@ -93,7 +93,7 @@ function MyButton({ children }) {
 
 ### Using regex patterns
 
-You can also use regular expressions to match multiple attributes dynamically. Regex patterns should be enclosed in forward slashes:
+You can also use regular expressions to match multiple attributes. Patterns should be enclosed in forward slashes. Note that JS regex literals are not supported with Prettier:
 
 ```json5
 // .prettierrc
@@ -117,13 +117,6 @@ function MyButton({ children }) {
   );
 }
 ```
-
-**Common regex patterns:**
-
-- `"/data-.*/"` - Match all data attributes (data-class, data-theme, etc.)
-- `"/.*List$/"` - Match attributes ending with "List" (classList, styleList, etc.)
-- `"/my-prefix-.*/i"` - Case-insensitive match for attributes starting with "my-prefix-"
-- `"/(styleNames|classNames)/"` - Match multiple specific attribute names
 
 ## Sorting classes in function calls
 

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fallback to Tailwind CSS v4 instead of v3 by default ([#390](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/390))
 - Support sorting in function calls in Twig ([#358](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/358))
 - Support regular expression patterns for attributes ([#405](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/405))
+- Support regular expression patterns for function names ([#405](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/405))
 
 ## [0.6.14] - 2025-07-09
 

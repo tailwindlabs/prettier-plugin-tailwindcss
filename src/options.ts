@@ -73,6 +73,7 @@ export function createMatcher(options: RequiredOptions, parser: string, defaults
   let functions = new Set<string>(defaults.functions)
   let staticAttrsRegex: RegExp[] = [...defaults.staticAttrsRegex]
   let dynamicAttrsRegex: RegExp[] = [...defaults.dynamicAttrsRegex]
+  let functionsRegex: RegExp[] = [...defaults.functionsRegex]
 
   // Create a list of "static" attributes
   for (let attr of options.tailwindAttributes ?? []) {
@@ -114,13 +115,19 @@ export function createMatcher(options: RequiredOptions, parser: string, defaults
 
   // Generate a list of supported functions
   for (let fn of options.tailwindFunctions ?? []) {
-    functions.add(fn)
+    let regex = parseRegex(fn)
+
+    if (regex) {
+      functionsRegex.push(regex)
+    } else {
+      functions.add(fn)
+    }
   }
 
   return {
     hasStaticAttr: (name: string) => hasMatch(name, staticAttrs, staticAttrsRegex),
     hasDynamicAttr: (name: string) => hasMatch(name, dynamicAttrs, dynamicAttrsRegex),
-    hasFunction: (name: string) => hasMatch(name, functions, []),
+    hasFunction: (name: string) => hasMatch(name, functions, functionsRegex),
   }
 }
 

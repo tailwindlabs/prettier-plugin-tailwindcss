@@ -14,6 +14,7 @@ export interface Customizations {
   dynamicAttrs: Set<string>
   staticAttrsRegex: RegExp[]
   dynamicAttrsRegex: RegExp[]
+  functionsRegex: RegExp[]
 }
 
 export interface TransformerContext {

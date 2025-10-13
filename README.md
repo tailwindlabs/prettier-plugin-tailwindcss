@@ -192,6 +192,10 @@ Once added, tag your strings with the function and the plugin will sort them:
 const mySortedClasses = tw`bg-white p-4 dark:bg-black`
 ```
 
+### Using regex patterns
+
+Like `tailwindAttributes` this function all supports regular expressions to match multiple function names. Patterns should be enclosed in forward slashes. Note that JS regex literals are not supported with Prettier.
+
 ## Preserving whitespace
 
 This plugin automatically removes unnecessary whitespace between classes to ensure consistent formatting. If you prefer to preserve whitespace, you can use the `tailwindPreserveWhitespace` option:

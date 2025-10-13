@@ -32,6 +32,7 @@ function createParser(
     functions: new Set(meta.functions ?? []),
     staticAttrsRegex: [],
     dynamicAttrsRegex: [],
+    functionsRegex: [],
   }
 
   return {

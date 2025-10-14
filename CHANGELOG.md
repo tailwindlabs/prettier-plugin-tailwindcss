@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## Added
+### Added
 - Format quotes in `@source`, `@plugin`, and `@config` ([#387](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/387))
 - Sort in function calls in Twig ([#358](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/358))
 - Sort in callable template literals ([#367](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/367))
@@ -15,14 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support regular expression patterns for attributes ([#405](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/405))
 - Support regular expression patterns for function names ([#405](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/405))
 
-## Changed
+### Changed
 - Improved monorepo support by loading Tailwind CSS relative to the input file instead of prettier config file ([#386](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/386))
 - Improved monorepo support by loading v3 configs relative to the input file instead of prettier config file ([#386](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/386))
 - Fallback to Tailwind CSS v4 instead of v3 by default ([#390](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/390))
 - Don't augment global Prettier `ParserOptions` and `RequiredOptions` types ([#354](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/354))
 - Drop support for `prettier-plugin-import-sort` ([#385](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/385))
 
-## Fixed
+### Fixed
 - Handle quote escapes in LESS when sorting `@apply` ([#392](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/392))
 - Fix whitespace removal inside nested concat and template expressions ([#396](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/396))
 

@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Nothing yet!
+
+## [0.7.0] - 2025-10-14
+
 ### Added
+
 - Format quotes in `@source`, `@plugin`, and `@config` ([#387](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/387))
 - Sort in function calls in Twig ([#358](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/358))
 - Sort in callable template literals ([#367](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/367))
@@ -385,7 +390,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.14...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.14...v0.7.0
 [0.6.14]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.13...v0.6.14
 [0.6.13]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.12...v0.6.13
 [0.6.12]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.11...v0.6.12

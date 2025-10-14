@@ -91,6 +91,33 @@ function MyButton({ children }) {
 }
 ```
 
+### Using regex patterns
+
+You can also use regular expressions to match multiple attributes. Patterns should be enclosed in forward slashes. Note that JS regex literals are not supported with Prettier:
+
+```json5
+// .prettierrc
+{
+  "tailwindAttributes": ["myClassList", "/data-.*/"]
+}
+```
+
+This example will sort classes in the `myClassList` attribute as well as any attribute starting with `data-`:
+
+```jsx
+function MyButton({ children }) {
+  return (
+    <button
+      myClassList="rounded bg-blue-500 px-4 py-2 text-base text-white"
+      data-theme="dark:bg-gray-800 bg-white"
+      data-classes="flex items-center"
+    >
+      {children}
+    </button>
+  );
+}
+```
+
 ## Sorting classes in function calls
 
 In addition to sorting classes in attributes, you can also sort classes in strings provided to function calls. This is useful when working with libraries like [clsx](https://github.com/lukeed/clsx) or [cva](https://cva.style/).
@@ -164,6 +191,10 @@ Once added, tag your strings with the function and the plugin will sort them:
 ```js
 const mySortedClasses = tw`bg-white p-4 dark:bg-black`
 ```
+
+### Using regex patterns
+
+Like `tailwindAttributes` this function all supports regular expressions to match multiple function names. Patterns should be enclosed in forward slashes. Note that JS regex literals are not supported with Prettier.
 
 ## Preserving whitespace
 

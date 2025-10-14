@@ -11,7 +11,7 @@ import * as prettierParserBabel from 'prettier/plugins/babel'
 // @ts-ignore
 import * as recast from 'recast'
 import { getTailwindConfig } from './config.js'
-import { getCustomizations } from './options.js'
+import { createMatcher, type Matcher } from './options.js'
 import { loadPlugins } from './plugins.js'
 import { sortClasses, sortClassList } from './sorting.js'
 import type { Customizations, StringChange, TransformerContext, TransformerEnv, TransformerMetadata } from './types'
@@ -30,6 +30,9 @@ function createParser(
     staticAttrs: new Set(meta.staticAttrs ?? []),
     dynamicAttrs: new Set(meta.dynamicAttrs ?? []),
     functions: new Set(meta.functions ?? []),
+    staticAttrsRegex: [],
+    dynamicAttrsRegex: [],
+    functionsRegex: [],
   }
 
   return {
@@ -53,12 +56,12 @@ function createParser(
       // @ts-ignore: We pass three options in the case of plugins that support Prettier 2 _and_ 3.
       let ast = await original.parse(text, options, options)
 
-      let customizations = getCustomizations(options, parserFormat, customizationDefaults)
+      let matcher = createMatcher(options, parserFormat, customizationDefaults)
 
       let changes: any[] = []
 
       transform(ast, {
-        env: { context, customizations, parsers: {}, options },
+        env: { context, matcher, parsers: {}, options },
         changes,
       })
 
@@ -158,7 +161,7 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
 }
 
 function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
-  let { functions } = env.customizations
+  let { matcher } = env
 
   let ast = recast.parse(`let __prettier_temp__ = ${attr.value}`, {
     parser: prettierParserBabel.parsers['babel-ts'],
@@ -249,7 +252,7 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
         )
       })
 
-      if (isSortableTemplateExpression(path.node, functions)) {
+      if (isSortableTemplateExpression(path.node, matcher)) {
         let sorted = sortTemplateLiteral(path.node.quasi, {
           env,
           collapseWhitespace: {
@@ -273,13 +276,13 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
 }
 
 function transformHtml(ast: any, { env, changes }: TransformerContext) {
-  let { staticAttrs, dynamicAttrs } = env.customizations
+  let { matcher } = env
   let { parser } = env.options
 
   for (let attr of ast.attrs ?? []) {
-    if (staticAttrs.has(attr.name)) {
+    if (matcher.hasStaticAttr(attr.name)) {
       attr.value = sortClasses(attr.value, { env })
-    } else if (dynamicAttrs.has(attr.name)) {
+    } else if (matcher.hasDynamicAttr(attr.name)) {
       if (!/[`'"]/.test(attr.value)) {
         continue
       }
@@ -298,11 +301,11 @@ function transformHtml(ast: any, { env, changes }: TransformerContext) {
 }
 
 function transformGlimmer(ast: any, { env }: TransformerContext) {
-  let { staticAttrs } = env.customizations
+  let { matcher } = env
 
   visit(ast, {
     AttrNode(attr, _path, meta) {
-      if (staticAttrs.has(attr.name) && attr.value) {
+      if (matcher.hasStaticAttr(attr.name) && attr.value) {
         meta.sortTextNodes = true
       }
     },
@@ -354,12 +357,12 @@ function transformGlimmer(ast: any, { env }: TransformerContext) {
 }
 
 function transformLiquid(ast: any, { env }: TransformerContext) {
-  let { staticAttrs } = env.customizations
+  let { matcher } = env
 
   function isClassAttr(node: { name: string | { type: string; value: string }[] }) {
     return Array.isArray(node.name)
-      ? node.name.every((n) => n.type === 'TextNode' && staticAttrs.has(n.value))
-      : staticAttrs.has(node.name)
+      ? node.name.every((n) => n.type === 'TextNode' && matcher.hasStaticAttr(n.value))
+      : matcher.hasStaticAttr(node.name)
   }
 
   function hasSurroundingQuotes(str: string) {
@@ -568,18 +571,18 @@ function sortTemplateLiteral(
 
 function isSortableTemplateExpression(
   node: import('@babel/types').TaggedTemplateExpression | import('ast-types').namedTypes.TaggedTemplateExpression,
-  functions: Set<string>,
+  matcher: Matcher,
 ): boolean {
-  return isSortableExpression(node.tag, functions)
+  return isSortableExpression(node.tag, matcher)
 }
 
 function isSortableCallExpression(
   node: import('@babel/types').CallExpression | import('ast-types').namedTypes.CallExpression,
-  functions: Set<string>,
+  matcher: Matcher,
 ): boolean {
   if (!node.arguments?.length) return false
 
-  return isSortableExpression(node.callee, functions)
+  return isSortableExpression(node.callee, matcher)
 }
 
 function isSortableExpression(
@@ -587,7 +590,7 @@ function isSortableExpression(
     | import('@babel/types').Expression
     | import('@babel/types').V8IntrinsicIdentifier
     | import('ast-types').namedTypes.ASTNode,
-  functions: Set<string>,
+  matcher: Matcher,
 ): boolean {
   // Traverse property accesses and function calls to find the leading ident
   while (node.type === 'CallExpression' || node.type === 'MemberExpression') {
@@ -599,7 +602,7 @@ function isSortableExpression(
   }
 
   if (node.type === 'Identifier') {
-    return functions.has(node.name)
+    return matcher.hasFunction(node.name)
   }
 
   return false
@@ -653,7 +656,7 @@ function canCollapseWhitespaceIn(path: Path<import('@babel/types').Node, any>) {
 // We cross several parsers that share roughly the same shape so things are
 // good enough. The actual AST we should be using is probably estree + ts.
 function transformJavaScript(ast: import('@babel/types').Node, { env }: TransformerContext) {
-  let { staticAttrs, functions } = env.customizations
+  let { matcher } = env
 
   function sortInside(ast: import('@babel/types').Node) {
     visit(ast, (node, path) => {
@@ -664,7 +667,7 @@ function transformJavaScript(ast: import('@babel/types').Node, { env }: Transfor
       } else if (node.type === 'TemplateLiteral') {
         sortTemplateLiteral(node, { env, collapseWhitespace })
       } else if (node.type === 'TaggedTemplateExpression') {
-        if (isSortableTemplateExpression(node, functions)) {
+        if (isSortableTemplateExpression(node, matcher)) {
           sortTemplateLiteral(node.quasi, { env, collapseWhitespace })
         }
       }
@@ -685,7 +688,7 @@ function transformJavaScript(ast: import('@babel/types').Node, { env }: Transfor
         return
       }
 
-      if (!staticAttrs.has(node.name.name)) {
+      if (!matcher.hasStaticAttr(node.name.name)) {
         return
       }
 
@@ -699,7 +702,7 @@ function transformJavaScript(ast: import('@babel/types').Node, { env }: Transfor
     CallExpression(node) {
       node = node as import('@babel/types').CallExpression
 
-      if (!isSortableCallExpression(node, functions)) {
+      if (!isSortableCallExpression(node, matcher)) {
         return
       }
 
@@ -709,7 +712,7 @@ function transformJavaScript(ast: import('@babel/types').Node, { env }: Transfor
     TaggedTemplateExpression(node, path) {
       node = node as import('@babel/types').TaggedTemplateExpression
 
-      if (!isSortableTemplateExpression(node, functions)) {
+      if (!isSortableTemplateExpression(node, matcher)) {
         return
       }
 
@@ -792,16 +795,16 @@ function transformCss(ast: any, { env }: TransformerContext) {
 }
 
 function transformAstro(ast: any, { env, changes }: TransformerContext) {
-  let { staticAttrs, dynamicAttrs } = env.customizations
+  let { matcher } = env
 
   if (ast.type === 'element' || ast.type === 'custom-element' || ast.type === 'component') {
     for (let attr of ast.attributes ?? []) {
-      if (staticAttrs.has(attr.name) && attr.type === 'attribute' && attr.kind === 'quoted') {
+      if (matcher.hasStaticAttr(attr.name) && attr.type === 'attribute' && attr.kind === 'quoted') {
         attr.value = sortClasses(attr.value, {
           env,
         })
       } else if (
-        dynamicAttrs.has(attr.name) &&
+        matcher.hasDynamicAttr(attr.name) &&
         attr.type === 'attribute' &&
         attr.kind === 'expression' &&
         typeof attr.value === 'string'
@@ -817,7 +820,7 @@ function transformAstro(ast: any, { env, changes }: TransformerContext) {
 }
 
 function transformMarko(ast: any, { env }: TransformerContext) {
-  let { staticAttrs } = env.customizations
+  let { matcher } = env
 
   const nodesToVisit = [ast]
   while (nodesToVisit.length > 0) {
@@ -837,7 +840,7 @@ function transformMarko(ast: any, { env }: TransformerContext) {
         nodesToVisit.push(...currentNode.body)
         break
       case 'MarkoAttribute':
-        if (!staticAttrs.has(currentNode.name)) break
+        if (!matcher.hasStaticAttr(currentNode.name)) break
         switch (currentNode.value.type) {
           case 'ArrayExpression':
             const classList = currentNode.value.elements
@@ -859,7 +862,7 @@ function transformMarko(ast: any, { env }: TransformerContext) {
 }
 
 function transformTwig(ast: any, { env, changes }: TransformerContext) {
-  let { staticAttrs, functions } = env.customizations
+  let { matcher } = env
 
   for (let child of ast.expressions ?? []) {
     transformTwig(child, { env, changes })
@@ -867,17 +870,14 @@ function transformTwig(ast: any, { env, changes }: TransformerContext) {
 
   visit(ast, {
     Attribute(node, _path, meta) {
-      if (!staticAttrs.has(node.name.name)) return
+      if (!matcher.hasStaticAttr(node.name.name)) return
 
       meta.sortTextNodes = true
     },
 
     CallExpression(node, _path, meta) {
       // Traverse property accesses and function calls to find the *trailing* ident
-      while (
-        node.type === 'CallExpression' ||
-        node.type === 'MemberExpression'
-      ) {
+      while (node.type === 'CallExpression' || node.type === 'MemberExpression') {
         if (node.type === 'CallExpression') {
           node = node.callee
         } else if (node.type === 'MemberExpression') {
@@ -891,7 +891,7 @@ function transformTwig(ast: any, { env, changes }: TransformerContext) {
       }
 
       if (node.type === 'Identifier') {
-        if (!functions.has(node.name)) return
+        if (!matcher.hasFunction(node.name)) return
       }
 
       meta.sortTextNodes = true
@@ -923,7 +923,7 @@ function transformTwig(ast: any, { env, changes }: TransformerContext) {
 }
 
 function transformPug(ast: any, { env }: TransformerContext) {
-  let { staticAttrs } = env.customizations
+  let { matcher } = env
 
   // This isn't optimal
   // We should merge the classes together across class attributes and class tokens
@@ -932,7 +932,7 @@ function transformPug(ast: any, { env }: TransformerContext) {
 
   // First sort the classes in attributes
   for (const token of ast.tokens) {
-    if (token.type === 'attribute' && staticAttrs.has(token.name)) {
+    if (token.type === 'attribute' && matcher.hasStaticAttr(token.name)) {
       token.val = [token.val.slice(0, 1), sortClasses(token.val.slice(1, -1), { env }), token.val.slice(-1)].join('')
     }
   }
@@ -977,10 +977,10 @@ function transformPug(ast: any, { env }: TransformerContext) {
 }
 
 function transformSvelte(ast: any, { env, changes }: TransformerContext) {
-  let { staticAttrs } = env.customizations
+  let { matcher } = env
 
   for (let attr of ast.attributes ?? []) {
-    if (!staticAttrs.has(attr.name) || attr.type !== 'Attribute') {
+    if (!matcher.hasStaticAttr(attr.name) || attr.type !== 'Attribute') {
       continue
     }
 

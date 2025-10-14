@@ -61,14 +61,27 @@ export const options: Record<string, SupportOption> = {
   },
 }
 
-export function getCustomizations(options: RequiredOptions, parser: string, defaults: Customizations): Customizations {
+export interface Matcher {
+  hasStaticAttr(name: string): boolean
+  hasDynamicAttr(name: string): boolean
+  hasFunction(name: string): boolean
+}
+
+export function createMatcher(options: RequiredOptions, parser: string, defaults: Customizations): Matcher {
   let staticAttrs = new Set<string>(defaults.staticAttrs)
   let dynamicAttrs = new Set<string>(defaults.dynamicAttrs)
   let functions = new Set<string>(defaults.functions)
+  let staticAttrsRegex: RegExp[] = [...defaults.staticAttrsRegex]
+  let dynamicAttrsRegex: RegExp[] = [...defaults.dynamicAttrsRegex]
+  let functionsRegex: RegExp[] = [...defaults.functionsRegex]
 
   // Create a list of "static" attributes
   for (let attr of options.tailwindAttributes ?? []) {
-    if (parser === 'vue' && attr.startsWith(':')) {
+    let regex = parseRegex(attr)
+
+    if (regex) {
+      staticAttrsRegex.push(regex)
+    } else if (parser === 'vue' && attr.startsWith(':')) {
       staticAttrs.add(attr.slice(1))
     } else if (parser === 'vue' && attr.startsWith('v-bind:')) {
       staticAttrs.add(attr.slice(7))
@@ -91,14 +104,57 @@ export function getCustomizations(options: RequiredOptions, parser: string, defa
     }
   }
 
+  for (let regex of staticAttrsRegex) {
+    if (parser === 'vue') {
+      dynamicAttrsRegex.push(new RegExp(`:${regex.source}`, regex.flags))
+      dynamicAttrsRegex.push(new RegExp(`v-bind:${regex.source}`, regex.flags))
+    } else if (parser === 'angular') {
+      dynamicAttrsRegex.push(new RegExp(`\\[${regex.source}\\]`, regex.flags))
+    }
+  }
+
   // Generate a list of supported functions
   for (let fn of options.tailwindFunctions ?? []) {
-    functions.add(fn)
+    let regex = parseRegex(fn)
+
+    if (regex) {
+      functionsRegex.push(regex)
+    } else {
+      functions.add(fn)
+    }
   }
 
   return {
-    functions,
-    staticAttrs,
-    dynamicAttrs,
+    hasStaticAttr: (name: string) => hasMatch(name, staticAttrs, staticAttrsRegex),
+    hasDynamicAttr: (name: string) => hasMatch(name, dynamicAttrs, dynamicAttrsRegex),
+    hasFunction: (name: string) => hasMatch(name, functions, functionsRegex),
+  }
+}
+
+/**
+ * Check for matches against a static list or possible regex patterns
+ */
+function hasMatch(name: string, list: Set<string>, patterns: RegExp[]): boolean {
+  if (list.has(name)) return true
+
+  for (let regex of patterns) {
+    if (regex.test(name)) return true
+  }
+
+  return false
+}
+
+function parseRegex(str: string): RegExp | null {
+  if (!str.startsWith('/')) return null
+
+  let lastSlash = str.lastIndexOf('/')
+  if (lastSlash <= 0) return null
+
+  try {
+    let pattern = str.slice(1, lastSlash)
+    let flags = str.slice(lastSlash + 1)
+    return new RegExp(pattern, flags)
+  } catch {
+    return null
   }
 }

@@ -1,4 +1,5 @@
 import type { ParserOptions } from 'prettier'
+import type { Matcher } from './options'
 
 export interface TransformerMetadata {
   // Default customizations for a given transformer
@@ -11,6 +12,9 @@ export interface Customizations {
   functions: Set<string>
   staticAttrs: Set<string>
   dynamicAttrs: Set<string>
+  staticAttrsRegex: RegExp[]
+  dynamicAttrsRegex: RegExp[]
+  functionsRegex: RegExp[]
 }
 
 export interface TransformerContext {
@@ -24,7 +28,7 @@ export interface UnifiedApi {
 
 export interface TransformerEnv {
   context: UnifiedApi
-  customizations: Customizations
+  matcher: Matcher
   parsers: any
   options: ParserOptions
 }

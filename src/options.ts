@@ -148,7 +148,7 @@ function parseRegex(str: string): RegExp | null {
   if (!str.startsWith('/')) return null
 
   let lastSlash = str.lastIndexOf('/')
-  if (str.lastIndexOf('/') <= 0) return null
+  if (lastSlash <= 0) return null
 
   try {
     let pattern = str.slice(1, lastSlash)

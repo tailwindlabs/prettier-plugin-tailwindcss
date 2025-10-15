@@ -12,7 +12,7 @@ function patchRecast() {
     // https://github.com/benjamn/recast/issues/611
     name: 'patch-recast',
     setup(build) {
-      build.onLoad({ filter: /recast\/lib\/patcher\.js$/ }, async (args) => {
+      build.onLoad({ filter: /recast[\/\\]lib[\/\\]patcher\.js$/ }, async (args) => {
         let original = await fs.promises.readFile(args.path, 'utf8')
 
         return {
@@ -39,7 +39,7 @@ function patchJiti() {
     name: 'patch-jiti',
     setup(build) {
       // TODO: Switch to rolldown and see if we can chunk split this instead?
-      build.onLoad({ filter: /jiti\/lib\/jiti\.mjs$/ }, async (args) => {
+      build.onLoad({ filter: /jiti[\/\\]lib[\/\\]jiti\.mjs$/ }, async (args) => {
         let original = await fs.promises.readFile(args.path, 'utf8')
 
         return {

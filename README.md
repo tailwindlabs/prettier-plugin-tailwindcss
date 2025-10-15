@@ -194,7 +194,7 @@ const mySortedClasses = tw`bg-white p-4 dark:bg-black`
 
 ### Using regex patterns
 
-Like `tailwindAttributes` this function all supports regular expressions to match multiple function names. Patterns should be enclosed in forward slashes. Note that JS regex literals are not supported with Prettier.
+Like the `tailwindAttributes` option, the `tailwindFunctions` option also supports regular expressions to match multiple function names. Patterns should be enclosed in forward slashes. Note that JS regex literals are not supported with Prettier.
 
 ## Preserving whitespace
 

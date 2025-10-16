@@ -72,7 +72,6 @@ export function createMatcher(options: RequiredOptions, parser: string, defaults
   let dynamicAttrs = new Set<string>(defaults.dynamicAttrs)
   let functions = new Set<string>(defaults.functions)
   let staticAttrsRegex: RegExp[] = [...defaults.staticAttrsRegex]
-  let dynamicAttrsRegex: RegExp[] = [...defaults.dynamicAttrsRegex]
   let functionsRegex: RegExp[] = [...defaults.functionsRegex]
 
   // Create a list of "static" attributes
@@ -104,15 +103,6 @@ export function createMatcher(options: RequiredOptions, parser: string, defaults
     }
   }
 
-  for (let regex of staticAttrsRegex) {
-    if (parser === 'vue') {
-      dynamicAttrsRegex.push(new RegExp(`:${regex.source}`, regex.flags))
-      dynamicAttrsRegex.push(new RegExp(`v-bind:${regex.source}`, regex.flags))
-    } else if (parser === 'angular') {
-      dynamicAttrsRegex.push(new RegExp(`\\[${regex.source}\\]`, regex.flags))
-    }
-  }
-
   // Generate a list of supported functions
   for (let fn of options.tailwindFunctions ?? []) {
     let regex = parseRegex(fn)
@@ -125,10 +115,45 @@ export function createMatcher(options: RequiredOptions, parser: string, defaults
   }
 
   return {
-    hasStaticAttr: (name: string) => hasMatch(name, staticAttrs, staticAttrsRegex),
-    hasDynamicAttr: (name: string) => hasMatch(name, dynamicAttrs, dynamicAttrsRegex),
+    hasStaticAttr: (name: string) => {
+      // If the name looks like a dynamic attribute we're not a static attr
+      // Only applies to Vue and Angular
+      let newName = nameFromDynamicAttr(name, parser)
+      if (newName) return false
+
+      return hasMatch(name, staticAttrs, staticAttrsRegex)
+    },
+
+    hasDynamicAttr: (name: string) => {
+      // This is definitely a dynamic attribute
+      if (hasMatch(name, dynamicAttrs, [])) return true
+
+      // If the name looks like a dynamic attribute compare the actual name
+      // Only applies to Vue and Angular
+      let newName = nameFromDynamicAttr(name, parser)
+      if (!newName) return false
+
+      return hasMatch(newName, staticAttrs, staticAttrsRegex)
+    },
+
     hasFunction: (name: string) => hasMatch(name, functions, functionsRegex),
   }
+}
+
+function nameFromDynamicAttr(name: string, parser: string) {
+  if (parser === 'vue') {
+    if (name.startsWith(':')) return name.slice(1)
+    if (name.startsWith('v-bind:')) return name.slice(7)
+    if (name.startsWith('v-')) return name
+    return null
+  }
+
+  if (parser === 'angular') {
+    if (name.startsWith('[') && name.endsWith(']')) return name.slice(1, -1)
+    return null
+  }
+
+  return null
 }
 
 /**

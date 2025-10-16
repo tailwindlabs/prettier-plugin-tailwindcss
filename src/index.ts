@@ -11,7 +11,9 @@ import * as prettierParserBabel from 'prettier/plugins/babel'
 // @ts-ignore
 import * as recast from 'recast'
 import { getTailwindConfig } from './config.js'
+import { createPlugin, defineTransform } from './create-plugin.js'
 import { createMatcher, type Matcher } from './options.js'
+import { takenBracnhes } from './path.js'
 import { loadPlugins } from './plugins.js'
 import { sortClasses, sortClassList } from './sorting.js'
 import type { Customizations, StringChange, TransformerContext, TransformerEnv, TransformerMetadata } from './types'
@@ -726,74 +728,6 @@ function transformJavaScript(ast: import('@babel/types').Node, { env }: Transfor
   })
 }
 
-function transformCss(ast: any, { env }: TransformerContext) {
-  // `parseValue` inside Prettier's CSS parser is private API so we have to
-  // produce the same result by parsing an import statement with the same params
-  function tryParseAtRuleParams(name: string, params: any) {
-    // It might already be an object or array. Could happen in the future if
-    // Prettier decides to start parsing these.
-    if (typeof params !== 'string') return params
-
-    // Otherwise we let prettier re-parse the params into its custom value AST
-    // based on postcss-value parser.
-    try {
-      let parser = base.parsers.css
-
-      let root = parser.parse(`@import ${params};`, {
-        // We can't pass env.options directly because css.parse overwrites
-        // options.originalText which is used during the printing phase
-        ...env.options,
-      })
-
-      return root.nodes[0].params
-    } catch (err) {
-      console.warn(`[prettier-plugin-tailwindcss] Unable to parse at rule`)
-      console.warn({ name, params })
-      console.warn(err)
-    }
-
-    return params
-  }
-
-  ast.walk((node: any) => {
-    if (node.name === 'plugin' || node.name === 'config' || node.name === 'source') {
-      node.params = tryParseAtRuleParams(node.name, node.params)
-    }
-
-    if (node.type === 'css-atrule' && node.name === 'apply') {
-      let isImportant = /\s+(?:!important|#{(['"]*)!important\1})\s*$/.test(node.params)
-
-      let classList = node.params
-
-      let prefix = ''
-      let suffix = ''
-
-      if (classList.startsWith('~"') && classList.endsWith('"')) {
-        prefix = '~"'
-        suffix = '"'
-        classList = classList.slice(2, -1)
-        isImportant = false
-      } else if (classList.startsWith("~'") && classList.endsWith("'")) {
-        prefix = "~'"
-        suffix = "'"
-        classList = classList.slice(2, -1)
-        isImportant = false
-      }
-
-      classList = sortClasses(classList, {
-        env,
-        ignoreLast: isImportant,
-        collapseWhitespace: {
-          start: false,
-          end: !isImportant,
-        },
-      })
-
-      node.params = `${prefix}${classList}${suffix}`
-    }
-  })
-}
-
 function transformAstro(ast: any, { env, changes }: TransformerContext) {
   let { matcher } = env
 
@@ -1072,78 +1006,60 @@ function transformSvelte(ast: any, { env, changes }: TransformerContext) {
   }
 }
 
-export { options } from './options.js'
+// export const printers: Record<string, Printer> = (function () {
+//   let printers: Record<string, Printer> = {}
 
-export const printers: Record<string, Printer> = (function () {
-  let printers: Record<string, Printer> = {}
+//   if (base.printers['svelte-ast']) {
+//     function mutateOriginalText(path: any, options: any) {
+//       if (options.__mutatedOriginalText) {
+//         return
+//       }
 
-  if (base.printers['svelte-ast']) {
-    function mutateOriginalText(path: any, options: any) {
-      if (options.__mutatedOriginalText) {
-        return
-      }
+//       options.__mutatedOriginalText = true
 
-      options.__mutatedOriginalText = true
+//       let changes: any[] = path.stack[0].changes
 
-      let changes: any[] = path.stack[0].changes
+//       if (changes?.length) {
+//         let finder = lineColumn(options.originalText)
 
-      if (changes?.length) {
-        let finder = lineColumn(options.originalText)
+//         changes = changes.map((change) => {
+//           return {
+//             ...change,
+//             start: finder.toIndex(change.start.line, change.start.column + 1),
+//             end: finder.toIndex(change.end.line, change.end.column + 1),
+//           }
+//         })
 
-        changes = changes.map((change) => {
-          return {
-            ...change,
-            start: finder.toIndex(change.start.line, change.start.column + 1),
-            end: finder.toIndex(change.end.line, change.end.column + 1),
-          }
-        })
+//         options.originalText = spliceChangesIntoString(options.originalText, changes)
+//       }
+//     }
 
-        options.originalText = spliceChangesIntoString(options.originalText, changes)
-      }
-    }
+//     let original = base.printers['svelte-ast']
+//     printers['svelte-ast'] = {
+//       ...original,
+//       print: (path: any, options: any, print: any) => {
+//         mutateOriginalText(path, options)
 
-    let original = base.printers['svelte-ast']
-    printers['svelte-ast'] = {
-      ...original,
-      print: (path: any, options: any, print: any) => {
-        mutateOriginalText(path, options)
+//         return base.printers['svelte-ast'].print(path, options, print)
+//       },
+//       embed: (path: any, options: any) => {
+//         mutateOriginalText(path, options)
 
-        return base.printers['svelte-ast'].print(path, options, print)
-      },
-      embed: (path: any, options: any) => {
-        mutateOriginalText(path, options)
+//         // @ts-ignore
+//         return base.printers['svelte-ast'].embed(path, options)
+//       },
+//     }
+//   }
 
-        // @ts-ignore
-        return base.printers['svelte-ast'].embed(path, options)
-      },
-    }
-  }
+//   return printers
+// })()
 
-  return printers
-})()
-
+/*
 export const parsers: Record<string, Parser> = {
-  html: createParser('html', transformHtml, {
-    staticAttrs: ['class'],
-  }),
   glimmer: createParser('glimmer', transformGlimmer, {
     staticAttrs: ['class'],
   }),
-  lwc: createParser('lwc', transformHtml, {
-    staticAttrs: ['class'],
-  }),
-  angular: createParser('angular', transformHtml, {
-    staticAttrs: ['class'],
-    dynamicAttrs: ['[ngClass]'],
-  }),
-  vue: createParser('vue', transformHtml, {
-    staticAttrs: ['class'],
-    dynamicAttrs: [':class', 'v-bind:class'],
-  }),
 
-  css: createParser('css', transformCss),
-  scss: createParser('scss', transformCss),
-  less: createParser('less', transformCss),
   babel: createParser('babel', transformJavaScript, {
     staticAttrs: ['class', 'className'],
   }),
@@ -1239,6 +1155,245 @@ export const parsers: Record<string, Parser> = {
       }
     : {}),
 }
+*/
+
+//
+// Transforms for builtin plugins
+//
+
+type HtmlNode = { type: 'attribute'; name: string; value: string } | { kind: 'attribute'; name: string; value: string }
+let html = defineTransform<HtmlNode>({
+  load: [() => import('prettier/plugins/html')],
+  compatible: [
+    // TODO: This plugin assigns its own parser
+    // this means we have to import it and return its parser
+    // Ideally Prettier could use our `html` printer and another plugins'
+    // parser.
+    //
+    // For backwards compat maybe the printer has to be marked with a property
+    // to enable this behavior?
+    'prettier-plugin-organize-attributes',
+
+    // Also what if two plugins want to use printers to change behavior?
+    // e.g.
+    //
+    // Plugin A has an `html` printer
+    // Plugin B has an `html` printer
+    //
+    // and the *goal* of both is to run each of their passes on the AST nodes?
+    //
+    // Right now there's only one printer per AST format but that means other
+    // plugins have to import earlier plugin's implementations which
+    // means that there is now a direct dependency to the other plugin
+    //
+    // In an ideal world the plugins wouldn't need to know anything about
+    // one another
+  ],
+
+  parsers: {
+    html: {
+      staticAttrs: ['class'],
+      dynamicAttrs: [':class', 'v-bind:class'],
+    },
+    lwc: {
+      staticAttrs: ['class'],
+      dynamicAttrs: [':class', 'v-bind:class'],
+    },
+    vue: {
+      staticAttrs: ['class'],
+      dynamicAttrs: [':class', 'v-bind:class'],
+    },
+    angular: {
+      staticAttrs: ['class'],
+      dynamicAttrs: ['[ngClass]'],
+    },
+  },
+
+  printers: ['html'],
+
+  reprint(path, { options, matcher, sort, env }) {
+    let node = path.node
+
+    // `type` is used in earlier versions of Prettier
+    if ('type' in node && node.type !== 'attribute') return
+
+    // `kind` is used in later versions of Prettier
+    if ('kind' in node && node.kind !== 'attribute') return
+
+    if (!('type' in node) && !('kind' in node)) return
+
+    if (matcher.hasStaticAttr(node.name)) {
+      node.value = sort(node.value)
+    } else if (matcher.hasDynamicAttr(node.name)) {
+      if (!/[`'"]/.test(node.value)) return
+
+      if (options.parser === 'angular') {
+        transformDynamicAngularAttribute(node, env)
+      } else {
+        transformDynamicJsAttribute(node, env)
+      }
+    }
+  },
+})
+
+type CssValueNode = { type: 'value-*'; name: string; params: string }
+type CssNode = { type: 'css-atrule'; name: string; params: string | CssValueNode }
+
+let css = defineTransform<CssNode>({
+  load: [() => import('prettier/plugins/postcss')],
+  compatible: ['prettier-plugin-css-order'],
+
+  parsers: {
+    css: {},
+    less: {},
+    scss: {},
+  },
+
+  printers: ['postcss'],
+
+  reprint(path, { options, sort }) {
+    let node = path.node
+    if (!node) return
+
+    if (node.type !== 'css-atrule') return
+
+    // Format the quotes used by `@plugin`, `@config`, and `@source`
+    if (node.name === 'plugin' || node.name === 'config' || node.name === 'source') {
+      // It might already be an object or array. Could happen in the future if
+      // Prettier decides to start parsing these.
+      if (typeof node.params !== 'string') return
+
+      // Parse these nodes so Prettier will reformat the strings. Prettier has
+      // a private API for this called parseValue() but we can't access it so
+      // we have to produce the same result by parsing an import statement
+      // with the same params
+      try {
+        let parser = base.parsers.css
+        let root = parser.parse(`@import ${node.params};`, {
+          // We can't pass options directly because css.parse overwrites
+          // options.originalText which is used during the printing phase
+          ...options,
+        })
+
+        node.params = root.nodes[0].params
+      } catch {}
+    }
+
+    // Sort classes used in `@apply`
+    if (node.name === 'apply') {
+      if (typeof node.params !== 'string') return
+
+      let isImportant = /\s+(?:!important|#{(['"]*)!important\1})\s*$/.test(node.params)
+
+      let classes = node.params
+
+      let prefix = ''
+      let suffix = ''
+
+      if (classes.startsWith('~"') && classes.endsWith('"')) {
+        prefix = '~"'
+        suffix = '"'
+        classes = classes.slice(2, -1)
+        isImportant = false
+      } else if (classes.startsWith("~'") && classes.endsWith("'")) {
+        prefix = "~'"
+        suffix = "'"
+        classes = classes.slice(2, -1)
+        isImportant = false
+      }
+
+      classes = sort(classes, {
+        ignoreFirst: false,
+        ignoreLast: isImportant,
+        collapseWhitespace: {
+          start: false,
+          end: !isImportant,
+        },
+      })
+
+      node.params = `${prefix}${classes}${suffix}`
+    }
+  },
+})
+
+type GlimmerNode =
+  | { type: 'TextNode'; chars: string }
+  | { type: 'StringLiteral'; value: string }
+  | { type: 'ConcatStatement'; parts: GlimmerNode[] }
+  | { type: 'SubExpression'; path: { original: string } }
+  | { type: 'AttrNode'; name: string; value: GlimmerNode }
+
+let glimmer = defineTransform<GlimmerNode>({
+  load: [() => import('prettier/plugins/glimmer')],
+  compatible: [],
+
+  parsers: {
+    glimmer: {
+      staticAttrs: ['class'],
+    },
+  },
+  printers: ['glimmer'],
+
+  reprint(path, { matcher, sort }) {
+    let node = path.node
+
+    if (node.type !== 'TextNode' && node.type !== 'StringLiteral') return
+
+    // Check to see if this is inside a sortable attribute
+    let sortable = path.ancestors.some((node) => {
+      return node.type === 'AttrNode' && matcher.hasStaticAttr(node.name)
+    })
+
+    if (!sortable) return
+
+    if (node.type === 'TextNode') {
+      let siblings = { prev: false, next: false }
+
+      for (let { parent, index } of takenBracnhes(path)) {
+        if (!parent) continue
+        if (index === null) continue
+        if (parent.node.type !== 'ConcatStatement') continue
+
+        siblings.prev = parent.node.parts[index - 1] !== undefined
+        siblings.next = parent.node.parts[index + 1] !== undefined
+        break
+      }
+
+      node.chars = sort(node.chars, {
+        ignoreFirst: siblings.prev && !/^\s/.test(node.chars),
+        ignoreLast: siblings.next && !/\s$/.test(node.chars),
+        collapseWhitespace: {
+          start: !siblings.prev,
+          end: !siblings.next,
+        },
+      })
+    }
+
+    if (node.type === 'StringLiteral') {
+      let concat = takenBracnhes(path).some(({ parent }) => {
+        return parent && parent.node.type === 'SubExpression' && parent.node.path.original === 'concat'
+      })
+
+      node.value = sort(node.value, {
+        ignoreLast: concat && !/[^\S\r\n]$/.test(node.value),
+        collapseWhitespace: {
+          start: false,
+          end: !concat,
+        },
+      })
+    }
+  },
+})
+
+let { parsers, printers } = createPlugin([
+  //
+  html,
+  css,
+  glimmer,
+])
+
+export { parsers, printers }
+export { options } from './options.js'
 
 export interface PluginOptions {
   /**

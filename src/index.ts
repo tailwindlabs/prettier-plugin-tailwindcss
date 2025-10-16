@@ -5,7 +5,7 @@ import * as astTypes from 'ast-types'
 import jsesc from 'jsesc'
 // @ts-ignore
 import lineColumn from 'line-column'
-import type { Parser, ParserOptions, Printer } from 'prettier'
+import type { AstPath, Parser, ParserOptions, Printer } from 'prettier'
 import * as prettierParserAcorn from 'prettier/plugins/acorn'
 import * as prettierParserAngular from 'prettier/plugins/angular'
 import * as prettierParserBabel from 'prettier/plugins/babel'
@@ -1314,30 +1314,66 @@ let css = defineTransform<CssNode>({
   },
 })
 
-// __babel_estree: Parser;
-// __js_expression: Parser;
-// __ts_expression: Parser;
-// __vue_event_binding: Parser;
-// __vue_expression: Parser;
-// __vue_ts_event_binding: Parser;
-// __vue_ts_expression: Parser;
-// babel: Parser;
-// "babel-flow": Parser;
-// "babel-ts": Parser;
-// json: Parser;
-// "json-stringify": Parser;
-// json5: Parser;
-// jsonc: Parser;
+function canCollapseWhitespaceInBabel(path: AstPath<import('@babel/types').Node>) {
+  let start = true
+  let end = true
+
+  for (let { node, parent, key } of takenBracnhes(path)) {
+    if (!parent) continue
+
+    // Nodes inside concat expressions shouldn't collapse whitespace
+    // depending on which side they're part of.
+    if (parent.node.type === 'BinaryExpression' && parent.node.operator === '+') {
+      start &&= key !== 'right'
+      end &&= key !== 'left'
+    }
+
+    // This is probably expression *inside* of a template literal. To collapse whitespace
+    // `Expression`s adjacent-before a quasi must start with whitespace
+    // `Expression`s adjacent-after a quasi must end with whitespace
+    //
+    // Note this check will bail out on more than it really should as it
+    // could be reset somewhere along the way by having whitespace around a
+    // string further up but not at the "root" but that complicates things
+    if (parent.node.type === 'TemplateLiteral') {
+      let nodeStart = node.start ?? null
+      let nodeEnd = node.end ?? null
+
+      for (let quasi of parent.node.quasis) {
+        let quasiStart = quasi.end ?? null
+        let quasiEnd = quasi.end ?? null
+
+        if (nodeStart !== null && quasiEnd !== null && nodeStart - quasiEnd <= 2) {
+          start &&= /^\s/.test(quasi.value.raw)
+        }
+
+        if (nodeEnd !== null && quasiStart !== null && nodeEnd - quasiStart <= 2) {
+          end &&= /\s$/.test(quasi.value.raw)
+        }
+      }
+    }
+  }
+
+  return { start, end }
+}
 
 let babel = defineTransform<import('@babel/types').Node>({
-  load: [() => import('prettier/plugins/babel')],
+  load: [() => import('prettier/plugins/babel'), () => import('prettier/plugins/estree') as any],
   compatible: ['prettier-plugin-css-order'],
 
   parsers: {
-    babel: {},
-    'babel-flow': {},
-    'babel-ts': {},
-    __js_expression: {},
+    babel: {
+      staticAttrs: ['class', 'className'],
+    },
+    'babel-flow': {
+      staticAttrs: ['class', 'className'],
+    },
+    'babel-ts': {
+      staticAttrs: ['class', 'className'],
+    },
+    __js_expression: {
+      staticAttrs: ['class', 'className'],
+    },
   },
 
   printers: ['estree'],
@@ -1345,7 +1381,24 @@ let babel = defineTransform<import('@babel/types').Node>({
   reprint(path, { matcher, env }) {
     let node = path.node
 
-    let collapseWhitespace = false // canCollapseWhitespaceIn(path)
+    let sortableAttr = false
+    let sortableFn = false
+
+    for (let parent of path.ancestors) {
+      if (parent.type === 'JSXAttribute') {
+        // We don't want to support namespaced attributes (e.g. `someNs:class`)
+        // React doesn't support them and most tools don't either
+        if (typeof parent.name.name !== 'string') return
+
+        sortableAttr ||= matcher.hasStaticAttr(parent.name.name)
+      } else if (parent.type === 'CallExpression') {
+        sortableFn ||= isSortableCallExpression(parent, matcher)
+      }
+    }
+
+    if (!sortableAttr && !sortableFn) return
+
+    let collapseWhitespace = canCollapseWhitespaceInBabel(path)
 
     if (node.type === 'StringLiteral') {
       sortStringLiteral(node, { env, collapseWhitespace })

@@ -6,8 +6,10 @@ import jsesc from 'jsesc'
 // @ts-ignore
 import lineColumn from 'line-column'
 import type { Parser, ParserOptions, Printer } from 'prettier'
+import * as prettierParserAcorn from 'prettier/plugins/acorn'
 import * as prettierParserAngular from 'prettier/plugins/angular'
 import * as prettierParserBabel from 'prettier/plugins/babel'
+import * as prettierParserFlow from 'prettier/plugins/flow'
 // @ts-ignore
 import * as recast from 'recast'
 import { getTailwindConfig } from './config.js'
@@ -1056,10 +1058,6 @@ function transformSvelte(ast: any, { env, changes }: TransformerContext) {
 
 /*
 export const parsers: Record<string, Parser> = {
-  glimmer: createParser('glimmer', transformGlimmer, {
-    staticAttrs: ['class'],
-  }),
-
   babel: createParser('babel', transformJavaScript, {
     staticAttrs: ['class', 'className'],
   }),
@@ -1316,6 +1314,50 @@ let css = defineTransform<CssNode>({
   },
 })
 
+// __babel_estree: Parser;
+// __js_expression: Parser;
+// __ts_expression: Parser;
+// __vue_event_binding: Parser;
+// __vue_expression: Parser;
+// __vue_ts_event_binding: Parser;
+// __vue_ts_expression: Parser;
+// babel: Parser;
+// "babel-flow": Parser;
+// "babel-ts": Parser;
+// json: Parser;
+// "json-stringify": Parser;
+// json5: Parser;
+// jsonc: Parser;
+
+let babel = defineTransform<import('@babel/types').Node>({
+  load: [() => import('prettier/plugins/babel')],
+  compatible: ['prettier-plugin-css-order'],
+
+  parsers: {
+    babel: {},
+    'babel-flow': {},
+    'babel-ts': {},
+    __js_expression: {},
+  },
+
+  printers: ['estree'],
+
+  reprint(path, { matcher, env }) {
+    let node = path.node
+
+    let collapseWhitespace = false // canCollapseWhitespaceIn(path)
+
+    if (node.type === 'StringLiteral') {
+      sortStringLiteral(node, { env, collapseWhitespace })
+    } else if (node.type === 'TemplateLiteral') {
+      sortTemplateLiteral(node, { env, collapseWhitespace })
+    } else if (node.type === 'TaggedTemplateExpression') {
+      if (!isSortableTemplateExpression(node, matcher)) return
+      sortTemplateLiteral(node.quasi, { env, collapseWhitespace })
+    }
+  },
+})
+
 type GlimmerNode =
   | { type: 'TextNode'; chars: string }
   | { type: 'StringLiteral'; value: string }
@@ -1389,6 +1431,7 @@ let { parsers, printers } = createPlugin([
   //
   html,
   css,
+  babel,
   glimmer,
 ])
 

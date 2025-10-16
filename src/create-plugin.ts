@@ -93,11 +93,22 @@ export function createPlugin(transformers: TransformOptions<any>[]) {
   for (let opts of transformers) {
     let pending: Promise<Plugin<any>>
     let loadPlugin = async () => {
-      let plugin = Object.create(null)
+      let plugin = {
+        parsers: Object.create(null),
+        printers: Object.create(null),
+        languages: Object.create(null),
+        options: Object.create(null),
+        defaultOptions: Object.create(null),
+      }
 
       for (let load of opts.load) {
         try {
-          Object.assign(plugin, await load())
+          let loaded = await load()
+          Object.assign(plugin.parsers, loaded.parsers ?? {})
+          Object.assign(plugin.printers, loaded.printers ?? {})
+          Object.assign(plugin.languages, loaded.languages ?? {})
+          Object.assign(plugin.options, loaded.options ?? {})
+          Object.assign(plugin.defaultOptions, loaded.defaultOptions ?? {})
         } catch {}
       }
       return plugin

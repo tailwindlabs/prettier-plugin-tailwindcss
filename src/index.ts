@@ -1357,11 +1357,17 @@ function canCollapseWhitespaceInBabel(path: AstPath<import('@babel/types').Node>
   return { start, end }
 }
 
-let babel = defineTransform<import('@babel/types').Node>({
-  load: [() => import('prettier/plugins/babel'), () => import('prettier/plugins/estree') as any],
+let javascript = defineTransform<import('@babel/types').Node>({
+  load: [
+    () => import('prettier/plugins/babel'),
+    // () => import('prettier/plugins/typescript'),
+    // () => import('prettier/plugins/meriyah'),
+    () => import('prettier/plugins/estree') as any,
+  ],
   compatible: ['prettier-plugin-css-order'],
 
   parsers: {
+    // prettier/plugins/babel
     babel: {
       staticAttrs: ['class', 'className'],
     },
@@ -1374,6 +1380,16 @@ let babel = defineTransform<import('@babel/types').Node>({
     __js_expression: {
       staticAttrs: ['class', 'className'],
     },
+
+    // TypeScript Parsers
+    // typescript: {
+    //   staticAttrs: ['class', 'className'],
+    // },
+
+    // Meriyah Parsers
+    // meriyah: {
+    //   staticAttrs: ['class', 'className'],
+    // },
   },
 
   printers: ['estree'],
@@ -1484,7 +1500,7 @@ let { parsers, printers } = createPlugin([
   //
   html,
   css,
-  babel,
+  javascript,
   glimmer,
 ])
 

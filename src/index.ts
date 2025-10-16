@@ -1184,37 +1184,32 @@ let html = defineTransform<HtmlNode>({
   // In an ideal world the plugins wouldn't need to know anything about
   // one another
 
+  staticAttrs: ['class'],
+  dynamicAttrs: [],
+
   parsers: {
     html: {
       load: ['prettier/plugins/html'],
       compatible: ['prettier-plugin-organize-attributes'],
-      staticAttrs: ['class'],
-      dynamicAttrs: [':class', 'v-bind:class'],
     },
     lwc: {
       load: ['prettier/plugins/html'],
       compatible: ['prettier-plugin-organize-attributes'],
-      staticAttrs: ['class'],
-      dynamicAttrs: [':class', 'v-bind:class'],
     },
     vue: {
       load: ['prettier/plugins/html'],
       compatible: ['prettier-plugin-organize-attributes'],
-      staticAttrs: ['class'],
       dynamicAttrs: [':class', 'v-bind:class'],
     },
     angular: {
       load: ['prettier/plugins/html'],
       compatible: ['prettier-plugin-organize-attributes'],
-      staticAttrs: ['class'],
       dynamicAttrs: ['[ngClass]'],
     },
   },
 
   printers: {
-    html: {
-      load: ['prettier/plugins/html'],
-    },
+    html: { load: ['prettier/plugins/html'] },
   },
 
   reprint(path, { options, matcher, sort, env }) {
@@ -1262,9 +1257,7 @@ let css = defineTransform<CssNode>({
   },
 
   printers: {
-    postcss: {
-      load: ['prettier/plugins/postcss'],
-    },
+    postcss: { load: ['prettier/plugins/postcss'] },
   },
 
   reprint(path, { options, sort }) {
@@ -1376,42 +1369,23 @@ function canCollapseWhitespaceInBabel(path: AstPath<import('@babel/types').Node>
 }
 
 let javascript = defineTransform<import('@babel/types').Node>({
+  staticAttrs: ['class', 'className'],
   parsers: {
-    // prettier/plugins/babel
-    babel: {
-      load: ['prettier/plugins/babel'],
-      staticAttrs: ['class', 'className'],
-    },
-    'babel-flow': {
-      load: ['prettier/plugins/babel'],
-      staticAttrs: ['class', 'className'],
-    },
-    'babel-ts': {
-      load: ['prettier/plugins/babel'],
-      staticAttrs: ['class', 'className'],
-    },
-    __js_expression: {
-      load: ['prettier/plugins/babel'],
-      staticAttrs: ['class', 'className'],
-    },
-
-    // TypeScript Parsers
-    typescript: {
-      load: ['prettier/plugins/typescript'],
-      staticAttrs: ['class', 'className'],
-    },
-
-    // Meriyah Parsers
-    meriyah: {
-      load: ['prettier/plugins/meriyah'],
-      staticAttrs: ['class', 'className'],
-    },
+    babel: { load: ['prettier/plugins/babel'] },
+    'babel-flow': { load: ['prettier/plugins/babel'] },
+    'babel-ts': { load: ['prettier/plugins/babel'] },
+    __js_expression: { load: ['prettier/plugins/babel'] },
+    typescript: { load: ['prettier/plugins/typescript'] },
+    meriyah: { load: ['prettier/plugins/meriyah'] },
+    acorn: { load: ['prettier/plugins/acorn'] },
+    flow: { load: ['prettier/plugins/flow'] },
+    oxc: { load: ['@prettier/plugin-oxc'] },
+    'oxc-ts': { load: ['@prettier/plugin-oxc'] },
+    hermes: { load: ['@prettier/plugin-hermes'] },
   },
 
   printers: {
-    estree: {
-      load: ['prettier/plugins/estree'],
-    },
+    estree: { load: ['prettier/plugins/estree'] },
   },
 
   reprint(path, { matcher, env }) {
@@ -1444,6 +1418,12 @@ let javascript = defineTransform<import('@babel/types').Node>({
       if (!isSortableTemplateExpression(node, matcher)) return
       sortTemplateLiteral(node.quasi, { env, collapseWhitespace })
     }
+
+    // @ts-ignore
+    // The types don't cover this but this is for typescript
+    else if (node.type === 'Literal' && typeof node.value === 'string') {
+      sortStringLiteral(node, { env, collapseWhitespace })
+    }
   },
 })
 
@@ -1455,17 +1435,14 @@ type GlimmerNode =
   | { type: 'AttrNode'; name: string; value: GlimmerNode }
 
 let glimmer = defineTransform<GlimmerNode>({
+  staticAttrs: ['class'],
+
   parsers: {
-    glimmer: {
-      load: ['prettier/plugins/glimmer'],
-      staticAttrs: ['class'],
-    },
+    glimmer: { load: ['prettier/plugins/glimmer'] },
   },
 
   printers: {
-    glimmer: {
-      load: ['prettier/plugins/glimmer'],
-    },
+    glimmer: { load: ['prettier/plugins/glimmer'] },
   },
 
   reprint(path, { matcher, sort }) {

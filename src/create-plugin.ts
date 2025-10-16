@@ -37,6 +37,16 @@ export interface Env<T> {
 
 export interface TransformOptions<T> {
   /**
+   * Static attributes that are supported by default
+   */
+  staticAttrs?: string[]
+
+  /**
+   * Dynamic / expression attributes that are supported by default
+   */
+  dynamicAttrs?: string[]
+
+  /**
    * A list of supported parser names
    */
   parsers: Record<
@@ -220,8 +230,8 @@ function wrapPrinter(original: Printer<any>, opts: TransformOptions<any>) {
     let parser = options.parser as string
 
     let matcher = createMatcher(options, parser, {
-      staticAttrs: new Set(opts.parsers[parser]?.staticAttrs ?? []),
-      dynamicAttrs: new Set(opts.parsers[parser]?.dynamicAttrs ?? []),
+      staticAttrs: new Set(opts.parsers[parser]?.staticAttrs ?? opts.staticAttrs ?? []),
+      dynamicAttrs: new Set(opts.parsers[parser]?.dynamicAttrs ?? opts.dynamicAttrs ?? []),
       functions: new Set(),
       staticAttrsRegex: [],
       dynamicAttrsRegex: [],

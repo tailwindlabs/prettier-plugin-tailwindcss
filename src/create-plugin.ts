@@ -37,27 +37,25 @@ export interface Env<T> {
 
 export interface TransformOptions<T> {
   /**
-   * Load the given plugins for this transformation step
-   *
-   * These are required for transformations to work at all
-   */
-  load: Array<() => Promise<Plugin<T>>>
-
-  /**
-   * A list of compatible, third-party plugins for this transformation step
-   *
-   * The loading of these is delayed until the actual parse call as
-   * using the parse() function from these plugins may cause errors
-   * if they haven't already been loaded by Prettier.
-   */
-  compatible: string[]
-
-  /**
    * A list of supported parser names
    */
   parsers: Record<
     string,
     {
+      /**
+       * Load the given plugins for this parser
+       */
+      load: string[]
+
+      /**
+       * A list of compatible, third-party plugins for this transformation step
+       *
+       * The loading of these is delayed until the actual parse call as
+       * using the parse() function from these plugins may cause errors
+       * if they haven't already been loaded by Prettier.
+       */
+      compatible?: string[]
+
       /**
        * Static attributes that are supported by default
        */
@@ -73,7 +71,15 @@ export interface TransformOptions<T> {
   /**
    * A list of supported AST formats / printer names
    */
-  printers: string[]
+  printers: Record<
+    string,
+    {
+      /**
+       * Load the given plugins to provide the printer
+       */
+      load: string[]
+    }
+  >
 
   /**
    * Transform each AST node to sort classes
@@ -84,6 +90,29 @@ export interface TransformOptions<T> {
   reprint(path: AstPath<T>, env: Env<T>): void
 }
 
+export async function loadPlugins<T>(fns: string[]) {
+  let plugin: Plugin<T> = {
+    parsers: Object.create(null),
+    printers: Object.create(null),
+    languages: Object.create(null),
+    options: Object.create(null),
+    defaultOptions: Object.create(null),
+  }
+
+  for (let moduleName of fns) {
+    try {
+      let loaded = await import(moduleName)
+      Object.assign(plugin.parsers!, loaded.parsers ?? {})
+      Object.assign(plugin.printers!, loaded.printers ?? {})
+      Object.assign(plugin.languages!, loaded.languages ?? {})
+      Object.assign(plugin.options!, loaded.options ?? {})
+      Object.assign(plugin.defaultOptions!, loaded.defaultOptions ?? {})
+    } catch {}
+  }
+
+  return plugin
+}
+
 export function createPlugin(transformers: TransformOptions<any>[]) {
   type Init<T> = (() => Promise<T | undefined>) | T | undefined
 
@@ -91,33 +120,9 @@ export function createPlugin(transformers: TransformOptions<any>[]) {
   let printers: Record<string, Init<Printer<any>>> = Object.create(null)
 
   for (let opts of transformers) {
-    let pending: Promise<Plugin<any>>
-    let loadPlugin = async () => {
-      let plugin = {
-        parsers: Object.create(null),
-        printers: Object.create(null),
-        languages: Object.create(null),
-        options: Object.create(null),
-        defaultOptions: Object.create(null),
-      }
-
-      for (let load of opts.load) {
-        try {
-          let loaded = await load()
-          Object.assign(plugin.parsers, loaded.parsers ?? {})
-          Object.assign(plugin.printers, loaded.printers ?? {})
-          Object.assign(plugin.languages, loaded.languages ?? {})
-          Object.assign(plugin.options, loaded.options ?? {})
-          Object.assign(plugin.defaultOptions, loaded.defaultOptions ?? {})
-        } catch {}
-      }
-      return plugin
-    }
-
-    for (let name of Object.keys(opts.parsers)) {
+    for (let [name, details] of Object.entries(opts.parsers)) {
       parsers[name] = async () => {
-        pending ??= loadPlugin()
-        let plugin = await pending
+        let plugin = await loadPlugins(details.load)
         let original = plugin.parsers?.[name]
         if (!original) return
 
@@ -129,7 +134,7 @@ export function createPlugin(transformers: TransformOptions<any>[]) {
             let parser = { ...original }
 
             // Now load parsers from "compatible" plugins if any
-            for (let pluginName of opts.compatible) {
+            for (let pluginName of details.compatible ?? []) {
               let mod = await loadIfExistsESM(pluginName)
               let plugin = findEnabledPlugin(options, pluginName, mod)
               if (!plugin) continue
@@ -144,10 +149,9 @@ export function createPlugin(transformers: TransformOptions<any>[]) {
       }
     }
 
-    for (let name of opts.printers) {
+    for (let [name, details] of Object.entries(opts.printers)) {
       printers[name] = async () => {
-        pending ??= loadPlugin()
-        let plugin = await pending
+        let plugin = await loadPlugins(details.load)
         let original = plugin.printers?.[name]
         if (!original) return
 

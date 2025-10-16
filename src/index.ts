@@ -1161,53 +1161,61 @@ export const parsers: Record<string, Parser> = {
 
 type HtmlNode = { type: 'attribute'; name: string; value: string } | { kind: 'attribute'; name: string; value: string }
 let html = defineTransform<HtmlNode>({
-  load: [() => import('prettier/plugins/html')],
-  compatible: [
-    // TODO: This plugin assigns its own parser
-    // this means we have to import it and return its parser
-    // Ideally Prettier could use our `html` printer and another plugins'
-    // parser.
-    //
-    // For backwards compat maybe the printer has to be marked with a property
-    // to enable this behavior?
-    'prettier-plugin-organize-attributes',
-
-    // Also what if two plugins want to use printers to change behavior?
-    // e.g.
-    //
-    // Plugin A has an `html` printer
-    // Plugin B has an `html` printer
-    //
-    // and the *goal* of both is to run each of their passes on the AST nodes?
-    //
-    // Right now there's only one printer per AST format but that means other
-    // plugins have to import earlier plugin's implementations which
-    // means that there is now a direct dependency to the other plugin
-    //
-    // In an ideal world the plugins wouldn't need to know anything about
-    // one another
-  ],
+  // TODO: This plugin assigns its own parser
+  // this means we have to import it and return its parser
+  // Ideally Prettier could use our `html` printer and another plugins'
+  // parser.
+  //
+  // For backwards compat maybe the printer has to be marked with a property
+  // to enable this behavior?
+  //
+  // Also what if two plugins want to use printers to change behavior?
+  // e.g.
+  //
+  // Plugin A has an `html` printer
+  // Plugin B has an `html` printer
+  //
+  // and the *goal* of both is to run each of their passes on the AST nodes?
+  //
+  // Right now there's only one printer per AST format but that means other
+  // plugins have to import earlier plugin's implementations which
+  // means that there is now a direct dependency to the other plugin
+  //
+  // In an ideal world the plugins wouldn't need to know anything about
+  // one another
 
   parsers: {
     html: {
+      load: ['prettier/plugins/html'],
+      compatible: ['prettier-plugin-organize-attributes'],
       staticAttrs: ['class'],
       dynamicAttrs: [':class', 'v-bind:class'],
     },
     lwc: {
+      load: ['prettier/plugins/html'],
+      compatible: ['prettier-plugin-organize-attributes'],
       staticAttrs: ['class'],
       dynamicAttrs: [':class', 'v-bind:class'],
     },
     vue: {
+      load: ['prettier/plugins/html'],
+      compatible: ['prettier-plugin-organize-attributes'],
       staticAttrs: ['class'],
       dynamicAttrs: [':class', 'v-bind:class'],
     },
     angular: {
+      load: ['prettier/plugins/html'],
+      compatible: ['prettier-plugin-organize-attributes'],
       staticAttrs: ['class'],
       dynamicAttrs: ['[ngClass]'],
     },
   },
 
-  printers: ['html'],
+  printers: {
+    html: {
+      load: ['prettier/plugins/html'],
+    },
+  },
 
   reprint(path, { options, matcher, sort, env }) {
     let node = path.node
@@ -1238,16 +1246,26 @@ type CssValueNode = { type: 'value-*'; name: string; params: string }
 type CssNode = { type: 'css-atrule'; name: string; params: string | CssValueNode }
 
 let css = defineTransform<CssNode>({
-  load: [() => import('prettier/plugins/postcss')],
-  compatible: ['prettier-plugin-css-order'],
-
   parsers: {
-    css: {},
-    less: {},
-    scss: {},
+    css: {
+      load: ['prettier/plugins/postcss'],
+      compatible: ['prettier-plugin-css-order'],
+    },
+    less: {
+      load: ['prettier/plugins/postcss'],
+      compatible: ['prettier-plugin-css-order'],
+    },
+    scss: {
+      load: ['prettier/plugins/postcss'],
+      compatible: ['prettier-plugin-css-order'],
+    },
   },
 
-  printers: ['postcss'],
+  printers: {
+    postcss: {
+      load: ['prettier/plugins/postcss'],
+    },
+  },
 
   reprint(path, { options, sort }) {
     let node = path.node
@@ -1358,41 +1376,43 @@ function canCollapseWhitespaceInBabel(path: AstPath<import('@babel/types').Node>
 }
 
 let javascript = defineTransform<import('@babel/types').Node>({
-  load: [
-    () => import('prettier/plugins/babel'),
-    // () => import('prettier/plugins/typescript'),
-    // () => import('prettier/plugins/meriyah'),
-    () => import('prettier/plugins/estree') as any,
-  ],
-  compatible: ['prettier-plugin-css-order'],
-
   parsers: {
     // prettier/plugins/babel
     babel: {
+      load: ['prettier/plugins/babel'],
       staticAttrs: ['class', 'className'],
     },
     'babel-flow': {
+      load: ['prettier/plugins/babel'],
       staticAttrs: ['class', 'className'],
     },
     'babel-ts': {
+      load: ['prettier/plugins/babel'],
       staticAttrs: ['class', 'className'],
     },
     __js_expression: {
+      load: ['prettier/plugins/babel'],
       staticAttrs: ['class', 'className'],
     },
 
     // TypeScript Parsers
-    // typescript: {
-    //   staticAttrs: ['class', 'className'],
-    // },
+    typescript: {
+      load: ['prettier/plugins/typescript'],
+      staticAttrs: ['class', 'className'],
+    },
 
     // Meriyah Parsers
-    // meriyah: {
-    //   staticAttrs: ['class', 'className'],
-    // },
+    meriyah: {
+      load: ['prettier/plugins/meriyah'],
+      staticAttrs: ['class', 'className'],
+    },
   },
 
-  printers: ['estree'],
+  printers: {
+    estree: {
+      load: ['prettier/plugins/estree'],
+    },
+  },
 
   reprint(path, { matcher, env }) {
     let node = path.node
@@ -1435,15 +1455,18 @@ type GlimmerNode =
   | { type: 'AttrNode'; name: string; value: GlimmerNode }
 
 let glimmer = defineTransform<GlimmerNode>({
-  load: [() => import('prettier/plugins/glimmer')],
-  compatible: [],
-
   parsers: {
     glimmer: {
+      load: ['prettier/plugins/glimmer'],
       staticAttrs: ['class'],
     },
   },
-  printers: ['glimmer'],
+
+  printers: {
+    glimmer: {
+      load: ['prettier/plugins/glimmer'],
+    },
+  },
 
   reprint(path, { matcher, sort }) {
     let node = path.node

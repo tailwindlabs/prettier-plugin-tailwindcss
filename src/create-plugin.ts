@@ -104,20 +104,23 @@ export async function loadPlugins<T>(fns: string[]) {
   let plugin: Plugin<T> = {
     parsers: Object.create(null),
     printers: Object.create(null),
-    languages: Object.create(null),
     options: Object.create(null),
     defaultOptions: Object.create(null),
+    languages: [],
   }
 
   for (let moduleName of fns) {
     try {
-      let loaded = await import(moduleName)
+      let loaded = await loadIfExistsESM(moduleName)
       Object.assign(plugin.parsers!, loaded.parsers ?? {})
       Object.assign(plugin.printers!, loaded.printers ?? {})
-      Object.assign(plugin.languages!, loaded.languages ?? {})
       Object.assign(plugin.options!, loaded.options ?? {})
       Object.assign(plugin.defaultOptions!, loaded.defaultOptions ?? {})
-    } catch {}
+
+      plugin.languages = [...(plugin.languages ?? []), ...(loaded.languages ?? [])]
+    } catch (err) {
+      throw err
+    }
   }
 
   return plugin
@@ -140,6 +143,21 @@ export function createPlugin(transformers: TransformOptions<any>[]) {
         // plugins that are intended to override builtin ones
         parsers[name] = {
           ...original,
+
+          preprocess: async (code: string, options: ParserOptions) => {
+            let parser = { ...original }
+
+            // Now load parsers from "compatible" plugins if any
+            for (let pluginName of details.compatible ?? []) {
+              let mod = await loadIfExistsESM(pluginName)
+              let plugin = findEnabledPlugin(options, pluginName, mod)
+              if (!plugin) continue
+              Object.assign(parser, plugin.parsers[name])
+            }
+
+            return parser.preprocess ? await parser.preprocess(code, options) : code
+          },
+
           parse: async (code, options) => {
             let parser = { ...original }
 
@@ -182,7 +200,8 @@ export function createPlugin(transformers: TransformOptions<any>[]) {
 
 async function loadIfExistsESM(name: string): Promise<Plugin<any>> {
   let mod = await loadIfExists<Plugin<any>>(name)
-  return mod ?? { parsers: {}, printers: {} }
+
+  return mod ?? { parsers: {}, printers: {}, languages: [], options: {}, defaultOptions: {} }
 }
 
 function findEnabledPlugin(options: ParserOptions<any>, name: string, mod: any) {

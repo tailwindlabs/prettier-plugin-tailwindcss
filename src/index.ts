@@ -1371,21 +1371,188 @@ function canCollapseWhitespaceInBabel(path: AstPath<import('@babel/types').Node>
 let javascript = defineTransform<import('@babel/types').Node>({
   staticAttrs: ['class', 'className'],
   parsers: {
-    babel: { load: ['prettier/plugins/babel'] },
-    'babel-flow': { load: ['prettier/plugins/babel'] },
-    'babel-ts': { load: ['prettier/plugins/babel'] },
-    __js_expression: { load: ['prettier/plugins/babel'] },
-    typescript: { load: ['prettier/plugins/typescript'] },
-    meriyah: { load: ['prettier/plugins/meriyah'] },
-    acorn: { load: ['prettier/plugins/acorn'] },
-    flow: { load: ['prettier/plugins/flow'] },
-    oxc: { load: ['@prettier/plugin-oxc'] },
-    'oxc-ts': { load: ['@prettier/plugin-oxc'] },
-    hermes: { load: ['@prettier/plugin-hermes'] },
+    babel: {
+      load: ['prettier/plugins/babel'],
+      compatible: [
+        // The following plugins must come *before* the jsdoc plugin for it to
+        // function correctly. Additionally `multiline-arrays` usually needs to be
+        // placed before import sorting plugins.
+        //
+        // https://github.com/electrovir/prettier-plugin-multiline-arrays#compatibility
+        'prettier-plugin-multiline-arrays',
+        '@ianvs/prettier-plugin-sort-imports',
+        '@trivago/prettier-plugin-sort-imports',
+        'prettier-plugin-organize-imports',
+        'prettier-plugin-sort-imports',
+        'prettier-plugin-jsdoc',
+      ],
+    },
+    'babel-flow': {
+      load: ['prettier/plugins/babel'],
+      compatible: [
+        // The following plugins must come *before* the jsdoc plugin for it to
+        // function correctly. Additionally `multiline-arrays` usually needs to be
+        // placed before import sorting plugins.
+        //
+        // https://github.com/electrovir/prettier-plugin-multiline-arrays#compatibility
+        'prettier-plugin-multiline-arrays',
+        '@ianvs/prettier-plugin-sort-imports',
+        '@trivago/prettier-plugin-sort-imports',
+        'prettier-plugin-organize-imports',
+        'prettier-plugin-sort-imports',
+        'prettier-plugin-jsdoc',
+      ],
+    },
+    'babel-ts': {
+      load: ['prettier/plugins/babel'],
+      compatible: [
+        // The following plugins must come *before* the jsdoc plugin for it to
+        // function correctly. Additionally `multiline-arrays` usually needs to be
+        // placed before import sorting plugins.
+        //
+        // https://github.com/electrovir/prettier-plugin-multiline-arrays#compatibility
+        'prettier-plugin-multiline-arrays',
+        '@ianvs/prettier-plugin-sort-imports',
+        '@trivago/prettier-plugin-sort-imports',
+        'prettier-plugin-organize-imports',
+        'prettier-plugin-sort-imports',
+        'prettier-plugin-jsdoc',
+      ],
+    },
+    __js_expression: {
+      load: ['prettier/plugins/babel'],
+      compatible: [
+        // The following plugins must come *before* the jsdoc plugin for it to
+        // function correctly. Additionally `multiline-arrays` usually needs to be
+        // placed before import sorting plugins.
+        //
+        // https://github.com/electrovir/prettier-plugin-multiline-arrays#compatibility
+        'prettier-plugin-multiline-arrays',
+        '@ianvs/prettier-plugin-sort-imports',
+        '@trivago/prettier-plugin-sort-imports',
+        'prettier-plugin-organize-imports',
+        'prettier-plugin-sort-imports',
+        'prettier-plugin-jsdoc',
+      ],
+    },
+    typescript: {
+      load: ['prettier/plugins/typescript'],
+      compatible: [
+        // The following plugins must come *before* the jsdoc plugin for it to
+        // function correctly. Additionally `multiline-arrays` usually needs to be
+        // placed before import sorting plugins.
+        //
+        // https://github.com/electrovir/prettier-plugin-multiline-arrays#compatibility
+        'prettier-plugin-multiline-arrays',
+        '@ianvs/prettier-plugin-sort-imports',
+        '@trivago/prettier-plugin-sort-imports',
+        'prettier-plugin-organize-imports',
+        'prettier-plugin-sort-imports',
+        'prettier-plugin-jsdoc',
+      ],
+    },
+    meriyah: {
+      load: ['prettier/plugins/meriyah'],
+      compatible: [
+        // The following plugins must come *before* the jsdoc plugin for it to
+        // function correctly. Additionally `multiline-arrays` usually needs to be
+        // placed before import sorting plugins.
+        //
+        // https://github.com/electrovir/prettier-plugin-multiline-arrays#compatibility
+        'prettier-plugin-multiline-arrays',
+        '@ianvs/prettier-plugin-sort-imports',
+        '@trivago/prettier-plugin-sort-imports',
+        'prettier-plugin-organize-imports',
+        'prettier-plugin-sort-imports',
+        'prettier-plugin-jsdoc',
+      ],
+    },
+    acorn: {
+      load: ['prettier/plugins/acorn'],
+      compatible: [
+        // The following plugins must come *before* the jsdoc plugin for it to
+        // function correctly. Additionally `multiline-arrays` usually needs to be
+        // placed before import sorting plugins.
+        //
+        // https://github.com/electrovir/prettier-plugin-multiline-arrays#compatibility
+        'prettier-plugin-multiline-arrays',
+        '@ianvs/prettier-plugin-sort-imports',
+        '@trivago/prettier-plugin-sort-imports',
+        'prettier-plugin-organize-imports',
+        'prettier-plugin-sort-imports',
+        'prettier-plugin-jsdoc',
+      ],
+    },
+    flow: {
+      load: ['prettier/plugins/flow'],
+      compatible: [
+        // The following plugins must come *before* the jsdoc plugin for it to
+        // function correctly. Additionally `multiline-arrays` usually needs to be
+        // placed before import sorting plugins.
+        //
+        // https://github.com/electrovir/prettier-plugin-multiline-arrays#compatibility
+        'prettier-plugin-multiline-arrays',
+        '@ianvs/prettier-plugin-sort-imports',
+        '@trivago/prettier-plugin-sort-imports',
+        'prettier-plugin-organize-imports',
+        'prettier-plugin-sort-imports',
+        'prettier-plugin-jsdoc',
+      ],
+    },
+    oxc: {
+      load: ['@prettier/plugin-oxc'],
+      compatible: [
+        // The following plugins must come *before* the jsdoc plugin for it to
+        // function correctly. Additionally `multiline-arrays` usually needs to be
+        // placed before import sorting plugins.
+        //
+        // https://github.com/electrovir/prettier-plugin-multiline-arrays#compatibility
+        'prettier-plugin-multiline-arrays',
+        '@ianvs/prettier-plugin-sort-imports',
+        '@trivago/prettier-plugin-sort-imports',
+        'prettier-plugin-organize-imports',
+        'prettier-plugin-sort-imports',
+        'prettier-plugin-jsdoc',
+      ],
+    },
+    'oxc-ts': {
+      load: ['@prettier/plugin-oxc'],
+      compatible: [
+        // The following plugins must come *before* the jsdoc plugin for it to
+        // function correctly. Additionally `multiline-arrays` usually needs to be
+        // placed before import sorting plugins.
+        //
+        // https://github.com/electrovir/prettier-plugin-multiline-arrays#compatibility
+        'prettier-plugin-multiline-arrays',
+        '@ianvs/prettier-plugin-sort-imports',
+        '@trivago/prettier-plugin-sort-imports',
+        'prettier-plugin-organize-imports',
+        'prettier-plugin-sort-imports',
+        'prettier-plugin-jsdoc',
+      ],
+    },
+    hermes: {
+      load: ['@prettier/plugin-hermes'],
+      compatible: [
+        // The following plugins must come *before* the jsdoc plugin for it to
+        // function correctly. Additionally `multiline-arrays` usually needs to be
+        // placed before import sorting plugins.
+        //
+        // https://github.com/electrovir/prettier-plugin-multiline-arrays#compatibility
+        'prettier-plugin-multiline-arrays',
+        '@ianvs/prettier-plugin-sort-imports',
+        '@trivago/prettier-plugin-sort-imports',
+        'prettier-plugin-organize-imports',
+        'prettier-plugin-sort-imports',
+        'prettier-plugin-jsdoc',
+      ],
+    },
   },
 
   printers: {
     estree: { load: ['prettier/plugins/estree'] },
+    'estree-oxc': { load: ['@prettier/plugin-oxc'] },
+    'estree-hermes': { load: ['@prettier/plugin-hermes'] },
   },
 
   reprint(path, { matcher, env }) {
@@ -1403,6 +1570,8 @@ let javascript = defineTransform<import('@babel/types').Node>({
         sortableAttr ||= matcher.hasStaticAttr(parent.name.name)
       } else if (parent.type === 'CallExpression') {
         sortableFn ||= isSortableCallExpression(parent, matcher)
+      } else if (parent.type === 'TaggedTemplateExpression') {
+        sortableFn ||= isSortableTemplateExpression(parent, matcher)
       }
     }
 

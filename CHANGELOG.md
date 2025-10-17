@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Nothing yet!
+
+## [0.7.1] - 2025-10-17
+
 ### Fixed
 
 - Match against correct name of dynamic attributes when using regexes ([#410](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/410))
@@ -392,7 +396,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.0...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.14...v0.7.0
 [0.6.14]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.13...v0.6.14
 [0.6.13]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.12...v0.6.13

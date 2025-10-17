@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Fixed
+
+- Match against correct name of dynamic attributes when using regexes ([#410](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/410))
 
 ## [0.7.0] - 2025-10-14
 

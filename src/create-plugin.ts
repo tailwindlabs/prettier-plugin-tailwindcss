@@ -2,7 +2,7 @@ import type { AstPath, Parser, ParserOptions, Plugin, Printer } from 'prettier'
 import { getTailwindConfig } from './config'
 import { createMatcher, type Matcher } from './options'
 import { loadIfExists, maybeResolve } from './resolve'
-import { sortClasses } from './sorting'
+import { sortClasses, sortClassList } from './sorting'
 import type { TransformerEnv } from './types'
 
 export function defineTransform<T>(opts: TransformOptions<T>) {
@@ -31,6 +31,17 @@ export interface Env<T> {
    * Sort a class list according to the associated Tailwind CSS project
    */
   sort: (classes: string, options?: SortOptions) => string
+
+  /**
+   * Sort an array of classes according to the associated Tailwind CSS project
+   */
+  sortList: (
+    classes: string[],
+    options?: SortOptions,
+  ) => {
+    classList: string[]
+    removedIndices: Set<number>
+  }
 
   env: TransformerEnv
 }
@@ -286,6 +297,12 @@ function wrapPrinter(original: Printer<any>, opts: TransformOptions<any>) {
       env: transformerEnv,
       sort(classes, opts) {
         return sortClasses(classes, {
+          ...opts,
+          env: transformerEnv,
+        })
+      },
+      sortList(classes, opts) {
+        return sortClassList(classes, {
           ...opts,
           env: transformerEnv,
         })

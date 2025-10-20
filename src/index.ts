@@ -1457,6 +1457,81 @@ let liquid = defineTransform<LiquidNode>({
   },
 })
 
+interface PugNode {
+  content: string
+  tokens: import('pug-lexer').Token[]
+}
+
+let pug = defineTransform<PugNode>({
+  staticAttrs: ['class'],
+
+  parsers: {
+    pug: { load: ['@prettier/plugin-pug'] },
+  },
+
+  printers: {
+    'pug-ast': { load: ['@prettier/plugin-pug'] },
+  },
+
+  reprint(path, { matcher, env, sort }) {
+    let ast = path.node
+
+    // This isn't optimal
+    // We should merge the classes together across class attributes and class tokens
+    // And then we sort them
+    // But this is good enough for now
+
+    // First sort the classes in attributes
+    for (let token of ast.tokens) {
+      if (token.type !== 'attribute') continue
+      if (typeof token.val === 'boolean') continue
+      if (!matcher.hasStaticAttr(token.name)) continue
+
+      token.val = token.val.slice(0, 1) + sort(token.val.slice(1, -1)) + token.val.slice(-1)
+    }
+
+    // Collect lists of consecutive class tokens
+    let startIdx = -1
+    let endIdx = -1
+    let ranges: [number, number][] = []
+
+    for (let i = 0; i < ast.tokens.length; i++) {
+      let token = ast.tokens[i]
+
+      if (token.type === 'class') {
+        startIdx = startIdx === -1 ? i : startIdx
+        endIdx = i
+      } else if (startIdx !== -1) {
+        ranges.push([startIdx, endIdx])
+        startIdx = -1
+        endIdx = -1
+      }
+    }
+
+    if (startIdx !== -1) {
+      ranges.push([startIdx, endIdx])
+      startIdx = -1
+      endIdx = -1
+    }
+
+    // Sort the lists of class tokens
+    for (let [startIdx, endIdx] of ranges) {
+      let classes = ast.tokens.slice(startIdx, endIdx + 1).map((token: any) => token.val)
+
+      let { classList } = sortClassList(classes, {
+        env,
+        removeDuplicates: false,
+      })
+
+      for (let i = startIdx; i <= endIdx; i++) {
+        let token = ast.tokens[i]
+        if (token.type !== 'class') continue
+        token.val = classList[i - startIdx]
+      }
+    }
+  },
+})
+
 let { parsers, printers } = createPlugin([
   //
   html,
@@ -1465,6 +1540,7 @@ let { parsers, printers } = createPlugin([
   glimmer,
   astro,
   liquid,
+  pug,
 ])
 
 export { parsers, printers }

@@ -106,9 +106,11 @@ export function sortClassList(
     removeDuplicates,
   }: {
     env: TransformerEnv
-    removeDuplicates: boolean
+    removeDuplicates?: boolean
   },
 ) {
+  removeDuplicates ??= true
+
   // Re-order classes based on the Tailwind CSS configuration
   let orderedClasses = reorderClasses(classList, { env })
 

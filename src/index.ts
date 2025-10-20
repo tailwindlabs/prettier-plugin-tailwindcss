@@ -1,9 +1,11 @@
 // @ts-ignore
 import type {
   AttrDoubleQuoted,
+  AttributeNode,
   AttrSingleQuoted,
   DocumentNode,
   HtmlElement,
+  LiquidExpression,
   LiquidTag,
   TextNode,
 } from '@shopify/prettier-plugin-liquid/dist/types.js'
@@ -1459,7 +1461,7 @@ let astro = defineTransform<AstroNode>({
   },
 })
 
-type LiquidNode = TextNode | AttrSingleQuoted | AttrDoubleQuoted | LiquidTag | HtmlElement | DocumentNode
+type LiquidNode = TextNode | AttributeNode | LiquidTag | HtmlElement | DocumentNode | LiquidExpression
 
 let liquid = defineTransform<LiquidNode>({
   staticAttrs: ['class'],
@@ -1472,15 +1474,72 @@ let liquid = defineTransform<LiquidNode>({
     'liquid-html-ast': { load: ['@shopify/prettier-plugin-liquid'] },
   },
 
-  reprint(path, { matcher, sort, env }) {
+  reprint(path, { matcher, sort }) {
     let node = path.node
 
-    if (node.type != 'Document') return
+    // We only need to sort text nodes and strings inside expressions
+    if (node.type !== 'TextNode' && node.type !== 'String') return
 
-    console.log({ node })
+    // Make note of where we are in the tree
+    let sources: LiquidNode[] = []
+    let attr: AttrSingleQuoted | AttrDoubleQuoted | null = null
+    let index: number | null = 0
 
-    let changes: StringChange[] = []
-    transformLiquid(node, { env, changes })
+    for (let i = 0; i < path.ancestors.length; ++i) {
+      let parent = path.ancestors[i]
+      if (parent.type === 'LiquidTag') {
+        sources.push(parent)
+      } else if (parent.type === 'AttrSingleQuoted' || parent.type === 'AttrDoubleQuoted') {
+        sources.push(parent)
+
+        for (let node of parent.name) {
+          // The node name can't contain an expression
+          // TODO: Maybe we should allow this when using regexes?
+          // But what should the "name" match against in that case?
+          if (node.type !== 'TextNode') return
+
+          // And this specific attribute must be sortable
+          if (!matcher.hasStaticAttr(node.value)) return
+        }
+
+        // The *closest* attribute is the one we care about
+        if (attr) continue
+
+        attr = parent
+        index = path.callParent((p) => p.index, i - 1) ?? 0
+      }
+    }
+
+    // We always have to be inside a sortable attribute
+    if (!attr) return
+
+    let after = sort(node.value, {
+      ignoreFirst: index > 0 && !/^\s/.test(node.value),
+      ignoreLast: index < attr.value.length - 1 && !/\s$/.test(node.value),
+      removeDuplicates: false,
+      collapseWhitespace: false,
+    })
+
+    let change: StringChange = { start: node.position.start, end: node.position.end, before: node.value, after }
+
+    // Inset the position as the node position includes quotes but the value never does
+    if (node.type === 'String') {
+      let str = node.source.slice(change.start, change.end)
+      let start = str[0]
+      let end = str[str.length - 1]
+
+      if (start === end && (start === '"' || start === "'" || start === '`')) {
+        change.start += 1
+        change.end -= 1
+      }
+    }
+
+    // The Liquid plugin uses the `source` property on nodes when printing:
+    // 1. Attribute values use the one on the attribute node
+    // 2. Liquid tags use the one on the tag node
+    for (let parent of sources) {
+      parent.source = spliceChangesIntoString(parent.source, [change])
+    }
   },
 })
 

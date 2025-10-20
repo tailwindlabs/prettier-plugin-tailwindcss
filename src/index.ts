@@ -1516,6 +1516,18 @@ let liquid = defineTransform<LiquidNode>({
     let after = sort(node.value, {
       ignoreFirst: index > 0 && !/^\s/.test(node.value),
       ignoreLast: index < attr.value.length - 1 && !/\s$/.test(node.value),
+
+      // We can't change the length of the string since the plugin slices a string when printing
+      // This means source locations cannot change under any circumstances
+
+      // IDEA:
+      //
+      // - To remove duplicates we should replace the duplicates with equal length whitespace
+      // - To collapse whitespace = shuffle all classes to the front and pad the end with whitespace
+      //   so the string does not change length
+      //
+      // We should encode the length immutability as an option to the sort() helper so it can
+      // handle these cases directly.
       removeDuplicates: false,
       collapseWhitespace: false,
     })

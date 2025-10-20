@@ -1532,6 +1532,41 @@ let pug = defineTransform<PugNode>({
   },
 })
 
+type MarkoNode = import('@marko/compiler').types.Node
+
+let marko = defineTransform<MarkoNode>({
+  staticAttrs: ['class'],
+
+  parsers: {
+    marko: { load: ['prettier-plugin-marko'] },
+  },
+
+  printers: {
+    'marko-ast': { load: ['prettier-plugin-marko'] },
+  },
+
+  reprint(path, { matcher, sort }) {
+    let node = path.node
+
+    if (node.type !== 'StringLiteral') return
+
+    let sortable = false
+    for (let parent of path.ancestors) {
+      // TODO: We should handle concat expressions
+      if (parent.type === 'BinaryExpression') return
+
+      if (parent.type !== 'MarkoAttribute') continue
+      if (!matcher.hasStaticAttr(parent.name)) continue
+
+      sortable = true
+    }
+
+    if (!sortable) return
+
+    node.value = sort(node.value)
+  },
+})
+
 let { parsers, printers } = createPlugin([
   //
   html,
@@ -1541,6 +1576,7 @@ let { parsers, printers } = createPlugin([
   astro,
   liquid,
   pug,
+  marko,
 ])
 
 export { parsers, printers }

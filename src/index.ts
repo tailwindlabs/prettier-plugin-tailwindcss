@@ -1,5 +1,12 @@
 // @ts-ignore
-import type { AttrDoubleQuoted, AttrSingleQuoted } from '@shopify/prettier-plugin-liquid/dist/types.js'
+import type {
+  AttrDoubleQuoted,
+  AttrSingleQuoted,
+  DocumentNode,
+  HtmlElement,
+  LiquidTag,
+  TextNode,
+} from '@shopify/prettier-plugin-liquid/dist/types.js'
 import * as astTypes from 'ast-types'
 // @ts-ignore
 import jsesc from 'jsesc'
@@ -277,87 +284,6 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
   if (didChange) {
     attr.value = recast.print(ast.program.body[0].declarations[0].init).code
   }
-}
-
-function transformHtml(ast: any, { env, changes }: TransformerContext) {
-  let { matcher } = env
-  let { parser } = env.options
-
-  for (let attr of ast.attrs ?? []) {
-    if (matcher.hasStaticAttr(attr.name)) {
-      attr.value = sortClasses(attr.value, { env })
-    } else if (matcher.hasDynamicAttr(attr.name)) {
-      if (!/[`'"]/.test(attr.value)) {
-        continue
-      }
-
-      if (parser === 'angular') {
-        transformDynamicAngularAttribute(attr, env)
-      } else {
-        transformDynamicJsAttribute(attr, env)
-      }
-    }
-  }
-
-  for (let child of ast.children ?? []) {
-    transformHtml(child, { env, changes })
-  }
-}
-
-function transformGlimmer(ast: any, { env }: TransformerContext) {
-  let { matcher } = env
-
-  visit(ast, {
-    AttrNode(attr, _path, meta) {
-      if (matcher.hasStaticAttr(attr.name) && attr.value) {
-        meta.sortTextNodes = true
-      }
-    },
-
-    TextNode(node, path, meta) {
-      if (!meta.sortTextNodes) {
-        return
-      }
-
-      let concat = path.find((entry) => {
-        return entry.parent && entry.parent.type === 'ConcatStatement'
-      })
-
-      let siblings = {
-        prev: concat?.parent.parts[concat.index! - 1],
-        next: concat?.parent.parts[concat.index! + 1],
-      }
-
-      node.chars = sortClasses(node.chars, {
-        env,
-        ignoreFirst: siblings.prev && !/^\s/.test(node.chars),
-        ignoreLast: siblings.next && !/\s$/.test(node.chars),
-        collapseWhitespace: {
-          start: !siblings.prev,
-          end: !siblings.next,
-        },
-      })
-    },
-
-    StringLiteral(node, path, meta) {
-      if (!meta.sortTextNodes) {
-        return
-      }
-
-      let concat = path.find((entry) => {
-        return entry.parent && entry.parent.type === 'SubExpression' && entry.parent.path.original === 'concat'
-      })
-
-      node.value = sortClasses(node.value, {
-        env,
-        ignoreLast: Boolean(concat) && !/[^\S\r\n]$/.test(node.value),
-        collapseWhitespace: {
-          start: false,
-          end: !concat,
-        },
-      })
-    },
-  })
 }
 
 function transformLiquid(ast: any, { env }: TransformerContext) {
@@ -653,81 +579,6 @@ function canCollapseWhitespaceIn(path: Path<import('@babel/types').Node, any>) {
   }
 
   return { start, end }
-}
-
-// TODO: The `ast` types here aren't strictly correct.
-//
-// We cross several parsers that share roughly the same shape so things are
-// good enough. The actual AST we should be using is probably estree + ts.
-function transformJavaScript(ast: import('@babel/types').Node, { env }: TransformerContext) {
-  let { matcher } = env
-
-  function sortInside(ast: import('@babel/types').Node) {
-    visit(ast, (node, path) => {
-      let collapseWhitespace = canCollapseWhitespaceIn(path)
-
-      if (isStringLiteral(node)) {
-        sortStringLiteral(node, { env, collapseWhitespace })
-      } else if (node.type === 'TemplateLiteral') {
-        sortTemplateLiteral(node, { env, collapseWhitespace })
-      } else if (node.type === 'TaggedTemplateExpression') {
-        if (isSortableTemplateExpression(node, matcher)) {
-          sortTemplateLiteral(node.quasi, { env, collapseWhitespace })
-        }
-      }
-    })
-  }
-
-  visit(ast, {
-    JSXAttribute(node) {
-      node = node as import('@babel/types').JSXAttribute
-
-      if (!node.value) {
-        return
-      }
-
-      // We don't want to support namespaced attributes (e.g. `somens:class`)
-      // React doesn't support them and most tools don't either
-      if (typeof node.name.name !== 'string') {
-        return
-      }
-
-      if (!matcher.hasStaticAttr(node.name.name)) {
-        return
-      }
-
-      if (isStringLiteral(node.value)) {
-        sortStringLiteral(node.value, { env })
-      } else if (node.value.type === 'JSXExpressionContainer') {
-        sortInside(node.value)
-      }
-    },
-
-    CallExpression(node) {
-      node = node as import('@babel/types').CallExpression
-
-      if (!isSortableCallExpression(node, matcher)) {
-        return
-      }
-
-      node.arguments.forEach((arg) => sortInside(arg))
-    },
-
-    TaggedTemplateExpression(node, path) {
-      node = node as import('@babel/types').TaggedTemplateExpression
-
-      if (!isSortableTemplateExpression(node, matcher)) {
-        return
-      }
-
-      let collapseWhitespace = canCollapseWhitespaceIn(path)
-
-      sortTemplateLiteral(node.quasi, {
-        env,
-        collapseWhitespace,
-      })
-    },
-  })
 }
 
 function transformAstro(ast: any, { env, changes }: TransformerContext) {
@@ -1057,103 +908,7 @@ function transformSvelte(ast: any, { env, changes }: TransformerContext) {
 // })()
 
 /*
-export const parsers: Record<string, Parser> = {
-  babel: createParser('babel', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  'babel-flow': createParser('babel-flow', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  flow: createParser('flow', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  hermes: createParser('hermes', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  typescript: createParser('typescript', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  'babel-ts': createParser('babel-ts', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  oxc: createParser('oxc', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-  'oxc-ts': createParser('oxc-ts', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  acorn: createParser('acorn', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  meriyah: createParser('meriyah', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  __js_expression: createParser('__js_expression', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  ...(base.parsers.svelte
-    ? {
-        svelte: createParser('svelte', transformSvelte, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
-  ...(base.parsers.astro
-    ? {
-        astro: createParser('astro', transformAstro, {
-          staticAttrs: ['class', 'className'],
-          dynamicAttrs: ['class:list', 'className'],
-        }),
-      }
-    : {}),
-  ...(base.parsers.astroExpressionParser
-    ? {
-        astroExpressionParser: createParser('astroExpressionParser', transformJavaScript, {
-          staticAttrs: ['class'],
-          dynamicAttrs: ['class:list'],
-        }),
-      }
-    : {}),
-  ...(base.parsers.marko
-    ? {
-        marko: createParser('marko', transformMarko, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
-  ...(base.parsers.twig
-    ? {
-        twig: createParser('twig', transformTwig, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
-  ...(base.parsers.pug
-    ? {
-        pug: createParser('pug', transformPug, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
-  ...(base.parsers['liquid-html']
-    ? {
-        'liquid-html': createParser('liquid-html', transformLiquid, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
-}
-*/
+ */
 
 //
 // Transforms for builtin plugins
@@ -1665,12 +1420,78 @@ let glimmer = defineTransform<GlimmerNode>({
   },
 })
 
+type AstroNode =
+  | { type: 'element'; attributes: Extract<AstroNode, { type: 'attribute' }>[] }
+  | { type: 'custom-element'; attributes: Extract<AstroNode, { type: 'attribute' }>[] }
+  | { type: 'component'; attributes: Extract<AstroNode, { type: 'attribute' }>[] }
+  | { type: 'attribute'; kind: 'quoted'; name: string; value: string }
+  | { type: 'attribute'; kind: 'expression'; name: string; value: unknown }
+
+let astro = defineTransform<AstroNode>({
+  staticAttrs: ['class', 'className'],
+  dynamicAttrs: ['class:list', 'className'],
+
+  parsers: {
+    astro: { load: ['prettier-plugin-astro'] },
+  },
+
+  printers: {
+    astro: { load: ['prettier-plugin-astro'] },
+  },
+
+  reprint(path, { matcher, sort, env }) {
+    let node = path.node
+
+    if (node.type !== 'attribute') return
+
+    if (node.kind === 'quoted') {
+      if (!matcher.hasStaticAttr(node.name)) return
+
+      node.value = sort(node.value)
+    }
+
+    if (node.kind === 'expression') {
+      if (typeof node.value !== 'string') return
+      if (!matcher.hasDynamicAttr(node.name)) return
+
+      transformDynamicJsAttribute(node, env)
+    }
+  },
+})
+
+type LiquidNode = TextNode | AttrSingleQuoted | AttrDoubleQuoted | LiquidTag | HtmlElement | DocumentNode
+
+let liquid = defineTransform<LiquidNode>({
+  staticAttrs: ['class'],
+
+  parsers: {
+    'liquid-html': { load: ['@shopify/prettier-plugin-liquid'] },
+  },
+
+  printers: {
+    'liquid-html-ast': { load: ['@shopify/prettier-plugin-liquid'] },
+  },
+
+  reprint(path, { matcher, sort, env }) {
+    let node = path.node
+
+    if (node.type != 'Document') return
+
+    console.log({ node })
+
+    let changes: StringChange[] = []
+    transformLiquid(node, { env, changes })
+  },
+})
+
 let { parsers, printers } = createPlugin([
   //
   html,
   css,
   javascript,
   glimmer,
+  astro,
+  liquid,
 ])
 
 export { parsers, printers }

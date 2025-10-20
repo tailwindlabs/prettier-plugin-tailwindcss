@@ -13,7 +13,7 @@ export interface SortOptions {
   ignoreFirst?: boolean
   ignoreLast?: boolean
   removeDuplicates?: boolean
-  collapseWhitespace?: { start: boolean; end: boolean }
+  collapseWhitespace?: false | { start: boolean; end: boolean }
 }
 
 export interface Env<T> {
@@ -141,37 +141,7 @@ export function createPlugin(transformers: TransformOptions<any>[]) {
 
         // TODO: Find a way to drop this. We have to do this for compatible
         // plugins that are intended to override builtin ones
-        parsers[name] = {
-          ...original,
-
-          preprocess: async (code: string, options: ParserOptions) => {
-            let parser = { ...original }
-
-            // Now load parsers from "compatible" plugins if any
-            for (let pluginName of details.compatible ?? []) {
-              let mod = await loadIfExistsESM(pluginName)
-              let plugin = findEnabledPlugin(options, pluginName, mod)
-              if (!plugin) continue
-              Object.assign(parser, plugin.parsers[name])
-            }
-
-            return parser.preprocess ? await parser.preprocess(code, options) : code
-          },
-
-          parse: async (code, options) => {
-            let parser = { ...original }
-
-            // Now load parsers from "compatible" plugins if any
-            for (let pluginName of details.compatible ?? []) {
-              let mod = await loadIfExistsESM(pluginName)
-              let plugin = findEnabledPlugin(options, pluginName, mod)
-              if (!plugin) continue
-              Object.assign(parser, plugin.parsers[name])
-            }
-
-            return await parser.parse(code, options)
-          },
-        }
+        parsers[name] = await wrapParser(original, opts, details, name)
 
         return parsers[name]
       }
@@ -239,6 +209,55 @@ function findEnabledPlugin(options: ParserOptions<any>, name: string, mod: any) 
       return mod
     }
   }
+}
+
+async function wrapParser(
+  original: Parser<any>,
+  opts: TransformOptions<any>,
+  details: TransformOptions<any>['parsers'][string],
+  name: string,
+) {
+  let parser: Parser<any> = { ...original }
+
+  let compatible: { pluginName: string; mod: Plugin<any> }[] = []
+
+  // Now load parsers from "compatible" plugins if any
+  for (let pluginName of details.compatible ?? []) {
+    compatible.push({
+      pluginName,
+      mod: await loadIfExistsESM(pluginName),
+    })
+  }
+
+  // TODO: Prettier v3.6.2+ allows preprocess to be async however this breaks
+  // - Astro
+  // - prettier-plugin-multiline-arrays
+  // - @trivago/prettier-plugin-sort-imports
+  // - prettier-plugin-jsdoc
+  parser.preprocess = (code: string, options: ParserOptions) => {
+    let parser = { ...original }
+
+    for (let { pluginName, mod } of compatible) {
+      let plugin = findEnabledPlugin(options, pluginName, mod)
+      if (plugin) Object.assign(parser, plugin.parsers[name])
+    }
+
+    return parser.preprocess ? parser.preprocess(code, options) : code
+  }
+
+  parser.parse = async (code, options) => {
+    let parser = { ...original }
+
+    // Now load parsers from "compatible" plugins if any
+    for (let { pluginName, mod } of compatible) {
+      let plugin = findEnabledPlugin(options, pluginName, mod)
+      if (plugin) Object.assign(parser, plugin.parsers[name])
+    }
+
+    return await parser.parse(code, options)
+  }
+
+  return parser
 }
 
 function wrapPrinter(original: Printer<any>, opts: TransformOptions<any>) {

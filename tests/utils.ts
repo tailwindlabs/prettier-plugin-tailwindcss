@@ -48,7 +48,12 @@ export async function format(str: string, options: prettier.Options = {}) {
     printWidth: 9999,
     parser: 'html',
     ...options,
-    plugins: [...(options.plugins ?? []), plugin /* pluginPath */],
+    plugins: [
+      //
+      ...(options.plugins ?? []),
+      // plugin,
+      pluginPath,
+    ],
   })
 
   return result.trim()

@@ -108,7 +108,7 @@ export interface TransformOptions<T> {
    * @param path The path from the root to the AST node
    * @param env  Provides options and mechanisms to sort classes
    */
-  reprint(path: AstPath<T>, env: Env<T>): void
+  reprint(path: AstPath<T>, env: Env<T>): void | ParserOptions<T>
 }
 
 export async function loadPlugins<T>(fns: string[]) {
@@ -182,7 +182,15 @@ export function createPlugin(transformers: TransformOptions<any>[]) {
 async function loadIfExistsESM(name: string): Promise<Plugin<any>> {
   let mod = await loadIfExists<Plugin<any>>(name)
 
-  return mod ?? { parsers: {}, printers: {}, languages: [], options: {}, defaultOptions: {} }
+  return (
+    mod ?? {
+      parsers: {},
+      printers: {},
+      languages: [],
+      options: {},
+      defaultOptions: {},
+    }
+  )
 }
 
 function findEnabledPlugin(options: ParserOptions<any>, name: string, mod: any) {
@@ -326,9 +334,9 @@ function wrapPrinter(original: Printer<any>, opts: TransformOptions<any>) {
 
   if (original.embed) {
     printer.embed = (path, options) => {
-      opts.reprint(path, options.__tailwindcss__ as Env<any>)
+      let result = opts.reprint(path, options.__tailwindcss__ as Env<any>)
 
-      return original.embed!(path, options)
+      return original.embed!(path, { ...options, ...result })
     }
   }
 

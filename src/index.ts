@@ -14,16 +14,13 @@ import * as astTypes from 'ast-types'
 import jsesc from 'jsesc'
 // @ts-ignore
 import lineColumn from 'line-column'
-import type { AstPath, Parser, ParserOptions, Printer } from 'prettier'
-import * as prettierParserAcorn from 'prettier/plugins/acorn'
+import type { AstPath } from 'prettier'
 import * as prettierParserAngular from 'prettier/plugins/angular'
 import * as prettierParserBabel from 'prettier/plugins/babel'
-import * as prettierParserFlow from 'prettier/plugins/flow'
 // @ts-ignore
 import * as recast from 'recast'
-import { getTailwindConfig } from './config.js'
 import { createPlugin, defineTransform } from './create-plugin.js'
-import { createMatcher, type Matcher } from './options.js'
+import type { Matcher } from './options.js'
 import { takenBranches } from './path.js'
 import { loadPlugins } from './plugins.js'
 import { sortClasses, sortClassList } from './sorting.js'
@@ -510,6 +507,9 @@ let html = defineTransform<HtmlNode>({
       } else {
         transformDynamicJsAttribute(node, env)
       }
+
+      // TODO
+      // return { __force__: true } as any
     }
   },
 })
@@ -554,6 +554,8 @@ let css = defineTransform<CssNode>({
       // we have to produce the same result by parsing an import statement
       // with the same params
       try {
+        // TODO: Can we use embeds here to reprint this node?
+
         let parser = base.parsers.css
         let root = parser.parse(`@import ${node.params};`, {
           // We can't pass options directly because css.parse overwrites
@@ -824,6 +826,14 @@ let javascript = defineTransform<import('@babel/types').Node>({
         'prettier-plugin-jsdoc',
       ],
     },
+
+    // TODO: This does not work but it would in an ideal world
+    // __vue_ts_expression: {
+    //   load: ['prettier/plugin/babel'],
+    // },
+    // __vue_expression: {
+    //   load: ['prettier/plugin/babel'],
+    // },
   },
 
   printers: {
@@ -832,9 +842,11 @@ let javascript = defineTransform<import('@babel/types').Node>({
     'estree-hermes': { load: ['@prettier/plugin-hermes'] },
   },
 
-  reprint(path, { matcher, env }) {
+  reprint(path, { matcher, env, options }) {
     let node = path.node
 
+    // console.log({ what: options.__force__ })
+    // let sortableAttr = '__force__' in options ? options.__force__ : false
     let sortableAttr = false
     let sortableFn = false
 
@@ -1052,7 +1064,12 @@ let liquid = defineTransform<LiquidNode>({
       collapseWhitespace: false,
     })
 
-    let change: StringChange = { start: node.position.start, end: node.position.end, before: node.value, after }
+    let change: StringChange = {
+      start: node.position.start,
+      end: node.position.end,
+      before: node.value,
+      after,
+    }
 
     // Inset the position as the node position includes quotes but the value never does
     if (node.type === 'String') {

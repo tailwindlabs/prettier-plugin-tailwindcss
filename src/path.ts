@@ -2,7 +2,7 @@ import type { AstPath } from 'prettier'
 
 type Branch<T> = { node: T; key: string | null; index: number | null; parent: Branch<T> | null }
 
-export function takenBracnhes<T>(path: AstPath<T>) {
+export function takenBranches<T>(path: AstPath<T>) {
   let branches: Branch<T>[] = [{ node: path.node, key: path.key, index: path.index, parent: null }]
 
   for (let i = 0; i < path.ancestors.length; ++i) {

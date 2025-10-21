@@ -24,7 +24,7 @@ import * as recast from 'recast'
 import { getTailwindConfig } from './config.js'
 import { createPlugin, defineTransform } from './create-plugin.js'
 import { createMatcher, type Matcher } from './options.js'
-import { takenBracnhes } from './path.js'
+import { takenBranches } from './path.js'
 import { loadPlugins } from './plugins.js'
 import { sortClasses, sortClassList } from './sorting.js'
 import type { Customizations, StringChange, TransformerContext, TransformerEnv, TransformerMetadata } from './types'
@@ -988,7 +988,7 @@ function canCollapseWhitespaceInBabel(path: AstPath<import('@babel/types').Node>
   let start = true
   let end = true
 
-  for (let { node, parent, key } of takenBracnhes(path)) {
+  for (let { node, parent, key } of takenBranches(path)) {
     if (!parent) continue
 
     // Nodes inside concat expressions shouldn't collapse whitespace
@@ -1288,7 +1288,7 @@ let glimmer = defineTransform<GlimmerNode>({
     if (node.type === 'TextNode') {
       let siblings = { prev: false, next: false }
 
-      for (let { parent, index } of takenBracnhes(path)) {
+      for (let { parent, index } of takenBranches(path)) {
         if (!parent) continue
         if (index === null) continue
         if (parent.node.type !== 'ConcatStatement') continue
@@ -1309,7 +1309,7 @@ let glimmer = defineTransform<GlimmerNode>({
     }
 
     if (node.type === 'StringLiteral') {
-      let concat = takenBracnhes(path).some(({ parent }) => {
+      let concat = takenBranches(path).some(({ parent }) => {
         return parent && parent.node.type === 'SubExpression' && parent.node.path.original === 'concat'
       })
 
@@ -1694,6 +1694,85 @@ let svelte = defineTransform<SvelteNode>({
   },
 })
 
+type TwigIdentifier = { type: 'Identifier'; name: string }
+
+type TwigMemberExpression = {
+  type: 'MemberExpression'
+  property: TwigIdentifier | TwigCallExpression | TwigMemberExpression
+}
+
+type TwigCallExpression = {
+  type: 'CallExpression'
+  callee: TwigIdentifier | TwigCallExpression | TwigMemberExpression
+}
+
+type TwigNode =
+  | { type: 'Attribute'; name: TwigIdentifier }
+  | { type: 'StringLiteral'; value: string }
+  | { type: 'BinaryConcatExpression' }
+  | { type: 'BinaryAddExpression' }
+  | TwigIdentifier
+  | TwigMemberExpression
+  | TwigCallExpression
+
+let twig = defineTransform<TwigNode>({
+  staticAttrs: ['class'],
+
+  parsers: {
+    twig: { load: ['@zackad/prettier-plugin-twig'] },
+  },
+
+  printers: {
+    twig: { load: ['@zackad/prettier-plugin-twig'] },
+  },
+
+  reprint(path, { matcher, sort }) {
+    let node = path.node
+
+    if (node.type !== 'StringLiteral') return
+
+    // We must be in a sortable attribute *or* a sortable fn call
+    let sortableAttr = false
+    let sortableFn = false
+
+    for (let parent of path.ancestors) {
+      if (parent.type === 'Attribute') {
+        sortableAttr ||= matcher.hasStaticAttr(parent.name.name)
+      } else if (parent.type === 'CallExpression') {
+        while (parent.type === 'CallExpression' || parent.type === 'MemberExpression') {
+          if (parent.type === 'CallExpression') {
+            parent = parent.callee
+          } else if (parent.type === 'MemberExpression') {
+            // TODO: This is *different* than `isSortableExpression` and that doesn't feel right
+            // but they're mutually exclusive implementations
+            //
+            // This is to handle foo.fnNameHere(…) where `isSortableExpression` is intentionally
+            // handling `fnNameHere.foo(…)`.
+            parent = parent.property
+          }
+        }
+
+        sortableFn ||= parent.type === 'Identifier' && matcher.hasFunction(parent.name)
+      }
+    }
+
+    if (!sortableAttr && !sortableFn) return
+
+    let concat = takenBranches(path).find(({ parent }) => {
+      return parent && (parent.node.type === 'BinaryConcatExpression' || parent.node.type === 'BinaryAddExpression')
+    })
+
+    node.value = sort(node.value, {
+      ignoreFirst: concat?.key === 'right' && !/^[^\S\r\n]/.test(node.value),
+      ignoreLast: concat?.key === 'left' && !/[^\S\r\n]$/.test(node.value),
+      collapseWhitespace: {
+        start: concat?.key !== 'right',
+        end: concat?.key !== 'left',
+      },
+    })
+  },
+})
+
 let { parsers, printers } = createPlugin([
   //
   html,
@@ -1705,6 +1784,7 @@ let { parsers, printers } = createPlugin([
   pug,
   marko,
   svelte,
+  twig,
 ])
 
 export { parsers, printers }

@@ -265,7 +265,11 @@ async function wrapParser(
       if (plugin) Object.assign(parser, plugin.parsers[name])
     }
 
-    return await parser.parse(code, options)
+    // @ts-expect-error: `options` is passed twice for compat with older plugins that were written
+    // for Prettier v2 but still work with v3.
+    //
+    // Currently only the Twig plugin requires this.
+    return await parser.parse(code, options, options)
   }
 
   return parser

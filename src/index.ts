@@ -1567,6 +1567,133 @@ let marko = defineTransform<MarkoNode>({
   },
 })
 
+type SvelteNode = import('svelte/compiler').AST.SvelteNode
+
+let svelte = defineTransform<SvelteNode>({
+  staticAttrs: ['class'],
+
+  parsers: {
+    svelte: { load: ['prettier-plugin-svelte'] },
+  },
+
+  printers: {
+    'svelte-ast': { load: ['prettier-plugin-svelte'] },
+  },
+
+  reprint(path, { matcher, sort, env, options }) {
+    let node = path.node
+
+    function sortableAttribute() {
+      for (let i = 0; i < path.ancestors.length; ++i) {
+        let node = path.ancestors[i]
+        if (node.type !== 'Attribute') continue
+        if (!matcher.hasStaticAttr(node.name)) return { attr: null, index: 0 }
+
+        return {
+          attr: node,
+          value: node.value,
+          index: path.callParent((p) => p.index, i - 1) ?? 0,
+        }
+      }
+
+      return { attr: null, index: 0 }
+    }
+
+    function applyChanges(text: string, callback: (finder: any) => StringChange[]): string {
+      return spliceChangesIntoString(text, callback(lineColumn(text)))
+    }
+
+    if (node.type === 'Text') {
+      let { attr, index } = sortableAttribute()
+      if (!attr) return
+      if (typeof attr.value === 'boolean') return
+
+      // TODO?
+      if (!Array.isArray(attr.value)) return
+
+      let same = node.raw === node.data
+
+      node.raw = sort(node.raw, {
+        ignoreFirst: index > 0 && !/^\s/.test(node.raw),
+        ignoreLast: index < attr.value.length - 1 && !/\s$/.test(node.raw),
+        removeDuplicates: true,
+        collapseWhitespace: false,
+      })
+
+      node.data = same
+        ? node.raw
+        : sort(node.data, {
+            ignoreFirst: index > 0 && !/^\s/.test(node.data),
+            ignoreLast: index < attr.value.length - 1 && !/\s$/.test(node.data),
+            removeDuplicates: true,
+            collapseWhitespace: false,
+          })
+    }
+
+    if (node.type === 'Literal') {
+      let { attr, index } = sortableAttribute()
+      if (!attr) return
+      if (!isStringLiteral(node)) return
+      if (!node.raw) return
+      if (!node.loc) return
+
+      let before = node.raw
+
+      let sorted = sortStringLiteral(node, {
+        env,
+        removeDuplicates: false,
+        collapseWhitespace: false,
+      })
+
+      if (!sorted) return
+
+      options.originalText = applyChanges(options.originalText, (finder) => {
+        if (!node.loc) return []
+        if (!node.raw) return []
+
+        let start = finder.toIndex(node.loc.start.line, node.loc.start.column + 1)
+        let end = finder.toIndex(node.loc.end.line, node.loc.end.column + 1)
+
+        return [{ before, after: node.raw, start, end }]
+      })
+    }
+
+    if (node.type === 'TemplateLiteral') {
+      let { attr, index } = sortableAttribute()
+      if (!attr) return
+
+      let before = node.quasis.map((quasi: any) => quasi.value.raw)
+      let sorted = sortTemplateLiteral(node, {
+        env,
+        removeDuplicates: false,
+        collapseWhitespace: false,
+      })
+
+      if (!sorted) return
+
+      options.originalText = applyChanges(options.originalText, (finder) => {
+        let changes: StringChange[] = []
+
+        for (let [idx, quasi] of node.quasis.entries()) {
+          if (!quasi.loc) continue
+
+          let start = finder.toIndex(quasi.loc.start.line, quasi.loc.start.column + 1)
+          let end = finder.toIndex(quasi.loc.end.line, quasi.loc.end.column + 1)
+
+          changes.push({
+            before: before[idx],
+            after: quasi.value.raw,
+            start,
+            end,
+          })
+        }
+
+        return changes
+      })
+    }
+  },
+})
+
 let { parsers, printers } = createPlugin([
   //
   html,
@@ -1577,6 +1704,7 @@ let { parsers, printers } = createPlugin([
   liquid,
   pug,
   marko,
+  svelte,
 ])
 
 export { parsers, printers }

@@ -131,16 +131,16 @@ async function loadBuiltinPlugins(): Promise<PluginDetails> {
 }
 
 async function loadThirdPartyPlugins(): Promise<PluginDetails> {
-  let [astro, liquid, marko, twig, hermes, oxc, pug, svelte] = await Promise.all([
-    loadIfExistsESM('prettier-plugin-astro'),
-    loadIfExistsESM('@shopify/prettier-plugin-liquid'),
-    loadIfExistsESM('prettier-plugin-marko'),
-    loadIfExistsESM('@zackad/prettier-plugin-twig'),
-    loadIfExistsESM('@prettier/plugin-hermes'),
-    loadIfExistsESM('@prettier/plugin-oxc'),
-    loadIfExistsESM('@prettier/plugin-pug'),
-    loadIfExistsESM('prettier-plugin-svelte'),
-  ])
+  // These plugins *must* be loaded sequentially. Race conditions are possible
+  // when using await import(…), require(esm), and Promise.all(…).
+  let astro = await loadIfExistsESM('prettier-plugin-astro')
+  let liquid = await loadIfExistsESM('@shopify/prettier-plugin-liquid')
+  let marko = await loadIfExistsESM('prettier-plugin-marko')
+  let twig = await loadIfExistsESM('@zackad/prettier-plugin-twig')
+  let hermes = await loadIfExistsESM('@prettier/plugin-hermes')
+  let oxc = await loadIfExistsESM('@prettier/plugin-oxc')
+  let pug = await loadIfExistsESM('@prettier/plugin-pug')
+  let svelte = await loadIfExistsESM('prettier-plugin-svelte')
 
   return {
     parsers: {
@@ -181,19 +181,19 @@ async function loadCompatiblePlugins() {
     'prettier-plugin-jsdoc',
   ]
 
-  // Load all the available compatible plugins up front
-  // These are wrapped in try/catch internally so failure doesn't cause issues
-  // Technically we're executing these plugins though
-  // Even if not enabled
-  // There is, unfortunately, no way around this currently
-  return await Promise.all(
-    plugins.map(async (name) => {
-      let mod = await loadIfExistsESM(name)
+  let list: { name: string; mod: unknown }[] = []
 
-      return {
-        name,
-        mod,
-      }
-    }),
-  )
+  // Load all the available compatible plugins up front. These are wrapped in
+  // try/catch internally so failure doesn't cause issues.
+  //
+  // We're always executing these plugins even if they're not enabled. Sadly,
+  // there is no way around this currently.
+  //
+  // These plugins *must* be loaded sequentially. Race conditions are possible
+  // when using await import(…), require(esm), and Promise.all(…).
+  for (let name of plugins) {
+    list.push({ name, mod: await loadIfExistsESM(name) })
+  }
+
+  return list
 }

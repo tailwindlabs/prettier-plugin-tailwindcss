@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+- Load compatible plugins sequentially to work around race conditions in Node.js ([#412](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/412))
 
 ## [0.7.1] - 2025-10-17
 

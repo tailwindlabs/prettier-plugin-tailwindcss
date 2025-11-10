@@ -83,6 +83,11 @@ let fixtures = [
     ext: 'html',
   },
   {
+    name: 'v4: subpath imports',
+    dir: 'v4/subpath-imports',
+    ext: 'html',
+  },
+  {
     name: 'custom npm package name: v3',
     dir: 'custom-pkg-name-v3',
     ext: 'html',

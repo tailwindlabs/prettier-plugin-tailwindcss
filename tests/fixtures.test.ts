@@ -88,6 +88,11 @@ let fixtures = [
     ext: 'html',
   },
   {
+    name: 'v4: tsconfig imports',
+    dir: 'v4/tsconfig-imports',
+    ext: 'html',
+  },
+  {
     name: 'custom npm package name: v3',
     dir: 'custom-pkg-name-v3',
     ext: 'html',

@@ -4,18 +4,21 @@ import { ResolverFactory } from 'oxc-resolver'
 import { expiringMap } from './expiring-map'
 
 const esmResolver = new ResolverFactory({
+  tsconfig: 'auto',
   extensions: ['.mjs', '.js'],
   mainFields: ['module'],
   conditionNames: ['node', 'import'],
 })
 
 const cjsResolver = esmResolver.cloneWithOptions({
+  tsconfig: 'auto',
   extensions: ['.js', '.cjs'],
   mainFields: ['main'],
   conditionNames: ['node', 'require'],
 })
 
 const cssResolver = esmResolver.cloneWithOptions({
+  tsconfig: 'auto',
   extensions: ['.css'],
   mainFields: ['style'],
   conditionNames: ['style'],

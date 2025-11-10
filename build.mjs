@@ -132,7 +132,7 @@ let context = await esbuild.context({
   bundle: true,
   platform: 'node',
   target: 'node14.21.3',
-  external: ['prettier'],
+  external: ['prettier', 'oxc-resolver'],
   minify: process.argv.includes('--minify'),
   entryPoints: [path.resolve(__dirname, './src/index.js')],
   outfile: path.resolve(__dirname, './dist/index.mjs'),

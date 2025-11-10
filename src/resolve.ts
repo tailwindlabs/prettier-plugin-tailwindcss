@@ -1,29 +1,21 @@
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { CachedInputFileSystem, ResolverFactory } from 'enhanced-resolve'
+import { ResolverFactory } from 'oxc-resolver'
 import { expiringMap } from './expiring-map'
 
-const fileSystem = new CachedInputFileSystem(fs, 30_000)
-
-const esmResolver = ResolverFactory.createResolver({
-  fileSystem,
-  useSyncFileSystemCalls: true,
+const esmResolver = new ResolverFactory({
   extensions: ['.mjs', '.js'],
   mainFields: ['module'],
   conditionNames: ['node', 'import'],
 })
 
-const cjsResolver = ResolverFactory.createResolver({
-  fileSystem,
-  useSyncFileSystemCalls: true,
+const cjsResolver = esmResolver.cloneWithOptions({
   extensions: ['.js', '.cjs'],
   mainFields: ['main'],
   conditionNames: ['node', 'require'],
 })
 
-const cssResolver = ResolverFactory.createResolver({
-  fileSystem,
-  useSyncFileSystemCalls: true,
+const cssResolver = esmResolver.cloneWithOptions({
   extensions: ['.css'],
   mainFields: ['style'],
   conditionNames: ['style'],
@@ -64,13 +56,9 @@ export async function loadIfExists<T>(name: string): Promise<T | null> {
 }
 
 export function resolveJsFrom(base: string, id: string): string {
-  try {
-    return esmResolver.resolveSync({}, base, id) || id
-  } catch (err) {
-    return cjsResolver.resolveSync({}, base, id) || id
-  }
+  return esmResolver.sync(base, id).path ?? cjsResolver.sync(base, id).path ?? id
 }
 
 export function resolveCssFrom(base: string, id: string) {
-  return cssResolver.resolveSync({}, base, id) || id
+  return cssResolver.sync(base, id).path ?? id
 }

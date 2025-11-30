@@ -58,7 +58,7 @@
     "marko": "^5.37.46",
     "postcss": "^8.5.6",
     "postcss-import": "^16.1.1",
-    "prettier": "^3.6.2",
+    "prettier": "^3.7.3",
     "prettier-plugin-astro": "^0.14.1",
     "prettier-plugin-css-order": "^2.1.2",
     "prettier-plugin-jsdoc": "^1.3.3",

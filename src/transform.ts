@@ -17,11 +17,30 @@ export interface TransformOptions<T> {
   dynamicAttrs?: string[]
 
   /**
+   * Load the given plugins for the parsers and printers
+   */
+  load?: string[]
+
+  /**
+   * A list of compatible, third-party plugins for this transformation step
+   *
+   * The loading of these is delayed until the actual parse call as
+   * using the parse() function from these plugins may cause errors
+   * if they haven't already been loaded by Prettier.
+   */
+  compatible?: string[]
+
+  /**
    * A list of supported parser names
    */
   parsers: Record<
     string,
     {
+      /**
+       * Load the given plugins for the parsers and printers
+       */
+      load?: string[]
+
       /**
        * Static attributes that are supported by default
        */
@@ -37,7 +56,15 @@ export interface TransformOptions<T> {
   /**
    * A list of supported parser names
    */
-  printers?: Record<string, {}>
+  printers?: Record<
+    string,
+    {
+      /**
+       * Load the given plugins for the parsers and printers
+       */
+      load?: string[]
+    }
+  >
 
   /**
    * Transform entire ASTs

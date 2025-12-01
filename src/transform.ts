@@ -1,5 +1,9 @@
 import type { TransformerEnv } from './types'
 
+export function defineTransform<T>(opts: TransformOptions<T>) {
+  return opts
+}
+
 export interface TransformOptions<T> {
   /**
    * A list of supported parser names

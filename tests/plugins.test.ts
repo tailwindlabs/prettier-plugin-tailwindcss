@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module'
 import dedent from 'dedent'
+import * as prettier from 'prettier'
 import { test } from 'vitest'
 import { javascript } from './tests.js'
 import type { TestEntry } from './utils.js'
@@ -492,7 +493,11 @@ for (const group of tests) {
   let name = group.plugins.join(', ')
 
   for (let parser in group.tests) {
-    test(`parsing ${parser} works with: ${name}`, async ({ expect }) => {
+    test(`parsing ${parser} works with: ${name}`, async ({ expect, skip }) => {
+      if (group.plugins.includes('prettier-plugin-multiline-arrays')) {
+        return skip('The `prettier-plugin-multiline-arrays` plugin does not work with Prettier v3.7+')
+      }
+
       // Hide logs from Pug's prettier plugin
       if (parser === 'pug') {
         let pug = await import('@prettier/plugin-pug')

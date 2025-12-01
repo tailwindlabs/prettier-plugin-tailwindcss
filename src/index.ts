@@ -18,7 +18,6 @@ import type { StringChange, TransformerEnv } from './types'
 import { spliceChangesIntoString, visit, type Path } from './utils.js'
 
 const ESCAPE_SEQUENCE_PATTERN = /\\(['"\\nrtbfv0-7xuU])/g
-
 function tryParseAngularAttribute(value: string, env: TransformerEnv) {
   try {
     return prettierParserAngular.parsers.__ng_directive.parse(value, env.options)

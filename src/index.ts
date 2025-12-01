@@ -49,10 +49,6 @@ function createParser(
 
       let original = base.originalParser(parserFormat, options)
 
-      if (original.astFormat in printers) {
-        options.printer = printers[original.astFormat]
-      }
-
       // @ts-ignore: We pass three options in the case of plugins that support Prettier 2 _and_ 3.
       let ast = await original.parse(text, options, options)
 

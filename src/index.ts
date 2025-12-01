@@ -14,7 +14,7 @@ import { getTailwindConfig } from './config.js'
 import { createMatcher, type Matcher } from './options.js'
 import { loadPlugins } from './plugins.js'
 import { sortClasses, sortClassList } from './sorting.js'
-import type { Customizations, StringChange, TransformerContext, TransformerEnv, TransformerMetadata } from './types'
+import type { Customizations, StringChange, TransformerEnv, TransformerMetadata } from './types'
 import { spliceChangesIntoString, visit, type Path } from './utils.js'
 
 let base = await loadPlugins()
@@ -23,7 +23,7 @@ const ESCAPE_SEQUENCE_PATTERN = /\\(['"\\nrtbfv0-7xuU])/g
 
 function createParser(
   parserFormat: string,
-  transform: (ast: any, context: TransformerContext) => void,
+  transform: (ast: any, env: TransformerEnv) => void,
   meta: TransformerMetadata = {},
 ) {
   let customizationDefaults: Customizations = {
@@ -54,15 +54,18 @@ function createParser(
 
       let matcher = createMatcher(options, parserFormat, customizationDefaults)
 
-      let changes: any[] = []
+      let env: TransformerEnv = {
+        context,
+        matcher,
+        parsers: {},
+        options,
+        changes: [],
+      }
 
-      transform(ast, {
-        env: { context, matcher, parsers: {}, options },
-        changes,
-      })
+      transform(ast, env)
 
       if (parserFormat === 'svelte') {
-        ast.changes = changes
+        ast.changes = env.changes
       }
 
       return ast
@@ -271,7 +274,7 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
   }
 }
 
-function transformHtml(ast: any, { env, changes }: TransformerContext) {
+function transformHtml(ast: any, env: TransformerEnv) {
   let { matcher } = env
   let { parser } = env.options
 
@@ -292,11 +295,11 @@ function transformHtml(ast: any, { env, changes }: TransformerContext) {
   }
 
   for (let child of ast.children ?? []) {
-    transformHtml(child, { env, changes })
+    transformHtml(child, env)
   }
 }
 
-function transformGlimmer(ast: any, { env }: TransformerContext) {
+function transformGlimmer(ast: any, env: TransformerEnv) {
   let { matcher } = env
 
   visit(ast, {
@@ -352,7 +355,7 @@ function transformGlimmer(ast: any, { env }: TransformerContext) {
   })
 }
 
-function transformLiquid(ast: any, { env }: TransformerContext) {
+function transformLiquid(ast: any, env: TransformerEnv) {
   let { matcher } = env
 
   function isClassAttr(node: { name: string | { type: string; value: string }[] }) {
@@ -651,7 +654,7 @@ function canCollapseWhitespaceIn(path: Path<import('@babel/types').Node, any>) {
 //
 // We cross several parsers that share roughly the same shape so things are
 // good enough. The actual AST we should be using is probably estree + ts.
-function transformJavaScript(ast: import('@babel/types').Node, { env }: TransformerContext) {
+function transformJavaScript(ast: import('@babel/types').Node, env: TransformerEnv) {
   let { matcher } = env
 
   function sortInside(ast: import('@babel/types').Node) {
@@ -722,7 +725,7 @@ function transformJavaScript(ast: import('@babel/types').Node, { env }: Transfor
   })
 }
 
-function transformCss(ast: any, { env }: TransformerContext) {
+function transformCss(ast: any, env: TransformerEnv) {
   // `parseValue` inside Prettier's CSS parser is private API so we have to
   // produce the same result by parsing an import statement with the same params
   function tryParseAtRuleParams(name: string, params: any) {
@@ -790,7 +793,7 @@ function transformCss(ast: any, { env }: TransformerContext) {
   })
 }
 
-function transformAstro(ast: any, { env, changes }: TransformerContext) {
+function transformAstro(ast: any, env: TransformerEnv) {
   let { matcher } = env
 
   if (ast.type === 'element' || ast.type === 'custom-element' || ast.type === 'component') {
@@ -811,11 +814,11 @@ function transformAstro(ast: any, { env, changes }: TransformerContext) {
   }
 
   for (let child of ast.children ?? []) {
-    transformAstro(child, { env, changes })
+    transformAstro(child, env)
   }
 }
 
-function transformMarko(ast: any, { env }: TransformerContext) {
+function transformMarko(ast: any, env: TransformerEnv) {
   let { matcher } = env
 
   const nodesToVisit = [ast]
@@ -857,11 +860,11 @@ function transformMarko(ast: any, { env }: TransformerContext) {
   }
 }
 
-function transformTwig(ast: any, { env, changes }: TransformerContext) {
+function transformTwig(ast: any, env: TransformerEnv) {
   let { matcher } = env
 
   for (let child of ast.expressions ?? []) {
-    transformTwig(child, { env, changes })
+    transformTwig(child, env)
   }
 
   visit(ast, {
@@ -918,7 +921,7 @@ function transformTwig(ast: any, { env, changes }: TransformerContext) {
   })
 }
 
-function transformPug(ast: any, { env }: TransformerContext) {
+function transformPug(ast: any, env: TransformerEnv) {
   let { matcher } = env
 
   // This isn't optimal
@@ -973,8 +976,8 @@ function transformPug(ast: any, { env }: TransformerContext) {
   }
 }
 
-function transformSvelte(ast: any, { env, changes }: TransformerContext) {
-  let { matcher } = env
+function transformSvelte(ast: any, env: TransformerEnv) {
+  let { matcher, changes } = env
 
   for (let attr of ast.attributes ?? []) {
     if (!matcher.hasStaticAttr(attr.name) || attr.type !== 'Attribute') {
@@ -1047,12 +1050,12 @@ function transformSvelte(ast: any, { env, changes }: TransformerContext) {
   }
 
   for (let child of ast.children ?? []) {
-    transformSvelte(child, { env, changes })
+    transformSvelte(child, env)
   }
 
   if (ast.type === 'IfBlock') {
     for (let child of ast.else?.children ?? []) {
-      transformSvelte(child, { env, changes })
+      transformSvelte(child, env)
     }
   }
 
@@ -1060,12 +1063,12 @@ function transformSvelte(ast: any, { env, changes }: TransformerContext) {
     let nodes = [ast.pending, ast.then, ast.catch]
 
     for (let child of nodes) {
-      transformSvelte(child, { env, changes })
+      transformSvelte(child, env)
     }
   }
 
   if (ast.html) {
-    transformSvelte(ast.html, { env, changes })
+    transformSvelte(ast.html, env)
   }
 }
 

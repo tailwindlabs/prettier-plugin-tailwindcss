@@ -1,5 +1,5 @@
 // @ts-ignore
-import type { AttrDoubleQuoted, AttrSingleQuoted } from '@shopify/prettier-plugin-liquid/dist/types.js'
+import type * as Liquid from '@shopify/prettier-plugin-liquid/dist/types.js'
 import * as astTypes from 'ast-types'
 // @ts-ignore
 import jsesc from 'jsesc'
@@ -311,7 +311,7 @@ function transformLiquid(ast: any, env: TransformerEnv) {
 
   let changes: StringChange[] = []
 
-  function sortAttribute(attr: AttrSingleQuoted | AttrDoubleQuoted) {
+  function sortAttribute(attr: Liquid.AttrSingleQuoted | Liquid.AttrDoubleQuoted) {
     for (let i = 0; i < attr.value.length; i++) {
       let node = attr.value[i]
       if (node.type === 'TextNode') {
@@ -1010,7 +1010,9 @@ function transformSvelte(ast: any, env: TransformerEnv) {
 
 export { options } from './options.js'
 
-let html = defineTransform({
+type HtmlNode = { type: 'attribute'; name: string; value: string } | { kind: 'attribute'; name: string; value: string }
+
+let html = defineTransform<HtmlNode>({
   parsers: {
     html: { staticAttrs: ['class'] },
     lwc: { staticAttrs: ['class'] },
@@ -1021,7 +1023,14 @@ let html = defineTransform({
   transform: transformHtml,
 })
 
-let glimmer = defineTransform({
+type GlimmerNode =
+  | { type: 'TextNode'; chars: string }
+  | { type: 'StringLiteral'; value: string }
+  | { type: 'ConcatStatement'; parts: GlimmerNode[] }
+  | { type: 'SubExpression'; path: { original: string } }
+  | { type: 'AttrNode'; name: string; value: GlimmerNode }
+
+let glimmer = defineTransform<GlimmerNode>({
   parsers: {
     glimmer: { staticAttrs: ['class'] },
   },
@@ -1029,7 +1038,14 @@ let glimmer = defineTransform({
   transform: transformGlimmer,
 })
 
-let css = defineTransform({
+type CssValueNode = { type: 'value-*'; name: string; params: string }
+type CssNode = {
+  type: 'css-atrule'
+  name: string
+  params: string | CssValueNode
+}
+
+let css = defineTransform<CssNode>({
   parsers: {
     css: {},
     scss: {},
@@ -1039,7 +1055,7 @@ let css = defineTransform({
   transform: transformCss,
 })
 
-let js = defineTransform({
+let js = defineTransform<import('@babel/types').Node>({
   parsers: {
     babel: { staticAttrs: ['class', 'className'] },
     'babel-flow': { staticAttrs: ['class', 'className'] },
@@ -1053,14 +1069,23 @@ let js = defineTransform({
     meriyah: { staticAttrs: ['class', 'className'] },
     __js_expression: { staticAttrs: ['class', 'className'] },
     ...(base.parsers.astroExpressionParser
-      ? { astroExpressionParser: { staticAttrs: ['class'], dynamicAttrs: ['class:list'] } }
+      ? {
+          astroExpressionParser: {
+            staticAttrs: ['class'],
+            dynamicAttrs: ['class:list'],
+          },
+        }
       : {}),
   },
 
   transform: transformJavaScript,
 })
 
-let svelte = defineTransform({
+type SvelteNode = import('svelte/compiler').AST.SvelteNode & {
+  changes: StringChange[]
+}
+
+let svelte = defineTransform<SvelteNode>({
   parsers: {
     svelte: { staticAttrs: ['class'] },
   },
@@ -1089,7 +1114,20 @@ let svelte = defineTransform({
   },
 })
 
-let astro = defineTransform({
+type AstroNode =
+  | { type: 'element'; attributes: Extract<AstroNode, { type: 'attribute' }>[] }
+  | {
+      type: 'custom-element'
+      attributes: Extract<AstroNode, { type: 'attribute' }>[]
+    }
+  | {
+      type: 'component'
+      attributes: Extract<AstroNode, { type: 'attribute' }>[]
+    }
+  | { type: 'attribute'; kind: 'quoted'; name: string; value: string }
+  | { type: 'attribute'; kind: 'expression'; name: string; value: unknown }
+
+let astro = defineTransform<AstroNode>({
   parsers: {
     astro: {
       staticAttrs: ['class', 'className'],
@@ -1100,25 +1138,61 @@ let astro = defineTransform({
   transform: transformAstro,
 })
 
-let marko = defineTransform({
+type MarkoNode = import('@marko/compiler').types.Node
+
+let marko = defineTransform<MarkoNode>({
   parsers: { marko: { staticAttrs: ['class'] } },
 
   transform: transformMarko,
 })
 
-let twig = defineTransform({
+type TwigIdentifier = { type: 'Identifier'; name: string }
+
+type TwigMemberExpression = {
+  type: 'MemberExpression'
+  property: TwigIdentifier | TwigCallExpression | TwigMemberExpression
+}
+
+type TwigCallExpression = {
+  type: 'CallExpression'
+  callee: TwigIdentifier | TwigCallExpression | TwigMemberExpression
+}
+
+type TwigNode =
+  | { type: 'Attribute'; name: TwigIdentifier }
+  | { type: 'StringLiteral'; value: string }
+  | { type: 'BinaryConcatExpression' }
+  | { type: 'BinaryAddExpression' }
+  | TwigIdentifier
+  | TwigMemberExpression
+  | TwigCallExpression
+
+let twig = defineTransform<TwigNode>({
   parsers: { twig: { staticAttrs: ['class'] } },
 
   transform: transformTwig,
 })
 
-let pug = defineTransform({
+interface PugNode {
+  content: string
+  tokens: import('pug-lexer').Token[]
+}
+
+let pug = defineTransform<PugNode>({
   parsers: { pug: { staticAttrs: ['class'] } },
 
   transform: transformPug,
 })
 
-let liquid = defineTransform({
+type LiquidNode =
+  | Liquid.TextNode
+  | Liquid.AttributeNode
+  | Liquid.LiquidTag
+  | Liquid.HtmlElement
+  | Liquid.DocumentNode
+  | Liquid.LiquidExpression
+
+let liquid = defineTransform<LiquidNode>({
   parsers: { 'liquid-html': { staticAttrs: ['class'] } },
 
   transform: transformLiquid,

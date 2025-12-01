@@ -1013,11 +1013,13 @@ export { options } from './options.js'
 type HtmlNode = { type: 'attribute'; name: string; value: string } | { kind: 'attribute'; name: string; value: string }
 
 let html = defineTransform<HtmlNode>({
+  staticAttrs: ['class'],
+
   parsers: {
-    html: { staticAttrs: ['class'] },
-    lwc: { staticAttrs: ['class'] },
-    angular: { staticAttrs: ['class'], dynamicAttrs: ['[ngClass]'] },
-    vue: { staticAttrs: ['class'], dynamicAttrs: [':class', 'v-bind:class'] },
+    html: {},
+    lwc: {},
+    angular: { dynamicAttrs: ['[ngClass]'] },
+    vue: { dynamicAttrs: [':class', 'v-bind:class'] },
   },
 
   transform: transformHtml,
@@ -1031,8 +1033,10 @@ type GlimmerNode =
   | { type: 'AttrNode'; name: string; value: GlimmerNode }
 
 let glimmer = defineTransform<GlimmerNode>({
+  staticAttrs: ['class'],
+
   parsers: {
-    glimmer: { staticAttrs: ['class'] },
+    glimmer: {},
   },
 
   transform: transformGlimmer,
@@ -1056,18 +1060,21 @@ let css = defineTransform<CssNode>({
 })
 
 let js = defineTransform<import('@babel/types').Node>({
+  staticAttrs: ['class', 'className'],
+
   parsers: {
-    babel: { staticAttrs: ['class', 'className'] },
-    'babel-flow': { staticAttrs: ['class', 'className'] },
-    flow: { staticAttrs: ['class', 'className'] },
-    hermes: { staticAttrs: ['class', 'className'] },
-    typescript: { staticAttrs: ['class', 'className'] },
-    'babel-ts': { staticAttrs: ['class', 'className'] },
-    oxc: { staticAttrs: ['class', 'className'] },
-    'oxc-ts': { staticAttrs: ['class', 'className'] },
-    acorn: { staticAttrs: ['class', 'className'] },
-    meriyah: { staticAttrs: ['class', 'className'] },
-    __js_expression: { staticAttrs: ['class', 'className'] },
+    babel: {},
+    'babel-flow': {},
+    'babel-ts': {},
+    __js_expression: {},
+    typescript: {},
+    meriyah: {},
+    acorn: {},
+    flow: {},
+    oxc: {},
+    'oxc-ts': {},
+    hermes: {},
+
     ...(base.parsers.astroExpressionParser
       ? {
           astroExpressionParser: {
@@ -1086,8 +1093,10 @@ type SvelteNode = import('svelte/compiler').AST.SvelteNode & {
 }
 
 let svelte = defineTransform<SvelteNode>({
+  staticAttrs: ['class'],
+
   parsers: {
-    svelte: { staticAttrs: ['class'] },
+    svelte: {},
   },
 
   printers: {
@@ -1129,11 +1138,11 @@ type AstroNode =
   | { type: 'attribute'; kind: 'expression'; name: string; value: unknown }
 
 let astro = defineTransform<AstroNode>({
+  staticAttrs: ['class', 'className'],
+  dynamicAttrs: ['class:list', 'className'],
+
   parsers: {
-    astro: {
-      staticAttrs: ['class', 'className'],
-      dynamicAttrs: ['class:list', 'className'],
-    },
+    astro: {},
   },
 
   transform: transformAstro,
@@ -1142,7 +1151,11 @@ let astro = defineTransform<AstroNode>({
 type MarkoNode = import('@marko/compiler').types.Node
 
 let marko = defineTransform<MarkoNode>({
-  parsers: { marko: { staticAttrs: ['class'] } },
+  staticAttrs: ['class'],
+
+  parsers: {
+    marko: {},
+  },
 
   transform: transformMarko,
 })
@@ -1169,7 +1182,11 @@ type TwigNode =
   | TwigCallExpression
 
 let twig = defineTransform<TwigNode>({
-  parsers: { twig: { staticAttrs: ['class'] } },
+  staticAttrs: ['class'],
+
+  parsers: {
+    twig: {},
+  },
 
   transform: transformTwig,
 })
@@ -1180,7 +1197,11 @@ interface PugNode {
 }
 
 let pug = defineTransform({
-  parsers: { pug: { staticAttrs: ['class'] } },
+  staticAttrs: ['class'],
+
+  parsers: {
+    pug: {},
+  },
 
   transform: transformPug,
 })
@@ -1194,7 +1215,9 @@ type LiquidNode =
   | Liquid.LiquidExpression
 
 let liquid = defineTransform<LiquidNode>({
-  parsers: { 'liquid-html': { staticAttrs: ['class'] } },
+  staticAttrs: ['class'],
+
+  parsers: { 'liquid-html': {} },
 
   transform: transformLiquid,
 })

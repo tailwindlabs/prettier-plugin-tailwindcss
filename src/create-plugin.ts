@@ -14,8 +14,8 @@ export function createPlugin(base: Base, transforms: TransformOptions<any>[]) {
   for (let opts of transforms) {
     for (let [name, meta] of Object.entries(opts.parsers)) {
       parsers[name] = createParser(base, name, opts.transform, {
-        staticAttrs: meta.staticAttrs ?? [],
-        dynamicAttrs: meta.dynamicAttrs ?? [],
+        staticAttrs: meta.staticAttrs ?? opts.staticAttrs ?? [],
+        dynamicAttrs: meta.dynamicAttrs ?? opts.dynamicAttrs ?? [],
       })
     }
 

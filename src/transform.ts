@@ -7,6 +7,16 @@ export function defineTransform<T>(opts: TransformOptions<T>) {
 
 export interface TransformOptions<T> {
   /**
+   * Static attributes that are supported by default
+   */
+  staticAttrs?: string[]
+
+  /**
+   * Dynamic / expression attributes that are supported by default
+   */
+  dynamicAttrs?: string[]
+
+  /**
    * A list of supported parser names
    */
   parsers: Record<

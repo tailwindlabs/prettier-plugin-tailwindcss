@@ -5,7 +5,7 @@ import * as astTypes from 'ast-types'
 import jsesc from 'jsesc'
 // @ts-ignore
 import lineColumn from 'line-column'
-import type { Parser, ParserOptions, Printer } from 'prettier'
+import type { AstPath, Parser, ParserOptions, Printer } from 'prettier'
 import * as prettierParserAngular from 'prettier/plugins/angular'
 import * as prettierParserBabel from 'prettier/plugins/babel'
 // @ts-ignore
@@ -24,6 +24,7 @@ const ESCAPE_SEQUENCE_PATTERN = /\\(['"\\nrtbfv0-7xuU])/g
 
 function createPlugin(transforms: TransformOptions<any>[]) {
   let parsers: Record<string, Parser> = {}
+  let printers: Record<string, Printer> = {}
 
   for (let opts of transforms) {
     for (let [name, meta] of Object.entries(opts.parsers)) {
@@ -32,9 +33,15 @@ function createPlugin(transforms: TransformOptions<any>[]) {
         dynamicAttrs: meta.dynamicAttrs ?? [],
       })
     }
+
+    for (let [name, meta] of Object.entries(opts.printers ?? {})) {
+      if (!opts.reprint) continue
+
+      printers[name] = createPrinter(name, opts.reprint)
+    }
   }
 
-  return { parsers }
+  return { parsers, printers }
 }
 
 function createParser(
@@ -86,6 +93,31 @@ function createParser(
       return ast
     },
   }
+}
+
+function createPrinter(name: string, reprint: (path: AstPath<any>, options: ParserOptions<any>) => void): Printer<any> {
+  let original = base.printers[name]
+  let printer = { ...original }
+
+  printer.print = new Proxy(original.print, {
+    apply(target, thisArg, args) {
+      let [path, options] = args as Parameters<typeof original.print>
+      reprint(path, options)
+      return Reflect.apply(target, thisArg, args)
+    },
+  })
+
+  if (original.embed) {
+    printer.embed = new Proxy(original.embed, {
+      apply(target, thisArg, args) {
+        let [path, options] = args as Parameters<typeof original.embed>
+        reprint(path, options as any)
+        return Reflect.apply(target, thisArg, args)
+      },
+    })
+  }
+
+  return printer
 }
 
 function tryParseAngularAttribute(value: string, env: TransformerEnv) {
@@ -1077,61 +1109,6 @@ function transformSvelte(ast: any, env: TransformerEnv) {
 
 export { options } from './options.js'
 
-export const printers: Record<string, Printer> = (function () {
-  let printers: Record<string, Printer> = {}
-
-  if (base.printers['svelte-ast']) {
-    function mutateOriginalText(path: any, options: any) {
-      if (options.__mutatedOriginalText) {
-        return
-      }
-
-      options.__mutatedOriginalText = true
-
-      let changes: any[] = path.stack[0].changes
-
-      if (changes?.length) {
-        let finder = lineColumn(options.originalText)
-
-        changes = changes.map((change) => {
-          return {
-            ...change,
-            start: finder.toIndex(change.start.line, change.start.column + 1),
-            end: finder.toIndex(change.end.line, change.end.column + 1),
-          }
-        })
-
-        options.originalText = spliceChangesIntoString(options.originalText, changes)
-      }
-    }
-
-    let original = base.printers['svelte-ast']
-    let printer = { ...original }
-
-    printer.print = new Proxy(original.print, {
-      apply(target, thisArg, args) {
-        let [path, options] = args as Parameters<typeof original.print>
-        mutateOriginalText(path, options)
-        return Reflect.apply(target, thisArg, args)
-      },
-    })
-
-    if (original.embed) {
-      printer.embed = new Proxy(original.embed, {
-        apply(target, thisArg, args) {
-          let [path, options] = args as Parameters<typeof original.embed>
-          mutateOriginalText(path, options)
-          return Reflect.apply(target, thisArg, args)
-        },
-      })
-    }
-
-    printers['svelte-ast'] = printer
-  }
-
-  return printers
-})()
-
 let html = defineTransform({
   parsers: {
     html: { staticAttrs: ['class'] },
@@ -1187,7 +1164,29 @@ let svelte = defineTransform({
     svelte: { staticAttrs: ['class'] },
   },
 
+  printers: {
+    'svelte-ast': {},
+  },
+
   transform: transformSvelte,
+
+  reprint(path, options) {
+    if (options.__mutatedOriginalText) return
+    options.__mutatedOriginalText = true
+
+    let changes: any[] = path.stack[0].changes
+    if (!changes?.length) return
+
+    let finder = lineColumn(options.originalText)
+
+    changes = changes.map((change) => ({
+      ...change,
+      start: finder.toIndex(change.start.line, change.start.column + 1),
+      end: finder.toIndex(change.end.line, change.end.column + 1),
+    }))
+
+    options.originalText = spliceChangesIntoString(options.originalText, changes)
+  },
 })
 
 let astro = defineTransform({
@@ -1225,7 +1224,7 @@ let liquid = defineTransform({
   transform: transformLiquid,
 })
 
-export const { parsers } = createPlugin([
+export const { parsers, printers } = createPlugin([
   html,
   glimmer,
   css,

@@ -1104,12 +1104,12 @@ export const printers: Record<string, Printer> = (function () {
     function print(path: any, options: any, print: any) {
       mutateOriginalText(path, options)
 
-      return base.printers['svelte-ast'].print(path, options, print)
+      return original.print(path, options, print)
     }
     printer.print = print
 
-    if (base.printers['svelte-ast'].embed) {
-      printer.embed = new Proxy(base.printers['svelte-ast'].embed, {
+    if (original.embed) {
+      printer.embed = new Proxy(original.embed, {
         apply(target, thisArg, args) {
           let [path, options] = args
           mutateOriginalText(path, options)

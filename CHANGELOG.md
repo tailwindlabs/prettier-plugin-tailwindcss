@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Load compatible plugins sequentially to work around race conditions in Node.js ([#412](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/412))
+- Fix compatibility with `prettier-plugin-svelte` when using Prettier v3.7+ ([#418](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/418))
 
 ## [0.7.1] - 2025-10-17
 

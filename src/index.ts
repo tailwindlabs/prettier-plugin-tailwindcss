@@ -5,72 +5,21 @@ import * as astTypes from 'ast-types'
 import jsesc from 'jsesc'
 // @ts-ignore
 import lineColumn from 'line-column'
-import type { Parser, ParserOptions, Printer } from 'prettier'
+import type { Printer } from 'prettier'
 import * as prettierParserAngular from 'prettier/plugins/angular'
 import * as prettierParserBabel from 'prettier/plugins/babel'
 // @ts-ignore
 import * as recast from 'recast'
-import { getTailwindConfig } from './config.js'
-import { createMatcher, type Matcher } from './options.js'
+import { createPlugin } from './create-plugin.js'
+import type { Matcher } from './options.js'
 import { loadPlugins } from './plugins.js'
 import { sortClasses, sortClassList } from './sorting.js'
-import type { Customizations, StringChange, TransformerEnv, TransformerMetadata } from './types'
+import type { StringChange, TransformerEnv } from './types'
 import { spliceChangesIntoString, visit, type Path } from './utils.js'
 
 let base = await loadPlugins()
 
 const ESCAPE_SEQUENCE_PATTERN = /\\(['"\\nrtbfv0-7xuU])/g
-
-function createParser(
-  parserFormat: string,
-  transform: (ast: any, env: TransformerEnv) => void,
-  meta: TransformerMetadata = {},
-) {
-  let customizationDefaults: Customizations = {
-    staticAttrs: new Set(meta.staticAttrs ?? []),
-    dynamicAttrs: new Set(meta.dynamicAttrs ?? []),
-    functions: new Set(meta.functions ?? []),
-    staticAttrsRegex: [],
-    dynamicAttrsRegex: [],
-    functionsRegex: [],
-  }
-
-  return {
-    ...base.parsers[parserFormat],
-
-    preprocess(code: string, options: ParserOptions) {
-      let original = base.originalParser(parserFormat, options)
-
-      return original.preprocess ? original.preprocess(code, options) : code
-    },
-
-    async parse(text: string, options: ParserOptions) {
-      let context = await getTailwindConfig(options)
-
-      let original = base.originalParser(parserFormat, options)
-
-      // @ts-ignore: We pass three options in the case of plugins that support Prettier 2 _and_ 3.
-      let ast = await original.parse(text, options, options)
-
-      let matcher = createMatcher(options, parserFormat, customizationDefaults)
-
-      let env: TransformerEnv = {
-        context,
-        matcher,
-        options,
-        changes: [],
-      }
-
-      transform(ast, env)
-
-      if (parserFormat === 'svelte') {
-        ast.changes = env.changes
-      }
-
-      return ast
-    },
-  }
-}
 
 function tryParseAngularAttribute(value: string, env: TransformerEnv) {
   try {
@@ -1116,123 +1065,105 @@ export const printers: Record<string, Printer> = (function () {
   return printers
 })()
 
-export const parsers: Record<string, Parser> = {
-  html: createParser('html', transformHtml, {
-    staticAttrs: ['class'],
-  }),
-  glimmer: createParser('glimmer', transformGlimmer, {
-    staticAttrs: ['class'],
-  }),
-  lwc: createParser('lwc', transformHtml, {
-    staticAttrs: ['class'],
-  }),
-  angular: createParser('angular', transformHtml, {
-    staticAttrs: ['class'],
-    dynamicAttrs: ['[ngClass]'],
-  }),
-  vue: createParser('vue', transformHtml, {
-    staticAttrs: ['class'],
-    dynamicAttrs: [':class', 'v-bind:class'],
-  }),
-
-  css: createParser('css', transformCss),
-  scss: createParser('scss', transformCss),
-  less: createParser('less', transformCss),
-  babel: createParser('babel', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  'babel-flow': createParser('babel-flow', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  flow: createParser('flow', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  hermes: createParser('hermes', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  typescript: createParser('typescript', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  'babel-ts': createParser('babel-ts', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  oxc: createParser('oxc', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-  'oxc-ts': createParser('oxc-ts', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  acorn: createParser('acorn', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  meriyah: createParser('meriyah', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  __js_expression: createParser('__js_expression', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
+export const { parsers } = createPlugin(base, [
+  {
+    transform: transformHtml,
+    parsers: {
+      html: { staticAttrs: ['class'] },
+      lwc: { staticAttrs: ['class'] },
+      angular: { staticAttrs: ['class'], dynamicAttrs: ['[ngClass]'] },
+      vue: { staticAttrs: ['class'], dynamicAttrs: [':class', 'v-bind:class'] },
+    },
+  },
+  {
+    transform: transformGlimmer,
+    parsers: {
+      glimmer: { staticAttrs: ['class'] },
+    },
+  },
+  {
+    transform: transformCss,
+    parsers: {
+      css: {},
+      scss: {},
+      less: {},
+    },
+  },
+  {
+    transform: transformJavaScript,
+    parsers: {
+      babel: { staticAttrs: ['class', 'className'] },
+      'babel-flow': { staticAttrs: ['class', 'className'] },
+      flow: { staticAttrs: ['class', 'className'] },
+      hermes: { staticAttrs: ['class', 'className'] },
+      typescript: { staticAttrs: ['class', 'className'] },
+      'babel-ts': { staticAttrs: ['class', 'className'] },
+      oxc: { staticAttrs: ['class', 'className'] },
+      'oxc-ts': { staticAttrs: ['class', 'className'] },
+      acorn: { staticAttrs: ['class', 'className'] },
+      meriyah: { staticAttrs: ['class', 'className'] },
+      __js_expression: { staticAttrs: ['class', 'className'] },
+      ...(base.parsers.astroExpressionParser
+        ? { astroExpressionParser: { staticAttrs: ['class'], dynamicAttrs: ['class:list'] } }
+        : {}),
+    },
+  },
   ...(base.parsers.svelte
-    ? {
-        svelte: createParser('svelte', transformSvelte, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
+    ? [
+        {
+          transform: transformSvelte,
+          parsers: {
+            svelte: { staticAttrs: ['class'] },
+          },
+        },
+      ]
+    : []),
   ...(base.parsers.astro
-    ? {
-        astro: createParser('astro', transformAstro, {
-          staticAttrs: ['class', 'className'],
-          dynamicAttrs: ['class:list', 'className'],
-        }),
-      }
-    : {}),
-  ...(base.parsers.astroExpressionParser
-    ? {
-        astroExpressionParser: createParser('astroExpressionParser', transformJavaScript, {
-          staticAttrs: ['class'],
-          dynamicAttrs: ['class:list'],
-        }),
-      }
-    : {}),
+    ? [
+        {
+          transform: transformAstro,
+          parsers: {
+            astro: {
+              staticAttrs: ['class', 'className'],
+              dynamicAttrs: ['class:list', 'className'],
+            },
+          },
+        },
+      ]
+    : []),
   ...(base.parsers.marko
-    ? {
-        marko: createParser('marko', transformMarko, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
+    ? [
+        {
+          transform: transformMarko,
+          parsers: { marko: { staticAttrs: ['class'] } },
+        },
+      ]
+    : []),
   ...(base.parsers.twig
-    ? {
-        twig: createParser('twig', transformTwig, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
+    ? [
+        {
+          transform: transformTwig,
+          parsers: { twig: { staticAttrs: ['class'] } },
+        },
+      ]
+    : []),
   ...(base.parsers.pug
-    ? {
-        pug: createParser('pug', transformPug, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
+    ? [
+        {
+          transform: transformPug,
+          parsers: { pug: { staticAttrs: ['class'] } },
+        },
+      ]
+    : []),
   ...(base.parsers['liquid-html']
-    ? {
-        'liquid-html': createParser('liquid-html', transformLiquid, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
-}
+    ? [
+        {
+          transform: transformLiquid,
+          parsers: { 'liquid-html': { staticAttrs: ['class'] } },
+        },
+      ]
+    : []),
+])
 
 export interface PluginOptions {
   /**

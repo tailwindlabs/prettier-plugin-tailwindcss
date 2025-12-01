@@ -992,8 +992,9 @@ function transformPug(ast: any, { env }: TransformerContext) {
   for (const [startIdx, endIdx] of ranges) {
     const classes = ast.tokens.slice(startIdx, endIdx + 1).map((token: any) => token.val)
 
-    const { classList } = sortClassList(classes, {
-      env,
+    const { classList } = sortClassList({
+      classList: classes,
+      api: env.context,
       removeDuplicates: false,
     })
 

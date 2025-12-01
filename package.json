@@ -156,5 +156,8 @@
   },
   "jest": {
     "testTimeout": 15000
+  },
+  "overrides": {
+    "@prettier/plugin-oxc": "^0.1.2"
   }
 }

@@ -49,10 +49,6 @@ function createParser(
 
       let original = base.originalParser(parserFormat, options)
 
-      if (original.astFormat in printers) {
-        options.printer = printers[original.astFormat]
-      }
-
       // @ts-ignore: We pass three options in the case of plugins that support Prettier 2 _and_ 3.
       let ast = await original.parse(text, options, options)
 
@@ -1103,20 +1099,27 @@ export const printers: Record<string, Printer> = (function () {
     }
 
     let original = base.printers['svelte-ast']
-    printers['svelte-ast'] = {
-      ...original,
-      print: (path: any, options: any, print: any) => {
-        mutateOriginalText(path, options)
+    let printer = { ...original }
 
-        return base.printers['svelte-ast'].print(path, options, print)
-      },
-      embed: (path: any, options: any) => {
+    printer.print = new Proxy(original.print, {
+      apply(target, thisArg, args) {
+        let [path, options] = args as Parameters<typeof original.print>
         mutateOriginalText(path, options)
-
-        // @ts-ignore
-        return base.printers['svelte-ast'].embed(path, options)
+        return Reflect.apply(target, thisArg, args)
       },
+    })
+
+    if (original.embed) {
+      printer.embed = new Proxy(original.embed, {
+        apply(target, thisArg, args) {
+          let [path, options] = args as Parameters<typeof original.embed>
+          mutateOriginalText(path, options)
+          return Reflect.apply(target, thisArg, args)
+        },
+      })
     }
+
+    printers['svelte-ast'] = printer
   }
 
   return printers

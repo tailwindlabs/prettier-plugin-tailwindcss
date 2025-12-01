@@ -1103,19 +1103,23 @@ export const printers: Record<string, Printer> = (function () {
     }
 
     let original = base.printers['svelte-ast']
+    function print(path: any, options: any, print: any) {
+      mutateOriginalText(path, options)
+
+      return base.printers['svelte-ast'].print(path, options, print)
+    }
+
+    function embed(path: any, options: any) {
+      mutateOriginalText(path, options)
+
+      // @ts-ignore
+      return base.printers['svelte-ast'].embed(path, options)
+    }
+
     printers['svelte-ast'] = {
       ...original,
-      print: (path: any, options: any, print: any) => {
-        mutateOriginalText(path, options)
-
-        return base.printers['svelte-ast'].print(path, options, print)
-      },
-      embed: (path: any, options: any) => {
-        mutateOriginalText(path, options)
-
-        // @ts-ignore
-        return base.printers['svelte-ast'].embed(path, options)
-      },
+      print,
+      embed,
     }
   }
 

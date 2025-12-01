@@ -1,4 +1,4 @@
-import type { Parser, ParserOptions } from 'prettier'
+import type { AstPath, Parser, ParserOptions, Printer } from 'prettier'
 import { getTailwindConfig } from './config'
 import { createMatcher } from './options'
 import type { loadPlugins } from './plugins'
@@ -9,6 +9,7 @@ type Base = Awaited<ReturnType<typeof loadPlugins>>
 
 export function createPlugin(base: Base, transforms: TransformOptions<any>[]) {
   let parsers: Record<string, Parser<any>> = Object.create(null)
+  let printers: Record<string, Printer<any>> = Object.create(null)
 
   for (let opts of transforms) {
     for (let [name, meta] of Object.entries(opts.parsers)) {
@@ -17,9 +18,15 @@ export function createPlugin(base: Base, transforms: TransformOptions<any>[]) {
         dynamicAttrs: meta.dynamicAttrs ?? [],
       })
     }
+
+    for (let [name, meta] of Object.entries(opts.printers ?? {})) {
+      if (!opts.reprint) continue
+
+      printers[name] = createPrinter(base, name, opts.reprint)
+    }
   }
 
-  return { parsers }
+  return { parsers, printers }
 }
 
 function createParser(
@@ -72,4 +79,33 @@ function createParser(
       return ast
     },
   }
+}
+
+function createPrinter(
+  base: Base,
+  name: string,
+  reprint: (path: AstPath<any>, options: ParserOptions<any>) => void,
+): Printer<any> {
+  let original = base.printers[name]
+  let printer = { ...original }
+
+  printer.print = new Proxy(original.print, {
+    apply(target, thisArg, args) {
+      let [path, options] = args as Parameters<typeof original.print>
+      reprint(path, options)
+      return Reflect.apply(target, thisArg, args)
+    },
+  })
+
+  if (original.embed) {
+    printer.embed = new Proxy(original.embed, {
+      apply(target, thisArg, args) {
+        let [path, options] = args as Parameters<typeof original.embed>
+        reprint(path, options as any)
+        return Reflect.apply(target, thisArg, args)
+      },
+    })
+  }
+
+  return printer
 }

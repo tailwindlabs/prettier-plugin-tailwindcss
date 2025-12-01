@@ -1,19 +1,11 @@
-import type { TransformerEnv } from './types'
+import type { TransformerEnv, UnifiedApi } from './types'
 import { bigSign } from './utils'
 
-function reorderClasses(classList: string[], { env }: { env: TransformerEnv }) {
-  let orderedClasses = env.context.getClassOrder(classList)
-
-  return orderedClasses.sort(([nameA, a], [nameZ, z]) => {
-    // Move `...` to the end of the list
-    if (nameA === '...' || nameA === '…') return 1
-    if (nameZ === '...' || nameZ === '…') return -1
-
-    if (a === z) return 0
-    if (a === null) return -1
-    if (z === null) return 1
-    return bigSign(a - z)
-  })
+export interface SortOptions {
+  ignoreFirst?: boolean
+  ignoreLast?: boolean
+  removeDuplicates?: boolean
+  collapseWhitespace?: false | { start: boolean; end: boolean }
 }
 
 export function sortClasses(
@@ -24,12 +16,8 @@ export function sortClasses(
     ignoreLast = false,
     removeDuplicates = true,
     collapseWhitespace = { start: true, end: true },
-  }: {
+  }: SortOptions & {
     env: TransformerEnv
-    ignoreFirst?: boolean
-    ignoreLast?: boolean
-    removeDuplicates?: boolean
-    collapseWhitespace?: false | { start: boolean; end: boolean }
   },
 ): string {
   if (typeof classStr !== 'string' || classStr === '') {
@@ -44,6 +32,10 @@ export function sortClasses(
 
   if (env.options.tailwindPreserveWhitespace) {
     collapseWhitespace = false
+  }
+
+  if (env.options.tailwindPreserveDuplicates) {
+    removeDuplicates = false
   }
 
   // This class list is purely whitespace
@@ -75,8 +67,9 @@ export function sortClasses(
     suffix = `${whitespace.pop() ?? ''}${classes.pop() ?? ''}`
   }
 
-  let { classList, removedIndices } = sortClassList(classes, {
-    env,
+  let { classList, removedIndices } = sortClassList({
+    classList: classes,
+    api: env.context,
     removeDuplicates,
   })
 
@@ -99,24 +92,30 @@ export function sortClasses(
   return prefix + result + suffix
 }
 
-export function sortClassList(
-  classList: string[],
-  {
-    env,
-    removeDuplicates,
-  }: {
-    env: TransformerEnv
-    removeDuplicates: boolean
-  },
-) {
+export function sortClassList({
+  classList,
+  api,
+  removeDuplicates,
+}: {
+  classList: string[]
+  api: UnifiedApi
+  removeDuplicates: boolean
+}) {
   // Re-order classes based on the Tailwind CSS configuration
-  let orderedClasses = reorderClasses(classList, { env })
+  let orderedClasses = api.getClassOrder(classList)
+
+  orderedClasses.sort(([nameA, a], [nameZ, z]) => {
+    // Move `...` to the end of the list
+    if (nameA === '...' || nameA === '…') return 1
+    if (nameZ === '...' || nameZ === '…') return -1
+
+    if (a === z) return 0
+    if (a === null) return -1
+    if (z === null) return 1
+    return bigSign(a - z)
+  })
 
   // Remove duplicate Tailwind classes
-  if (env.options.tailwindPreserveDuplicates) {
-    removeDuplicates = false
-  }
-
   let removedIndices = new Set<number>()
 
   if (removeDuplicates) {

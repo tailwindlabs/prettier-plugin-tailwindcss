@@ -41,7 +41,6 @@ export let pluginPath = path.resolve(__dirname, '../dist/index.mjs')
 
 export async function format(str: string, options: prettier.Options = {}) {
   let result = await prettier.format(str, {
-    pluginSearchDirs: [__dirname], // disable plugin autoload
     semi: false,
     singleQuote: true,
     printWidth: 9999,

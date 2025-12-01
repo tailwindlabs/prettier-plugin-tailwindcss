@@ -17,6 +17,7 @@ import { createPlugin } from './create-plugin.js'
 import type { Matcher } from './options.js'
 import { loadPlugins } from './plugins.js'
 import { sortClasses, sortClassList } from './sorting.js'
+import { defineTransform, type TransformOptions } from './transform.js'
 import type { StringChange, TransformerEnv } from './types'
 import { spliceChangesIntoString, visit, type Path } from './utils.js'
 
@@ -1090,104 +1091,110 @@ export const printers: Record<string, Printer> = (function () {
   return printers
 })()
 
+let html = defineTransform({
+  parsers: {
+    html: { staticAttrs: ['class'] },
+    lwc: { staticAttrs: ['class'] },
+    angular: { staticAttrs: ['class'], dynamicAttrs: ['[ngClass]'] },
+    vue: { staticAttrs: ['class'], dynamicAttrs: [':class', 'v-bind:class'] },
+  },
+
+  transform: transformHtml,
+})
+
+let glimmer = defineTransform({
+  parsers: {
+    glimmer: { staticAttrs: ['class'] },
+  },
+
+  transform: transformGlimmer,
+})
+
+let css = defineTransform({
+  parsers: {
+    css: {},
+    scss: {},
+    less: {},
+  },
+
+  transform: transformCss,
+})
+
+let js = defineTransform({
+  parsers: {
+    babel: { staticAttrs: ['class', 'className'] },
+    'babel-flow': { staticAttrs: ['class', 'className'] },
+    flow: { staticAttrs: ['class', 'className'] },
+    hermes: { staticAttrs: ['class', 'className'] },
+    typescript: { staticAttrs: ['class', 'className'] },
+    'babel-ts': { staticAttrs: ['class', 'className'] },
+    oxc: { staticAttrs: ['class', 'className'] },
+    'oxc-ts': { staticAttrs: ['class', 'className'] },
+    acorn: { staticAttrs: ['class', 'className'] },
+    meriyah: { staticAttrs: ['class', 'className'] },
+    __js_expression: { staticAttrs: ['class', 'className'] },
+    ...(base.parsers.astroExpressionParser
+      ? { astroExpressionParser: { staticAttrs: ['class'], dynamicAttrs: ['class:list'] } }
+      : {}),
+  },
+
+  transform: transformJavaScript,
+})
+
+let svelte = defineTransform({
+  parsers: {
+    svelte: { staticAttrs: ['class'] },
+  },
+
+  transform: transformSvelte,
+})
+
+let astro = defineTransform({
+  parsers: {
+    astro: {
+      staticAttrs: ['class', 'className'],
+      dynamicAttrs: ['class:list', 'className'],
+    },
+  },
+
+  transform: transformAstro,
+})
+
+let marko = defineTransform({
+  parsers: { marko: { staticAttrs: ['class'] } },
+
+  transform: transformMarko,
+})
+
+let twig = defineTransform({
+  parsers: { twig: { staticAttrs: ['class'] } },
+
+  transform: transformTwig,
+})
+
+let pug = defineTransform({
+  parsers: { pug: { staticAttrs: ['class'] } },
+
+  transform: transformPug,
+})
+
+let liquid = defineTransform({
+  parsers: { 'liquid-html': { staticAttrs: ['class'] } },
+
+  transform: transformLiquid,
+})
+
 export const { parsers } = createPlugin(base, [
-  {
-    transform: transformHtml,
-    parsers: {
-      html: { staticAttrs: ['class'] },
-      lwc: { staticAttrs: ['class'] },
-      angular: { staticAttrs: ['class'], dynamicAttrs: ['[ngClass]'] },
-      vue: { staticAttrs: ['class'], dynamicAttrs: [':class', 'v-bind:class'] },
-    },
-  },
-  {
-    transform: transformGlimmer,
-    parsers: {
-      glimmer: { staticAttrs: ['class'] },
-    },
-  },
-  {
-    transform: transformCss,
-    parsers: {
-      css: {},
-      scss: {},
-      less: {},
-    },
-  },
-  {
-    transform: transformJavaScript,
-    parsers: {
-      babel: { staticAttrs: ['class', 'className'] },
-      'babel-flow': { staticAttrs: ['class', 'className'] },
-      flow: { staticAttrs: ['class', 'className'] },
-      hermes: { staticAttrs: ['class', 'className'] },
-      typescript: { staticAttrs: ['class', 'className'] },
-      'babel-ts': { staticAttrs: ['class', 'className'] },
-      oxc: { staticAttrs: ['class', 'className'] },
-      'oxc-ts': { staticAttrs: ['class', 'className'] },
-      acorn: { staticAttrs: ['class', 'className'] },
-      meriyah: { staticAttrs: ['class', 'className'] },
-      __js_expression: { staticAttrs: ['class', 'className'] },
-      ...(base.parsers.astroExpressionParser
-        ? { astroExpressionParser: { staticAttrs: ['class'], dynamicAttrs: ['class:list'] } }
-        : {}),
-    },
-  },
-  ...(base.parsers.svelte
-    ? [
-        {
-          transform: transformSvelte,
-          parsers: {
-            svelte: { staticAttrs: ['class'] },
-          },
-        },
-      ]
-    : []),
-  ...(base.parsers.astro
-    ? [
-        {
-          transform: transformAstro,
-          parsers: {
-            astro: {
-              staticAttrs: ['class', 'className'],
-              dynamicAttrs: ['class:list', 'className'],
-            },
-          },
-        },
-      ]
-    : []),
-  ...(base.parsers.marko
-    ? [
-        {
-          transform: transformMarko,
-          parsers: { marko: { staticAttrs: ['class'] } },
-        },
-      ]
-    : []),
-  ...(base.parsers.twig
-    ? [
-        {
-          transform: transformTwig,
-          parsers: { twig: { staticAttrs: ['class'] } },
-        },
-      ]
-    : []),
-  ...(base.parsers.pug
-    ? [
-        {
-          transform: transformPug,
-          parsers: { pug: { staticAttrs: ['class'] } },
-        },
-      ]
-    : []),
-  ...(base.parsers['liquid-html']
-    ? [
-        {
-          transform: transformLiquid,
-          parsers: { 'liquid-html': { staticAttrs: ['class'] } },
-        },
-      ]
-    : []),
+  html,
+  glimmer,
+  css,
+  js,
+  ...(base.parsers.svelte ? [svelte] : []),
+  ...(base.parsers.astro ? [astro] : []),
+  ...(base.parsers.marko ? [marko] : []),
+  ...(base.parsers.twig ? [twig] : []),
+  ...(base.parsers.pug ? [pug] : []),
+  ...(base.parsers['liquid-html'] ? [liquid] : []),
 ])
 
 export interface PluginOptions {

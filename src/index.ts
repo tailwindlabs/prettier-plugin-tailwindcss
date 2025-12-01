@@ -1111,7 +1111,7 @@ export const printers: Record<string, Printer> = (function () {
     if (original.embed) {
       printer.embed = new Proxy(original.embed, {
         apply(target, thisArg, args) {
-          let [path, options] = args
+          let [path, options] = args as Parameters<typeof original.embed>
           mutateOriginalText(path, options)
           return Reflect.apply(target, thisArg, args)
         },

@@ -24,7 +24,6 @@ export interface UnifiedApi {
 export interface TransformerEnv {
   context: UnifiedApi
   matcher: Matcher
-  parsers: any
   options: ParserOptions
   changes: StringChange[]
 }

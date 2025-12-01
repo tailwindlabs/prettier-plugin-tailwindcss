@@ -65,7 +65,6 @@ function createParser(
       let env: TransformerEnv = {
         context,
         matcher,
-        parsers: {},
         options,
         changes: [],
       }
@@ -82,25 +81,13 @@ function createParser(
 }
 
 function tryParseAngularAttribute(value: string, env: TransformerEnv) {
-  let parsers = [
-    // Try parsing as an angular directive
-    prettierParserAngular.parsers.__ng_directive,
-
-    // If this fails we fall back to arbitrary parsing of a JS expression
-    { parse: env.parsers.__js_expression },
-  ]
-
-  let errors: unknown[] = []
-  for (const parser of parsers) {
-    try {
-      return parser.parse(value, env.parsers, env.options)
-    } catch (err) {
-      errors.push(err)
-    }
+  try {
+    return prettierParserAngular.parsers.__ng_directive.parse(value, env.options)
+  } catch (err) {
+    console.warn('prettier-plugin-tailwindcss: Unable to parse angular directive')
+    console.warn(err)
+    return null
   }
-
-  console.warn('prettier-plugin-tailwindcss: Unable to parse angular directive')
-  errors.forEach((err) => console.warn(err))
 }
 
 function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {

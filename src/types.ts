@@ -17,11 +17,6 @@ export interface Customizations {
   functionsRegex: RegExp[]
 }
 
-export interface TransformerContext {
-  env: TransformerEnv
-  changes: StringChange[]
-}
-
 export interface UnifiedApi {
   getClassOrder(classList: string[]): [string, bigint | null][]
 }
@@ -29,8 +24,8 @@ export interface UnifiedApi {
 export interface TransformerEnv {
   context: UnifiedApi
   matcher: Matcher
-  parsers: any
   options: ParserOptions
+  changes: StringChange[]
 }
 
 export interface StringChange {

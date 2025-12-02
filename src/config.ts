@@ -13,7 +13,7 @@ import { loadV4 } from './versions/v4'
 
 let pathToApiMap = expiringMap<string | null, Promise<UnifiedApi>>(10_000)
 
-export async function getTailwindConfig(options: ParserOptions): Promise<any> {
+export async function getTailwindConfig(options: ParserOptions): Promise<UnifiedApi> {
   let cwd = process.cwd()
 
   // Locate the file being processed

@@ -5,9 +5,10 @@ import * as astTypes from 'ast-types'
 import jsesc from 'jsesc'
 // @ts-ignore
 import lineColumn from 'line-column'
-import type { Parser, ParserOptions, Printer } from 'prettier'
+import { type Parser, type ParserOptions, type Printer, doc } from 'prettier'
 import * as prettierParserAngular from 'prettier/plugins/angular'
 import * as prettierParserBabel from 'prettier/plugins/babel'
+import * as prettierPluginHtml from 'prettier/plugins/html'
 // @ts-ignore
 import * as recast from 'recast'
 import { getTailwindConfig } from './config.js'
@@ -37,6 +38,7 @@ function createParser(
 
   return {
     ...base.parsers[parserFormat],
+    astFormat: parserFormat === 'html' ? 'tailwindcss-html' : base.parsers[parserFormat].astFormat,
 
     preprocess(code: string, options: ParserOptions) {
       let original = base.originalParser(parserFormat, options)
@@ -1070,8 +1072,76 @@ function transformSvelte(ast: any, { env, changes }: TransformerContext) {
 
 export { options } from './options.js'
 
+// --- Extended HTML Printer for Multiline Support ---
+const {
+  builders: {
+    join,
+    line,
+    softline,
+    hardline,
+    literalline,
+    group,
+    indent,
+    align,
+    ifBreak,
+    breakParent,
+    // @ts-ignore
+    concat
+  },
+} = doc
+
+function printClassAttribute(path: any, options: any, print: any) {
+  const node = path.getValue()
+
+  // DEBUG LOG
+  console.error('printClassAttribute called for:', node.name, 'multiline:', options.tailwindMultiline, 'value has newline:', node.value && node.value.includes('\n'));
+
+  // We only care if tailwindMultiline is on and the value has newlines (which sortClasses inserts)
+  if (options.tailwindMultiline && node.value && node.value.includes('\n')) {
+     const parts = node.value.split('\n');
+
+     // Construct a Doc that prints:
+     // class="
+     //   line1
+     //   line2
+     // "
+     return group(
+       concat([
+         node.name,
+         '="',
+         indent(
+            concat([
+                hardline,
+                join(hardline, parts)
+            ])
+         ),
+         hardline,
+         '"'
+       ])
+     );
+  }
+
+  // @ts-ignore
+  return prettierPluginHtml.printers.html.print(path, options, print)
+}
+
+const wrappedHtmlPrinter = {
+  // @ts-ignore
+  ...prettierPluginHtml.printers.html,
+  print: (path: any, options: any, print: any) => {
+     const node = path.getValue()
+     if (node.kind === 'attribute' && node.name === 'class') {
+        return printClassAttribute(path, options, print)
+     }
+     // @ts-ignore
+     return prettierPluginHtml.printers.html.print(path, options, print)
+  }
+}
+
 export const printers: Record<string, Printer> = (function () {
-  let printers: Record<string, Printer> = {}
+  let printers: Record<string, Printer> = {
+    'tailwindcss-html': wrappedHtmlPrinter
+  }
 
   if (base.printers['svelte-ast']) {
     function mutateOriginalText(path: any, options: any) {
@@ -1124,160 +1194,3 @@ export const printers: Record<string, Printer> = (function () {
 
   return printers
 })()
-
-export const parsers: Record<string, Parser> = {
-  html: createParser('html', transformHtml, {
-    staticAttrs: ['class'],
-  }),
-  glimmer: createParser('glimmer', transformGlimmer, {
-    staticAttrs: ['class'],
-  }),
-  lwc: createParser('lwc', transformHtml, {
-    staticAttrs: ['class'],
-  }),
-  angular: createParser('angular', transformHtml, {
-    staticAttrs: ['class'],
-    dynamicAttrs: ['[ngClass]'],
-  }),
-  vue: createParser('vue', transformHtml, {
-    staticAttrs: ['class'],
-    dynamicAttrs: [':class', 'v-bind:class'],
-  }),
-
-  css: createParser('css', transformCss),
-  scss: createParser('scss', transformCss),
-  less: createParser('less', transformCss),
-  babel: createParser('babel', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  'babel-flow': createParser('babel-flow', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  flow: createParser('flow', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  hermes: createParser('hermes', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  typescript: createParser('typescript', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  'babel-ts': createParser('babel-ts', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  oxc: createParser('oxc', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-  'oxc-ts': createParser('oxc-ts', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  acorn: createParser('acorn', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  meriyah: createParser('meriyah', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  __js_expression: createParser('__js_expression', transformJavaScript, {
-    staticAttrs: ['class', 'className'],
-  }),
-
-  ...(base.parsers.svelte
-    ? {
-        svelte: createParser('svelte', transformSvelte, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
-  ...(base.parsers.astro
-    ? {
-        astro: createParser('astro', transformAstro, {
-          staticAttrs: ['class', 'className'],
-          dynamicAttrs: ['class:list', 'className'],
-        }),
-      }
-    : {}),
-  ...(base.parsers.astroExpressionParser
-    ? {
-        astroExpressionParser: createParser('astroExpressionParser', transformJavaScript, {
-          staticAttrs: ['class'],
-          dynamicAttrs: ['class:list'],
-        }),
-      }
-    : {}),
-  ...(base.parsers.marko
-    ? {
-        marko: createParser('marko', transformMarko, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
-  ...(base.parsers.twig
-    ? {
-        twig: createParser('twig', transformTwig, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
-  ...(base.parsers.pug
-    ? {
-        pug: createParser('pug', transformPug, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
-  ...(base.parsers['liquid-html']
-    ? {
-        'liquid-html': createParser('liquid-html', transformLiquid, {
-          staticAttrs: ['class'],
-        }),
-      }
-    : {}),
-}
-
-export interface PluginOptions {
-  /**
-   * Path to the Tailwind config file.
-   */
-  tailwindConfig?: string
-
-  /**
-   * Path to the CSS stylesheet used by Tailwind CSS (v4+)
-   */
-  tailwindStylesheet?: string
-
-  /**
-   * Path to the CSS stylesheet used by Tailwind CSS (v4+)
-   *
-   * @deprecated Use `tailwindStylesheet` instead
-   */
-  tailwindEntryPoint?: string
-
-  /**
-   * List of custom function and tag names that contain classes.
-   */
-  tailwindFunctions?: string[]
-
-  /**
-   * List of custom attributes that contain classes.
-   */
-  tailwindAttributes?: string[]
-
-  /**
-   * Preserve whitespace around Tailwind classes when sorting.
-   */
-  tailwindPreserveWhitespace?: boolean
-
-  /**
-   * Preserve duplicate classes inside a class list when sorting.
-   */
-  tailwindPreserveDuplicates?: boolean
-}

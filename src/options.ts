@@ -75,7 +75,7 @@ export function createMatcher(options: RequiredOptions, parser: string, defaults
   let functionsRegex: RegExp[] = [...defaults.functionsRegex]
 
   // Create a list of "static" attributes
-  for (let attr of options.tailwindAttributes ?? []) {
+  for (let attr of (options.tailwindAttributes ?? []) as string[]) {
     let regex = parseRegex(attr)
 
     if (regex) {
@@ -104,7 +104,7 @@ export function createMatcher(options: RequiredOptions, parser: string, defaults
   }
 
   // Generate a list of supported functions
-  for (let fn of options.tailwindFunctions ?? []) {
+  for (let fn of (options.tailwindFunctions ?? []) as string[]) {
     let regex = parseRegex(fn)
 
     if (regex) {

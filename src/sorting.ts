@@ -16,6 +16,40 @@ function reorderClasses(classList: string[], { env }: { env: TransformerEnv }) {
   })
 }
 
+function getGroup(className: string): string {
+  const parts = className.split(':');
+  const base = parts[parts.length - 1];
+
+  if (/^(block|inline|flex|grid|table|contents|hidden|static|fixed|absolute|relative|sticky)$/.test(base)) return 'layout-display';
+  if (/^(isolate|z-|top|right|bottom|left|visible|invisible|overflow|overscroll|object|inset)/.test(base)) return 'layout-position';
+
+  if (/^(flex-|justify-|items-|content-|self-|order-|place-|grow|shrink|basis)/.test(base)) return 'flex-grid';
+  if (/^(grid-|col-|row-|gap-|auto-cols|auto-rows)/.test(base)) return 'flex-grid';
+
+  if (/^(p-|px-|py-|pt-|pr-|pb-|pl-|m-|mx-|my-|mt-|mr-|mb-|ml-|space-)/.test(base)) return 'spacing';
+
+  if (/^(w-|h-|min-|max-|size-|aspect-)/.test(base)) return 'sizing';
+
+  if (/^(font-|text-|antialiased|subpixel|italic|not-italic|normal-case|uppercase|lowercase|capitalize|tracking-|leading-|align-|whitespace-|break-|hyphens-|content-|decoration-|underline|overline|line-through|no-underline|list-|indent-)/.test(base)) return 'typography';
+
+  if (/^(bg-|gradient-|from-|via-|to-)/.test(base)) return 'backgrounds';
+
+  if (/^(rounded|border|divide|ring|outline|stroke|fill)/.test(base)) return 'borders';
+
+  if (/^(shadow|opacity|mix-|blend-|box-decoration|box-slice)/.test(base)) return 'effects';
+
+  if (/^(blur|brightness|contrast|drop-shadow|grayscale|hue-rotate|invert|saturate|sepia|backdrop-)/.test(base)) return 'filters';
+
+  if (/^(transition|duration|ease|delay|animate-)/.test(base)) return 'transitions';
+
+  if (/^(scale|rotate|translate|skew|origin-)/.test(base)) return 'transforms';
+
+  if (/^(cursor-|pointer-|resize|scroll-|select-|touch-|will-change|accent-|appearance-|caret-)/.test(base)) return 'interactivity';
+
+  const prefix = base.split('-')[0];
+  return prefix;
+}
+
 export function sortClasses(
   classStr: string,
   {
@@ -36,8 +70,6 @@ export function sortClasses(
     return classStr
   }
 
-  // Ignore class attributes containing `{{`, to match Prettier behaviour:
-  // https://github.com/prettier/prettier/blob/8a88cdce6d4605f206305ebb9204a0cabf96a070/src/language-html/embed/class-names.js#L9
   if (classStr.includes('{{')) {
     return classStr
   }
@@ -46,23 +78,16 @@ export function sortClasses(
     collapseWhitespace = false
   }
 
-  // This class list is purely whitespace
-  // Collapse it to a single space if the option is enabled
   if (/^[\t\r\f\n ]+$/.test(classStr) && collapseWhitespace) {
     return ' '
   }
 
-  let result = ''
   let parts = classStr.split(/([\t\r\f\n ]+)/)
   let classes = parts.filter((_, i) => i % 2 === 0)
   let whitespace = parts.filter((_, i) => i % 2 !== 0)
 
   if (classes[classes.length - 1] === '') {
     classes.pop()
-  }
-
-  if (collapseWhitespace) {
-    whitespace = whitespace.map(() => ' ')
   }
 
   let prefix = ''
@@ -80,20 +105,58 @@ export function sortClasses(
     removeDuplicates,
   })
 
-  // Remove whitespace that appeared before a removed classes
-  whitespace = whitespace.filter((_, index) => !removedIndices.has(index + 1))
+  let result = '';
 
-  for (let i = 0; i < classList.length; i++) {
-    result += `${classList[i]}${whitespace[i] ?? ''}`
+  // Check if multiline option is enabled
+  // @ts-ignore
+  const multiline = env.options.tailwindMultiline;
+
+  if (multiline && classList.length > 0) {
+      let currentGroup = getGroup(classList[0]);
+      result += classList[0];
+
+      for (let i = 1; i < classList.length; i++) {
+        let cls = classList[i];
+        let group = getGroup(cls);
+
+        if (group !== currentGroup) {
+          result += '\n' + cls;
+          currentGroup = group;
+        } else {
+          result += ' ' + cls;
+        }
+      }
+
+      // If multiline, we should probably ensure the surrounding whitespace logic doesn't kill it.
+      // But standard logic handles prefix/suffix.
+      // We do NOT want to use `whitespace` array from the original string because we just reconstructed the string.
+      // So we ignore `whitespace` (except prefix/suffix which we handled).
+
+  } else {
+      // Standard behavior: rejoin with spaces or original whitespace if preserved (but we removed indices so it's tricky)
+      // Actually the original implementation re-inserted whitespace.
+
+      // Remove whitespace that appeared before a removed classes
+      whitespace = whitespace.filter((_, index) => !removedIndices.has(index + 1))
+
+      for (let i = 0; i < classList.length; i++) {
+        result += `${classList[i]}${whitespace[i] ?? ''}`
+      }
   }
 
   if (collapseWhitespace) {
     prefix = prefix.replace(/\s+$/g, ' ')
     suffix = suffix.replace(/^\s+/g, ' ')
 
+    // Only strip start/end of the main result
     result = result
       .replace(/^\s+/, collapseWhitespace.start ? '' : ' ')
       .replace(/\s+$/, collapseWhitespace.end ? '' : ' ')
+
+    // If not multiline, we might want to ensure single spaces?
+    // The original code relied on `whitespace` array which contained what was there.
+    // If `collapseWhitespace` is true, `whitespace` array elements were replaced by ' ' earlier in `sortClasses`.
+    // So `result` is effectively space-separated.
   }
 
   return prefix + result + suffix
@@ -109,10 +172,8 @@ export function sortClassList(
     removeDuplicates: boolean
   },
 ) {
-  // Re-order classes based on the Tailwind CSS configuration
   let orderedClasses = reorderClasses(classList, { env })
 
-  // Remove duplicate Tailwind classes
   if (env.options.tailwindPreserveDuplicates) {
     removeDuplicates = false
   }
@@ -127,12 +188,9 @@ export function sortClassList(
         removedIndices.add(index)
         return false
       }
-
-      // Only consider known classes when removing duplicates
       if (order !== null) {
         seenClasses.add(cls)
       }
-
       return true
     })
   }

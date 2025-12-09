@@ -7,17 +7,15 @@ import jsesc from 'jsesc'
 import lineColumn from 'line-column'
 import * as prettierParserAngular from 'prettier/plugins/angular'
 import * as prettierParserBabel from 'prettier/plugins/babel'
+import * as prettierParserCss from 'prettier/plugins/postcss'
 // @ts-ignore
 import * as recast from 'recast'
 import { createPlugin } from './create-plugin.js'
 import type { Matcher } from './options.js'
-import { loadPlugins } from './plugins.js'
 import { sortClasses, sortClassList } from './sorting.js'
 import { defineTransform, type TransformOptions } from './transform.js'
 import type { StringChange, TransformerEnv } from './types'
 import { spliceChangesIntoString, visit, type Path } from './utils.js'
-
-let base = await loadPlugins()
 
 const ESCAPE_SEQUENCE_PATTERN = /\\(['"\\nrtbfv0-7xuU])/g
 
@@ -672,7 +670,7 @@ function transformCss(ast: any, env: TransformerEnv) {
     // Otherwise we let prettier re-parse the params into its custom value AST
     // based on postcss-value parser.
     try {
-      let parser = base.parsers.css
+      let parser = prettierParserCss.parsers.css
 
       let root = parser.parse(`@import ${params};`, {
         // We can't pass env.options directly because css.parse overwrites
@@ -1015,6 +1013,9 @@ type HtmlNode = { type: 'attribute'; name: string; value: string } | { kind: 'at
 let html = defineTransform<HtmlNode>({
   staticAttrs: ['class'],
 
+  load: ['prettier/plugins/html'],
+  compatible: ['prettier-plugin-organize-attributes'],
+
   parsers: {
     html: {},
     lwc: {},
@@ -1034,6 +1035,7 @@ type GlimmerNode =
 
 let glimmer = defineTransform<GlimmerNode>({
   staticAttrs: ['class'],
+  load: ['prettier/plugins/glimmer'],
 
   parsers: {
     glimmer: {},
@@ -1050,6 +1052,9 @@ type CssNode = {
 }
 
 let css = defineTransform<CssNode>({
+  load: ['prettier/plugins/postcss'],
+  compatible: ['prettier-plugin-css-order'],
+
   parsers: {
     css: {},
     scss: {},
@@ -1061,28 +1066,37 @@ let css = defineTransform<CssNode>({
 
 let js = defineTransform<import('@babel/types').Node>({
   staticAttrs: ['class', 'className'],
+  compatible: [
+    // The following plugins must come *before* the jsdoc plugin for it to
+    // function correctly. Additionally `multiline-arrays` usually needs to be
+    // placed before import sorting plugins.
+    //
+    // https://github.com/electrovir/prettier-plugin-multiline-arrays#compatibility
+    'prettier-plugin-multiline-arrays',
+    '@ianvs/prettier-plugin-sort-imports',
+    '@trivago/prettier-plugin-sort-imports',
+    'prettier-plugin-organize-imports',
+    'prettier-plugin-sort-imports',
+    'prettier-plugin-jsdoc',
+  ],
 
   parsers: {
-    babel: {},
-    'babel-flow': {},
-    'babel-ts': {},
-    __js_expression: {},
-    typescript: {},
-    meriyah: {},
-    acorn: {},
-    flow: {},
-    oxc: {},
-    'oxc-ts': {},
-    hermes: {},
-
-    ...(base.parsers.astroExpressionParser
-      ? {
-          astroExpressionParser: {
-            staticAttrs: ['class'],
-            dynamicAttrs: ['class:list'],
-          },
-        }
-      : {}),
+    babel: { load: ['prettier/plugins/babel'] },
+    'babel-flow': { load: ['prettier/plugins/babel'] },
+    'babel-ts': { load: ['prettier/plugins/babel'] },
+    __js_expression: { load: ['prettier/plugins/babel'] },
+    typescript: { load: ['prettier/plugins/typescript'] },
+    meriyah: { load: ['prettier/plugins/meriyah'] },
+    acorn: { load: ['prettier/plugins/acorn'] },
+    flow: { load: ['prettier/plugins/flow'] },
+    oxc: { load: ['@prettier/plugin-oxc'] },
+    'oxc-ts': { load: ['@prettier/plugin-oxc'] },
+    hermes: { load: ['@prettier/plugin-hermes'] },
+    astroExpressionParser: {
+      load: ['prettier-plugin-astro'],
+      staticAttrs: ['class'],
+      dynamicAttrs: ['class:list'],
+    },
   },
 
   transform: transformJavaScript,
@@ -1094,6 +1108,7 @@ type SvelteNode = import('svelte/compiler').AST.SvelteNode & {
 
 let svelte = defineTransform<SvelteNode>({
   staticAttrs: ['class'],
+  load: ['prettier-plugin-svelte'],
 
   parsers: {
     svelte: {},
@@ -1139,6 +1154,7 @@ type AstroNode =
 let astro = defineTransform<AstroNode>({
   staticAttrs: ['class', 'className'],
   dynamicAttrs: ['class:list', 'className'],
+  load: ['prettier-plugin-astro'],
 
   parsers: {
     astro: {},
@@ -1151,6 +1167,7 @@ type MarkoNode = import('@marko/compiler').types.Node
 
 let marko = defineTransform<MarkoNode>({
   staticAttrs: ['class'],
+  load: ['prettier-plugin-marko'],
 
   parsers: {
     marko: {},
@@ -1182,6 +1199,7 @@ type TwigNode =
 
 let twig = defineTransform<TwigNode>({
   staticAttrs: ['class'],
+  load: ['@zackad/prettier-plugin-twig'],
 
   parsers: {
     twig: {},
@@ -1197,6 +1215,7 @@ interface PugNode {
 
 let pug = defineTransform<PugNode>({
   staticAttrs: ['class'],
+  load: ['@prettier/plugin-pug'],
 
   parsers: {
     pug: {},
@@ -1215,23 +1234,25 @@ type LiquidNode =
 
 let liquid = defineTransform<LiquidNode>({
   staticAttrs: ['class'],
+  load: ['@shopify/prettier-plugin-liquid'],
 
   parsers: { 'liquid-html': {} },
 
   transform: transformLiquid,
 })
 
-export const { parsers, printers } = createPlugin(base, [
+export const { parsers, printers } = createPlugin([
+  //
   html,
   glimmer,
   css,
   js,
-  ...(base.parsers.svelte ? [svelte] : []),
-  ...(base.parsers.astro ? [astro] : []),
-  ...(base.parsers.marko ? [marko] : []),
-  ...(base.parsers.twig ? [twig] : []),
-  ...(base.parsers.pug ? [pug] : []),
-  ...(base.parsers['liquid-html'] ? [liquid] : []),
+  svelte,
+  astro,
+  marko,
+  twig,
+  pug,
+  liquid,
 ])
 
 export interface PluginOptions {

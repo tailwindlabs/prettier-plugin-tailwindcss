@@ -1,13 +1,11 @@
-import type { AstPath, Parser, ParserOptions, Printer } from 'prettier'
+import type { Parser, ParserOptions, Plugin, Printer } from 'prettier'
 import { getTailwindConfig } from './config'
 import { createMatcher } from './options'
-import type { loadPlugins } from './plugins'
+import { loadIfExists, maybeResolve } from './resolve'
 import type { TransformOptions } from './transform'
-import type { Customizations, TransformerEnv, TransformerMetadata } from './types'
+import type { TransformerEnv } from './types'
 
-type Base = Awaited<ReturnType<typeof loadPlugins>>
-
-export function createPlugin(base: Base, transforms: TransformOptions<any>[]) {
+export function createPlugin(transforms: TransformOptions<any>[]) {
   // Prettier parsers and printers may be async functions at definition time.
   // They'll be awaited when the plugin is loaded but must also be swapped out
   // with the resolved value before returning as later Prettier internals
@@ -20,9 +18,13 @@ export function createPlugin(base: Base, transforms: TransformOptions<any>[]) {
   for (let opts of transforms) {
     for (let [name, meta] of Object.entries(opts.parsers)) {
       parsers[name] = async () => {
-        parsers[name] = createParser({
-          base,
-          parserFormat: name,
+        let plugin = await loadPlugins(meta.load ?? opts.load ?? [])
+        let original = plugin.parsers?.[name]
+        if (!original) return
+
+        parsers[name] = await createParser({
+          name,
+          original,
           opts,
         })
 
@@ -32,9 +34,12 @@ export function createPlugin(base: Base, transforms: TransformOptions<any>[]) {
 
     for (let [name, meta] of Object.entries(opts.printers ?? {})) {
       printers[name] = async () => {
+        let plugin = await loadPlugins(opts.load ?? [])
+        let original = plugin.printers?.[name]
+        if (!original) return
+
         printers[name] = createPrinter({
-          base,
-          name,
+          original,
           opts,
         })
 
@@ -46,29 +51,48 @@ export function createPlugin(base: Base, transforms: TransformOptions<any>[]) {
   return { parsers, printers }
 }
 
-function createParser({
-  //
-  base,
-  parserFormat,
+async function createParser({
+  name,
+  original,
   opts,
 }: {
-  base: Base
-  parserFormat: string
+  name: string
+  original: Parser<any>
   opts: TransformOptions<any>
 }) {
-  let original = base.parsers[parserFormat]
   let parser: Parser<any> = { ...original }
 
-  parser.preprocess = (code: string, options: ParserOptions) => {
-    let original = base.originalParser(parserFormat, options)
+  let compatible: { pluginName: string; mod: unknown }[] = []
 
-    return original.preprocess ? original.preprocess(code, options) : code
+  for (let pluginName of opts.compatible ?? []) {
+    let mod = await loadIfExistsESM(pluginName)
+    compatible.push({ pluginName, mod })
   }
 
-  parser.parse = async (code: string, options: ParserOptions) => {
-    let original = base.originalParser(parserFormat, options)
+  function load(options: ParserOptions<any>) {
+    let parser: Parser<any> = { ...original }
 
-    // @ts-ignore: We pass three options in the case of plugins that support Prettier 2 _and_ 3.
+    for (let { pluginName, mod } of compatible) {
+      let plugin = findEnabledPlugin(options, pluginName, mod)
+      if (plugin) Object.assign(parser, plugin.parsers[name])
+    }
+
+    return parser
+  }
+
+  parser.preprocess = (code: string, options: ParserOptions) => {
+    let parser = load(options)
+
+    return parser.preprocess ? parser.preprocess(code, options) : code
+  }
+
+  parser.parse = async (code, options) => {
+    let original = load(options)
+
+    // @ts-expect-error: `options` is passed twice for compat with older plugins that were written
+    // for Prettier v2 but still work with v3.
+    //
+    // Currently only the Twig plugin requires this.
     let ast = await original.parse(code, options, options)
 
     let env = await loadTailwindCSS({ opts, options })
@@ -88,20 +112,12 @@ function createParser({
   return parser
 }
 
-function createPrinter({
-  //
-  base,
-  name,
-  opts,
-}: {
-  base: Base
-  name: string
-  opts: TransformOptions<any>
-}): Printer<any> {
-  let original = base.printers[name]
-  let printer = { ...original }
+function createPrinter({ original, opts }: { original: Printer<any>; opts: TransformOptions<any> }) {
+  let printer: Printer<any> = { ...original }
+
   let reprint = opts.reprint
 
+  // Hook into the preprocessing phase to load the config
   if (reprint) {
     printer.print = new Proxy(original.print, {
       apply(target, thisArg, args) {
@@ -125,6 +141,83 @@ function createPrinter({
   }
 
   return printer
+}
+
+async function loadPlugins<T>(fns: string[]) {
+  let plugin: Plugin<T> = {
+    parsers: Object.create(null),
+    printers: Object.create(null),
+    options: Object.create(null),
+    defaultOptions: Object.create(null),
+    languages: [],
+  }
+
+  for (let moduleName of fns) {
+    try {
+      let loaded = await loadIfExistsESM(moduleName)
+      Object.assign(plugin.parsers!, loaded.parsers ?? {})
+      Object.assign(plugin.printers!, loaded.printers ?? {})
+      Object.assign(plugin.options!, loaded.options ?? {})
+      Object.assign(plugin.defaultOptions!, loaded.defaultOptions ?? {})
+
+      plugin.languages = [...(plugin.languages ?? []), ...(loaded.languages ?? [])]
+    } catch (err) {
+      throw err
+    }
+  }
+
+  return plugin
+}
+
+async function loadIfExistsESM(name: string): Promise<Plugin<any>> {
+  let mod = await loadIfExists<Plugin<any>>(name)
+
+  return (
+    mod ?? {
+      parsers: {},
+      printers: {},
+      languages: [],
+      options: {},
+      defaultOptions: {},
+    }
+  )
+}
+
+function findEnabledPlugin(options: ParserOptions<any>, name: string, mod: any) {
+  let path = maybeResolve(name)
+
+  for (let plugin of options.plugins) {
+    if (plugin instanceof URL) {
+      if (plugin.protocol !== 'file:') continue
+      if (plugin.hostname !== '') continue
+
+      plugin = plugin.pathname
+    }
+
+    if (typeof plugin === 'string') {
+      if (plugin === name || plugin === path) {
+        return mod
+      }
+
+      continue
+    }
+
+    // options.plugins.*.name == name
+    if (plugin.name === name) {
+      return mod
+    }
+
+    // options.plugins.*.name == path
+    if (plugin.name === path) {
+      return mod
+    }
+
+    // basically options.plugins.* == mod
+    // But that can't work because prettier normalizes plugins which destroys top-level object identity
+    if (plugin.parsers && mod.parsers && plugin.parsers == mod.parsers) {
+      return mod
+    }
+  }
 }
 
 async function loadTailwindCSS<T = any>({

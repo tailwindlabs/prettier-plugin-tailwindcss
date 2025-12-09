@@ -8,24 +8,38 @@ import type { Customizations, TransformerEnv, TransformerMetadata } from './type
 type Base = Awaited<ReturnType<typeof loadPlugins>>
 
 export function createPlugin(base: Base, transforms: TransformOptions<any>[]) {
-  let parsers: Record<string, Parser<any>> = Object.create(null)
-  let printers: Record<string, Printer<any>> = Object.create(null)
+  // Prettier parsers and printers may be async functions at definition time.
+  // They'll be awaited when the plugin is loaded but must also be swapped out
+  // with the resolved value before returning as later Prettier internals
+  // assume that parsers and printers are objects and not functions.
+  type Init<T> = (() => Promise<T | undefined>) | T | undefined
+
+  let parsers: Record<string, Init<Parser<any>>> = Object.create(null)
+  let printers: Record<string, Init<Printer<any>>> = Object.create(null)
 
   for (let opts of transforms) {
     for (let [name, meta] of Object.entries(opts.parsers)) {
-      parsers[name] = createParser({
-        base,
-        parserFormat: name,
-        opts,
-      })
+      parsers[name] = async () => {
+        parsers[name] = createParser({
+          base,
+          parserFormat: name,
+          opts,
+        })
+
+        return parsers[name]
+      }
     }
 
     for (let [name, meta] of Object.entries(opts.printers ?? {})) {
-      printers[name] = createPrinter({
-        base,
-        name,
-        opts,
-      })
+      printers[name] = async () => {
+        printers[name] = createPrinter({
+          base,
+          name,
+          opts,
+        })
+
+        return printers[name]
+      }
     }
   }
 

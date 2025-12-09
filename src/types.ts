@@ -25,7 +25,14 @@ export interface TransformerEnv {
   context: UnifiedApi
   matcher: Matcher
   options: ParserOptions
-  changes: StringChange[]
+  changes: StringChangePositional[]
+}
+
+export interface StringChangePositional {
+  start: { line: number; column: number }
+  end: { line: number; column: number }
+  before: string
+  after: string
 }
 
 export interface StringChange {

@@ -1,4 +1,4 @@
-import type { Parser, ParserOptions } from 'prettier'
+import type { AstPath, Parser, ParserOptions, Printer } from 'prettier'
 import { getTailwindConfig } from './config'
 import { createMatcher } from './options'
 import type { loadPlugins } from './plugins'
@@ -9,6 +9,7 @@ type Base = Awaited<ReturnType<typeof loadPlugins>>
 
 export function createPlugin(base: Base, transforms: TransformOptions<any>[]) {
   let parsers: Record<string, Parser<any>> = Object.create(null)
+  let printers: Record<string, Printer<any>> = Object.create(null)
 
   for (let opts of transforms) {
     for (let [name, meta] of Object.entries(opts.parsers)) {
@@ -18,9 +19,17 @@ export function createPlugin(base: Base, transforms: TransformOptions<any>[]) {
         opts,
       })
     }
+
+    for (let [name, meta] of Object.entries(opts.printers ?? {})) {
+      printers[name] = createPrinter({
+        base,
+        name,
+        opts,
+      })
+    }
   }
 
-  return { parsers }
+  return { parsers, printers }
 }
 
 function createParser({
@@ -57,9 +66,50 @@ function createParser({
         options,
       })
 
+      options.__tailwindcss__ = env
+
       return ast
     },
   }
+}
+
+function createPrinter({
+  //
+  base,
+  name,
+  opts,
+}: {
+  base: Base
+  name: string
+  opts: TransformOptions<any>
+}): Printer<any> {
+  let original = base.printers[name]
+  let printer = { ...original }
+  let reprint = opts.reprint
+
+  if (reprint) {
+    printer.print = new Proxy(original.print, {
+      apply(target, thisArg, args) {
+        let [path, options] = args as Parameters<typeof original.print>
+        let env = options.__tailwindcss__ as TransformerEnv
+        reprint(path, { ...env, options: options })
+        return Reflect.apply(target, thisArg, args)
+      },
+    })
+
+    if (original.embed) {
+      printer.embed = new Proxy(original.embed, {
+        apply(target, thisArg, args) {
+          let [path, options] = args as Parameters<typeof original.embed>
+          let env = options.__tailwindcss__ as TransformerEnv
+          reprint(path, { ...env, options: options as any })
+          return Reflect.apply(target, thisArg, args)
+        },
+      })
+    }
+  }
+
+  return printer
 }
 
 async function loadTailwindCSS<T = any>({
@@ -93,7 +143,6 @@ async function loadTailwindCSS<T = any>({
 
 function transformAst<T = any>({
   ast,
-  options,
   env,
   opts,
 }: {
@@ -103,12 +152,5 @@ function transformAst<T = any>({
   opts: TransformOptions<T>
 }) {
   let transform = opts.transform
-  if (transform) {
-    transform(ast, env)
-  }
-
-  if (options.parser === 'svelte') {
-    // @ts-ignore
-    ast.changes = env.changes
-  }
+  if (transform) transform(ast, env)
 }

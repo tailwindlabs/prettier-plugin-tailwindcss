@@ -112,7 +112,13 @@ async function createParser({
   return parser
 }
 
-function createPrinter({ original, opts }: { original: Printer<any>; opts: TransformOptions<any> }) {
+function createPrinter({
+  original,
+  opts,
+}: {
+  original: Printer<any>
+  opts: TransformOptions<any>
+}) {
   let printer: Printer<any> = { ...original }
 
   let reprint = opts.reprint

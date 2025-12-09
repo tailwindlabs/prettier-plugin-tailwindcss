@@ -1030,7 +1030,9 @@ function transformSvelte(ast: any, env: TransformerEnv) {
 
 export { options } from './options.js'
 
-type HtmlNode = { type: 'attribute'; name: string; value: string } | { kind: 'attribute'; name: string; value: string }
+type HtmlNode =
+  | { type: 'attribute'; name: string; value: string }
+  | { kind: 'attribute'; name: string; value: string }
 
 let html = defineTransform<HtmlNode>({
   staticAttrs: ['class'],

@@ -42,35 +42,36 @@ function createParser({
   parserFormat: string
   opts: TransformOptions<any>
 }) {
-  return {
-    ...base.parsers[parserFormat],
+  let original = base.parsers[parserFormat]
+  let parser: Parser<any> = { ...original }
 
-    preprocess(code: string, options: ParserOptions) {
-      let original = base.originalParser(parserFormat, options)
+  parser.preprocess = (code: string, options: ParserOptions) => {
+    let original = base.originalParser(parserFormat, options)
 
-      return original.preprocess ? original.preprocess(code, options) : code
-    },
-
-    async parse(text: string, options: ParserOptions) {
-      let original = base.originalParser(parserFormat, options)
-
-      // @ts-ignore: We pass three options in the case of plugins that support Prettier 2 _and_ 3.
-      let ast = await original.parse(text, options, options)
-
-      let env = await loadTailwindCSS({ opts, options })
-
-      transformAst({
-        ast,
-        env,
-        opts,
-        options,
-      })
-
-      options.__tailwindcss__ = env
-
-      return ast
-    },
+    return original.preprocess ? original.preprocess(code, options) : code
   }
+
+  parser.parse = async (code: string, options: ParserOptions) => {
+    let original = base.originalParser(parserFormat, options)
+
+    // @ts-ignore: We pass three options in the case of plugins that support Prettier 2 _and_ 3.
+    let ast = await original.parse(code, options, options)
+
+    let env = await loadTailwindCSS({ opts, options })
+
+    transformAst({
+      ast,
+      env,
+      opts,
+      options,
+    })
+
+    options.__tailwindcss__ = env
+
+    return ast
+  }
+
+  return parser
 }
 
 function createPrinter({

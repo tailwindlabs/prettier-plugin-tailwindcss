@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Changed
+
+- Remove top-level await ([#420](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/420))
+- Improve load-time performance ([#420](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/420))
 
 ## [0.7.2] - 2025-12-01
 

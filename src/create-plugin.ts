@@ -125,8 +125,8 @@ async function loadTailwindCSS<T = any>({
   let context = await getTailwindConfig(options)
 
   let matcher = createMatcher(options, parser, {
-    staticAttrs: new Set(parsers[parser]?.staticAttrs ?? []),
-    dynamicAttrs: new Set(parsers[parser]?.dynamicAttrs ?? []),
+    staticAttrs: new Set(parsers[parser]?.staticAttrs ?? opts.staticAttrs ?? []),
+    dynamicAttrs: new Set(parsers[parser]?.dynamicAttrs ?? opts.dynamicAttrs ?? []),
     functions: new Set(),
     staticAttrsRegex: [],
     dynamicAttrsRegex: [],

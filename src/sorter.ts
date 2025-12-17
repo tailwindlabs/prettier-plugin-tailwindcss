@@ -13,42 +13,76 @@ export interface SorterOptions {
   filepath?: string
 
   /**
-   * Path to the Tailwind config file.
+   * Path to the Tailwind config file (v3).
+   *
+   * Relative paths are resolved to the prettier config file
+   * determined by `filepath` (or the current working directory
+   * if no `filepath` is provided).
+   *
+   * e.g. `./tailwind.config.js`
+   *
+   * Default: The closest `tailwind.config.{js,mjs,cjs,ts}` file relative to
+   *          `filepath` if a local installation of Tailwind CSS v3 is found.
    */
   config?: string
 
   /**
    * Path to the CSS stylesheet used by Tailwind CSS (v4+)
+   *
+   * Relative paths are resolved to the prettier config file
+   * determined by `filepath` (or the current working directory
+   * if no `filepath` is provided).
+   *
+   * e.g. `./src/app.css`
+   *
+   * Default: The default Tailwind CSS v4 stylesheet if a local installation of
+   * Tailwind CSS v4 is found.
    */
   stylesheet?: string
 
   /**
-   * List of custom function and tag names that contain classes.
+   * List of custom function and tag names whose arguments should be treated as
+   * a class list and sorted.
    *
-   * Default: []
+   * e.g. `["clsx", "cn", "tw"]`
+   *
+   * Default: `[]`
    */
   functions?: string[]
 
   /**
-   * List of custom attributes that contain classes.
+   * List of additional HTML/JSX attributes to sort (beyond `class` and `className`).
    *
-   * Default: []
+   * e.g. `["myClassProp", ":class"]`
+   *
+   * Default: `[]`
    */
   attributes?: string[]
 
   /**
-   * Preserve whitespace around Tailwind classes when sorting.
+   * Preserve whitespace around classes.
    *
    * Default: false
    */
   preserveWhitespace?: boolean
 
   /**
-   * Preserve duplicate classes inside a class list when sorting.
+   * Preserve duplicate classes.
    *
    * Default: false
    */
   preserveDuplicates?: boolean
+
+  /**
+   * The package name to use when loading Tailwind CSS.
+   *
+   * Useful when multiple versions are installed in the same project.
+   *
+   * Default: `tailwindcss`
+   *
+   * @internal
+   */
+  packageName?: boolean
 }
 
 export interface Sorter {
@@ -94,6 +128,7 @@ export async function createSorter(opts: SorterOptions): Promise<Sorter> {
     tailwindAttributes: opts.attributes,
     tailwindPreserveWhitespace: preserveWhitespace,
     tailwindPreserveDuplicates: preserveDuplicates,
+    tailwindPackageName: opts.packageName,
   } as any
 
   let api = await getTailwindConfig(options)

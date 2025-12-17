@@ -82,7 +82,7 @@ export interface SorterOptions {
    *
    * @internal
    */
-  packageName?: boolean
+  packageName?: string
 }
 
 export interface Sorter {

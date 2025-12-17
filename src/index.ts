@@ -1298,21 +1298,29 @@ export interface PluginOptions {
 
   /**
    * List of custom function and tag names that contain classes.
+   *
+   * Default: []
    */
   tailwindFunctions?: string[]
 
   /**
    * List of custom attributes that contain classes.
+   *
+   * Default: []
    */
   tailwindAttributes?: string[]
 
   /**
    * Preserve whitespace around Tailwind classes when sorting.
+   *
+   * Default: false
    */
   tailwindPreserveWhitespace?: boolean
 
   /**
    * Preserve duplicate classes inside a class list when sorting.
+   *
+   * Default: false
    */
   tailwindPreserveDuplicates?: boolean
 }

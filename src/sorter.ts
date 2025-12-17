@@ -1,4 +1,6 @@
+import type { ParserOptions } from 'prettier'
 import { getTailwindConfig } from './config.js'
+import type { PluginOptions } from './index.js'
 import { sortClasses, sortClassList } from './sorting.js'
 import type { TransformerEnv } from './types.js'
 
@@ -81,26 +83,31 @@ export interface Sorter {
 }
 
 export async function createSorter(opts: SorterOptions): Promise<Sorter> {
-  let api = await getTailwindConfig(opts)
+  let preserveDuplicates = opts.preserveDuplicates ?? false
+  let preserveWhitespace = opts.preserveWhitespace ?? false
 
-  let preserveDuplicates = 'preserveDuplicates' in opts ? (opts.preserveDuplicates ?? false) : false
-  let preserveWhitespace = 'preserveWhitespace' in opts ? (opts.preserveWhitespace ?? false) : false
+  let options: ParserOptions & PluginOptions = {
+    filepath: opts.filepath as any,
+    tailwindConfig: opts.config,
+    tailwindStylesheet: opts.stylesheet,
+    tailwindFunctions: opts.functions,
+    tailwindAttributes: opts.attributes,
+    tailwindPreserveWhitespace: preserveWhitespace,
+    tailwindPreserveDuplicates: preserveDuplicates,
+  } as any
+
+  let api = await getTailwindConfig(options)
 
   let env: TransformerEnv = {
     context: api,
     changes: [],
-    options: {
-      tailwindPreserveWhitespace: preserveWhitespace,
-      tailwindPreserveDuplicates: preserveDuplicates,
-    } as any,
+    options,
     matcher: undefined as any,
   }
 
   return {
     sortClassLists(classes) {
-      let output: (string | null)[][] = [...classes]
-
-      for (let [idx, list] of classes.entries()) {
+      return classes.map((list) => {
         let result = sortClassList({
           api,
           classList: list,
@@ -112,26 +119,12 @@ export async function createSorter(opts: SorterOptions): Promise<Sorter> {
           sorted[idx] = null
         }
 
-        output[idx] = sorted
-      }
-
-      return output
+        return sorted
+      })
     },
 
     sortClassAttributes(classes) {
-      let output: string[] = [...classes]
-
-      for (let [idx, list] of classes.entries()) {
-        output[idx] = sortClasses(list, {
-          ignoreFirst: false,
-          ignoreLast: false,
-          removeDuplicates: !preserveDuplicates,
-          collapseWhitespace: preserveWhitespace ? false : { start: true, end: true },
-          env,
-        })
-      }
-
-      return output
+      return classes.map((list) => sortClasses(list, { env }))
     },
   }
 }

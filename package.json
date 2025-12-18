@@ -32,6 +32,9 @@
     "release-channel": "node ./scripts/release-channel.js",
     "release-notes": "node ./scripts/release-notes.js"
   },
+  "dependencies": {
+    "oxc-resolver": "^11.16.0"
+  },
   "devDependencies": {
     "@babel/types": "^7.28.2",
     "@ianvs/prettier-plugin-sort-imports": "^4.7.0",
@@ -47,7 +50,6 @@
     "clear-module": "^4.1.2",
     "cpy-cli": "^6.0.0",
     "dedent": "^1.6.0",
-    "enhanced-resolve": "^5.18.3",
     "esbuild": "^0.25.9",
     "escalade": "^3.2.0",
     "import-sort-style-module": "^6.0.0",
@@ -72,8 +74,8 @@
     "resolve-from": "^5.0.0",
     "rimraf": "^6.0.1",
     "svelte": "^5.38.2",
-    "tailwindcss-v4": "npm:tailwindcss@^4.1.14",
     "tailwindcss-v3": "npm:tailwindcss@^3.4.18",
+    "tailwindcss-v4": "npm:tailwindcss@^4.1.14",
     "tsup": "^8.5.0",
     "vitest": "^3.2.4"
   },

@@ -143,10 +143,12 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
             // And does not end with a space
             ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.raw),
 
-            collapseWhitespace: {
-              start: collapseWhitespace.start && i === 0,
-              end: collapseWhitespace.end && i >= node.expressions.length,
-            },
+            collapseWhitespace: collapseWhitespace
+              ? {
+                  start: collapseWhitespace.start && i === 0,
+                  end: collapseWhitespace.end && i >= node.expressions.length,
+                }
+              : false,
           }),
         })
       }

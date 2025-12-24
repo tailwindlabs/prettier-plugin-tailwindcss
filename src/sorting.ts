@@ -48,7 +48,7 @@ export function sortClasses(
 
   // This class list is purely whitespace
   // Collapse it to a single space if the option is enabled
-  if (/^[\t\r\f\n ]+$/.test(classStr) && collapseWhitespace) {
+  if (collapseWhitespace && /^[\t\r\f\n ]+$/.test(classStr)) {
     return ' '
   }
 

@@ -630,7 +630,7 @@ function canCollapseWhitespaceIn(path: Path<import('@babel/types').Node, any>) {
       let nodeEnd = entry.node.end ?? null
 
       for (let quasi of entry.parent.quasis) {
-        let quasiStart = quasi.end ?? null
+        let quasiStart = quasi.start ?? null
         let quasiEnd = quasi.end ?? null
 
         if (nodeStart !== null && quasiEnd !== null && nodeStart - quasiEnd <= 2) {

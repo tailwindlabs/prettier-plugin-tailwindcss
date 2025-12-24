@@ -42,10 +42,6 @@ export function sortClasses(
     return classStr
   }
 
-  if (env.options.tailwindPreserveWhitespace) {
-    collapseWhitespace = false
-  }
-
   // This class list is purely whitespace
   // Collapse it to a single space if the option is enabled
   if (/^[\t\r\f\n ]+$/.test(classStr) && collapseWhitespace) {

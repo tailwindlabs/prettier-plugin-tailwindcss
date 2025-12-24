@@ -108,7 +108,7 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
     StringLiteral(node, path) {
       if (!node.value) return
 
-      let collapseWhitespace = canCollapseWhitespaceIn(path)
+      let collapseWhitespace = canCollapseWhitespaceIn(path, env)
 
       changes.push({
         start: node.start + 1,
@@ -124,7 +124,7 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
     TemplateLiteral(node, path) {
       if (!node.quasis.length) return
 
-      let collapseWhitespace = canCollapseWhitespaceIn(path)
+      let collapseWhitespace = canCollapseWhitespaceIn(path, env)
 
       for (let i = 0; i < node.quasis.length; i++) {
         let quasi = node.quasis[i]
@@ -143,10 +143,12 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
             // And does not end with a space
             ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.raw),
 
-            collapseWhitespace: {
-              start: collapseWhitespace.start && i === 0,
-              end: collapseWhitespace.end && i >= node.expressions.length,
-            },
+            collapseWhitespace: collapseWhitespace
+              ? {
+                  start: collapseWhitespace.start && i === 0,
+                  end: collapseWhitespace.end && i >= node.expressions.length,
+                }
+              : false,
           }),
         })
       }
@@ -604,7 +606,14 @@ function isSortableExpression(
   return false
 }
 
-function canCollapseWhitespaceIn(path: Path<import('@babel/types').Node, any>) {
+function canCollapseWhitespaceIn(
+  path: Path<import('@babel/types').Node, any>,
+  env: TransformerEnv,
+): false | { start: boolean; end: boolean } {
+  if (env.options.tailwindPreserveWhitespace) {
+    return false
+  }
+
   let start = true
   let end = true
 
@@ -656,7 +665,7 @@ function transformJavaScript(ast: import('@babel/types').Node, { env }: Transfor
 
   function sortInside(ast: import('@babel/types').Node) {
     visit(ast, (node, path) => {
-      let collapseWhitespace = canCollapseWhitespaceIn(path)
+      let collapseWhitespace = canCollapseWhitespaceIn(path, env)
 
       if (isStringLiteral(node)) {
         sortStringLiteral(node, { env, collapseWhitespace })
@@ -712,7 +721,7 @@ function transformJavaScript(ast: import('@babel/types').Node, { env }: Transfor
         return
       }
 
-      let collapseWhitespace = canCollapseWhitespaceIn(path)
+      let collapseWhitespace = canCollapseWhitespaceIn(path, env)
 
       sortTemplateLiteral(node.quasi, {
         env,

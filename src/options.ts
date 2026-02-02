@@ -67,7 +67,11 @@ export interface Matcher {
   hasFunction(name: string): boolean
 }
 
-export function createMatcher(options: RequiredOptions, parser: string, defaults: Customizations): Matcher {
+export function createMatcher(
+  options: RequiredOptions,
+  parser: string,
+  defaults: Customizations,
+): Matcher {
   let staticAttrs = new Set<string>(defaults.staticAttrs)
   let dynamicAttrs = new Set<string>(defaults.dynamicAttrs)
   let functions = new Set<string>(defaults.functions)

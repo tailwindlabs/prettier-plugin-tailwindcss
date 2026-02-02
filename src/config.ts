@@ -138,7 +138,10 @@ async function resolvePrettierConfigPath(filePath: string): Promise<[string, str
 
 let resolvedModCache = expiringMap<string, Promise<[any | null, string | null]>>(10_000)
 
-async function resolveTailwindPath(options: ParserOptions, baseDir: string): Promise<[any | null, string | null]> {
+async function resolveTailwindPath(
+  options: ParserOptions,
+  baseDir: string,
+): Promise<[any | null, string | null]> {
   let pkgName = options.tailwindPackageName ?? 'tailwindcss'
 
   return await resolvedModCache.remember(`${pkgName}:${baseDir}`, async () => {
@@ -187,7 +190,11 @@ function findClosestJsConfig(inputDir: string): string | null {
   return configPath
 }
 
-function resolveStylesheet(options: ParserOptions, baseDir: string, configPath: string | null): string | null {
+function resolveStylesheet(
+  options: ParserOptions,
+  baseDir: string,
+  configPath: string | null,
+): string | null {
   if (options.tailwindStylesheet) {
     if (
       options.tailwindStylesheet.endsWith('.js') ||

@@ -10,7 +10,9 @@ describe('spliceChangesIntoString', () => {
       { start: 10, end: 15, before: 'brown', after: 'purple' },
     ]
 
-    expect(spliceChangesIntoString(str, changes)).toBe('the quick purple fox jumps over the lazy dog')
+    expect(spliceChangesIntoString(str, changes)).toBe(
+      'the quick purple fox jumps over the lazy dog',
+    )
   })
 
   test('changes are applied in order', ({ expect }) => {
@@ -21,6 +23,8 @@ describe('spliceChangesIntoString', () => {
       { start: 4, end: 9, before: 'quick', after: 'slow' },
     ]
 
-    expect(spliceChangesIntoString(str, changes)).toBe('the slow purple fox jumps over the lazy dog')
+    expect(spliceChangesIntoString(str, changes)).toBe(
+      'the slow purple fox jumps over the lazy dog',
+    )
   })
 })

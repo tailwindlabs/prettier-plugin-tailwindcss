@@ -1,5 +1,8 @@
 // @ts-ignore
-import type { AttrDoubleQuoted, AttrSingleQuoted } from '@shopify/prettier-plugin-liquid/dist/types.js'
+import type {
+  AttrDoubleQuoted,
+  AttrSingleQuoted,
+} from '@shopify/prettier-plugin-liquid/dist/types.js'
 import * as astTypes from 'ast-types'
 // @ts-ignore
 import jsesc from 'jsesc'
@@ -14,7 +17,13 @@ import { getTailwindConfig } from './config.js'
 import { createMatcher, type Matcher } from './options.js'
 import { loadPlugins } from './plugins.js'
 import { sortClasses, sortClassList } from './sorting.js'
-import type { Customizations, StringChange, TransformerContext, TransformerEnv, TransformerMetadata } from './types'
+import type {
+  Customizations,
+  StringChange,
+  TransformerContext,
+  TransformerEnv,
+  TransformerMetadata,
+} from './types'
 import { spliceChangesIntoString, visit, type Path } from './utils.js'
 
 let base = await loadPlugins()
@@ -339,7 +348,11 @@ function transformGlimmer(ast: any, { env }: TransformerContext) {
       }
 
       let concat = path.find((entry) => {
-        return entry.parent && entry.parent.type === 'SubExpression' && entry.parent.path.original === 'concat'
+        return (
+          entry.parent &&
+          entry.parent.type === 'SubExpression' &&
+          entry.parent.path.original === 'concat'
+        )
       })
 
       node.value = sortClasses(node.value, {
@@ -507,7 +520,9 @@ function sortStringLiteral(
 }
 
 function isStringLiteral(node: any) {
-  return node.type === 'StringLiteral' || (node.type === 'Literal' && typeof node.value === 'string')
+  return (
+    node.type === 'StringLiteral' || (node.type === 'Literal' && typeof node.value === 'string')
+  )
 }
 
 function sortTemplateLiteral(
@@ -568,7 +583,9 @@ function sortTemplateLiteral(
 }
 
 function isSortableTemplateExpression(
-  node: import('@babel/types').TaggedTemplateExpression | import('ast-types').namedTypes.TaggedTemplateExpression,
+  node:
+    | import('@babel/types').TaggedTemplateExpression
+    | import('ast-types').namedTypes.TaggedTemplateExpression,
   matcher: Matcher,
 ): boolean {
   return isSortableExpression(node.tag, matcher)
@@ -910,7 +927,8 @@ function transformTwig(ast: any, { env, changes }: TransformerContext) {
       const concat = path.find((entry) => {
         return (
           entry.parent &&
-          (entry.parent.type === 'BinaryConcatExpression' || entry.parent.type === 'BinaryAddExpression')
+          (entry.parent.type === 'BinaryConcatExpression' ||
+            entry.parent.type === 'BinaryAddExpression')
         )
       })
 
@@ -938,7 +956,11 @@ function transformPug(ast: any, { env }: TransformerContext) {
   // First sort the classes in attributes
   for (const token of ast.tokens) {
     if (token.type === 'attribute' && matcher.hasStaticAttr(token.name)) {
-      token.val = [token.val.slice(0, 1), sortClasses(token.val.slice(1, -1), { env }), token.val.slice(-1)].join('')
+      token.val = [
+        token.val.slice(0, 1),
+        sortClasses(token.val.slice(1, -1), { env }),
+        token.val.slice(-1),
+      ].join('')
     }
   }
 

@@ -11,6 +11,41 @@ import type { UnifiedApi } from './types'
 import { loadV3 } from './versions/v3'
 import { loadV4 } from './versions/v4'
 
+/**
+ * Cache a value for all directories from `inputDir` up to `targetDir` (inclusive).
+ * Stops early if an existing cache entry is found.
+ *
+ * How it works:
+ *
+ * For a file at '/repo/packages/ui/src/Button.tsx' with config at '/repo/package.json'
+ *
+ * `cacheForDirs(cache, '/repo/packages/ui/src', '/repo/package.json', '/repo')`
+ *
+ * Caches:
+ * - '/repo/packages/ui/src' -> '/repo/package.json'
+ * - '/repo/packages/ui'     -> '/repo/package.json'
+ * - '/repo/packages'        -> '/repo/package.json'
+ * - '/repo'                 -> '/repo/package.json'
+ */
+function cacheForDirs<V>(
+  cache: { set(key: string, value: V): void; get(key: string): V | undefined },
+  inputDir: string,
+  value: V,
+  targetDir: string,
+  makeKey: (dir: string) => string = (dir) => dir,
+): void {
+  let dir = inputDir
+  while (dir !== path.dirname(dir) && dir.length >= targetDir.length) {
+    const key = makeKey(dir)
+    // Stop caching if we hit an existing entry
+    if (cache.get(key) !== undefined) break
+
+    cache.set(key, value)
+    if (dir === targetDir) break
+    dir = path.dirname(dir)
+  }
+}
+
 let pathToApiMap = expiringMap<string | null, Promise<UnifiedApi>>(10_000)
 
 export async function getTailwindConfig(options: ParserOptions): Promise<any> {
@@ -34,7 +69,7 @@ export async function getTailwindConfig(options: ParserOptions): Promise<any> {
   //
   // These lookups can take a bit so we cache them. This is especially important
   // for files with lots of embedded languages (e.g. Vue bindings).
-  let [configDir, configPath] = await resolvePrettierConfigPath(options.filepath)
+  let [configDir, configPath] = await resolvePrettierConfigPath(options.filepath, inputDir)
 
   // Locate Tailwind CSS itself
   //
@@ -120,10 +155,19 @@ export async function getTailwindConfig(options: ParserOptions): Promise<any> {
   return pathToApiMap.remember(`${pkgDir}:${stylesheet}`, () => loadV4(mod, stylesheet))
 }
 
-let prettierConfigCache = expiringMap<string, Promise<string | null>>(10_000)
+let prettierConfigCache = expiringMap<string, string | null>(10_000)
 
-async function resolvePrettierConfigPath(filePath: string): Promise<[string, string | null]> {
-  let prettierConfig = await prettierConfigCache.remember(filePath, async () => {
+async function resolvePrettierConfigPath(
+  filePath: string,
+  inputDir: string,
+): Promise<[string, string | null]> {
+  // Check cache for this directory
+  let cached = prettierConfigCache.get(inputDir)
+  if (cached !== undefined) {
+    return cached ? [path.dirname(cached), cached] : [process.cwd(), null]
+  }
+
+  const resolve = async () => {
     try {
       return await prettier.resolveConfigFile(filePath)
     } catch (err) {
@@ -131,20 +175,36 @@ async function resolvePrettierConfigPath(filePath: string): Promise<[string, str
       console.error('prettier-config-not-found-err', err)
       return null
     }
-  })
+  }
+
+  let prettierConfig = await resolve()
+
+  // Cache all directories from inputDir up to config location
+  if (prettierConfig) {
+    cacheForDirs(prettierConfigCache, inputDir, prettierConfig, path.dirname(prettierConfig))
+  } else {
+    prettierConfigCache.set(inputDir, null)
+  }
 
   return prettierConfig ? [path.dirname(prettierConfig), prettierConfig] : [process.cwd(), null]
 }
 
-let resolvedModCache = expiringMap<string, Promise<[any | null, string | null]>>(10_000)
+let resolvedModCache = expiringMap<string, [any | null, string | null]>(10_000)
 
 async function resolveTailwindPath(
   options: ParserOptions,
   baseDir: string,
 ): Promise<[any | null, string | null]> {
   let pkgName = options.tailwindPackageName ?? 'tailwindcss'
+  let makeKey = (dir: string) => `${pkgName}:${dir}`
 
-  return await resolvedModCache.remember(`${pkgName}:${baseDir}`, async () => {
+  // Check cache for this directory
+  let cached = resolvedModCache.get(makeKey(baseDir))
+  if (cached !== undefined) {
+    return cached
+  }
+
+  let resolve = async () => {
     let pkgDir: string | null = null
     let mod: any | null = null
 
@@ -156,8 +216,20 @@ async function resolveTailwindPath(
       pkgDir = path.dirname(pkgFile)
     } catch {}
 
-    return [mod, pkgDir] as const
-  })
+    return [mod, pkgDir] as [any | null, string | null]
+  }
+
+  let result = await resolve()
+
+  // Cache all directories from baseDir up to package location
+  let [, pkgDir] = result
+  if (pkgDir) {
+    cacheForDirs(resolvedModCache, baseDir, result, pkgDir, makeKey)
+  } else {
+    resolvedModCache.set(makeKey(baseDir), result)
+  }
+
+  return result
 }
 
 function resolveJsConfigPath(options: ParserOptions, configDir: string): string | null {
@@ -168,23 +240,31 @@ function resolveJsConfigPath(options: ParserOptions, configDir: string): string 
 }
 
 let configPathCache = new Map<string, string | null>()
+
 function findClosestJsConfig(inputDir: string): string | null {
-  let configPath: string | null | undefined = configPathCache.get(inputDir)
+  // Check cache for this directory
+  let cached = configPathCache.get(inputDir)
+  if (cached !== undefined) {
+    return cached
+  }
 
-  if (configPath === undefined) {
-    try {
-      let foundPath = escalade(inputDir, (_, names) => {
-        if (names.includes('tailwind.config.js')) return 'tailwind.config.js'
-        if (names.includes('tailwind.config.cjs')) return 'tailwind.config.cjs'
-        if (names.includes('tailwind.config.mjs')) return 'tailwind.config.mjs'
-        if (names.includes('tailwind.config.ts')) return 'tailwind.config.ts'
-      })
+  // Resolve
+  let configPath: string | null = null
+  try {
+    let foundPath = escalade(inputDir, (_, names) => {
+      if (names.includes('tailwind.config.js')) return 'tailwind.config.js'
+      if (names.includes('tailwind.config.cjs')) return 'tailwind.config.cjs'
+      if (names.includes('tailwind.config.mjs')) return 'tailwind.config.mjs'
+      if (names.includes('tailwind.config.ts')) return 'tailwind.config.ts'
+    })
+    configPath = foundPath ?? null
+  } catch {}
 
-      configPath = foundPath ?? null
-    } catch {}
-
-    configPath ??= null
-    configPathCache.set(inputDir, configPath)
+  // Cache all directories from inputDir up to config location
+  if (configPath) {
+    cacheForDirs(configPathCache, inputDir, configPath, path.dirname(configPath))
+  } else {
+    configPathCache.set(inputDir, null)
   }
 
   return configPath

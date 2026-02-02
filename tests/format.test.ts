@@ -81,22 +81,34 @@ describe('whitespace', () => {
   })
 
   test('whitespace is not trimmed inside concat expressions (angular)', async ({ expect }) => {
-    let result = await format(`<ul [class]="'pagination' + (size ? ' pagination-' + size : '')"></ul>`, {
-      parser: 'angular',
-    })
+    let result = await format(
+      `<ul [class]="'pagination' + (size ? ' pagination-' + size : '')"></ul>`,
+      {
+        parser: 'angular',
+      },
+    )
 
     expect(result).toEqual(`<ul [class]="'pagination' + (size ? ' pagination-' + size : '')"></ul>`)
   })
 
-  test('whitespace is not trimmed inside adjacent-before/after template expressions', async ({ expect }) => {
-    let result = await format(";<div className={`header${isExtendable ? ' header-extendable' : ''}`} />", {
-      parser: 'babel',
-    })
+  test('whitespace is not trimmed inside adjacent-before/after template expressions', async ({
+    expect,
+  }) => {
+    let result = await format(
+      ";<div className={`header${isExtendable ? ' header-extendable' : ''}`} />",
+      {
+        parser: 'babel',
+      },
+    )
 
-    expect(result).toEqual(";<div className={`header${isExtendable ? ' header-extendable' : ''}`} />")
+    expect(result).toEqual(
+      ";<div className={`header${isExtendable ? ' header-extendable' : ''}`} />",
+    )
   })
 
-  test('whitespace is not trimmed before template literal quasis without leading space', async ({ expect }) => {
+  test('whitespace is not trimmed before template literal quasis without leading space', async ({
+    expect,
+  }) => {
     let result = await format(";<div className={`${foo ? 'sm:p-0 p-0 ' : ''}header`}></div>", {
       parser: 'babel',
     })
@@ -159,20 +171,30 @@ describe('regex matching', () => {
   })
 
   test('attribute name regex matches', async ({ expect }) => {
-    let result = await format(`<div data-class="sm:p-0 p-0" data-classes="sm:p-0 p-0" data-style="sm:p-0 p-0"></div>`, {
-      tailwindAttributes: ['/data-.*/'],
-    })
+    let result = await format(
+      `<div data-class="sm:p-0 p-0" data-classes="sm:p-0 p-0" data-style="sm:p-0 p-0"></div>`,
+      {
+        tailwindAttributes: ['/data-.*/'],
+      },
+    )
 
-    expect(result).toEqual(`<div data-class="p-0 sm:p-0" data-classes="p-0 sm:p-0" data-style="p-0 sm:p-0"></div>`)
+    expect(result).toEqual(
+      `<div data-class="p-0 sm:p-0" data-classes="p-0 sm:p-0" data-style="p-0 sm:p-0"></div>`,
+    )
   })
 
   test('function name regex matches', async ({ expect }) => {
-    let result = await format('let classList1 = twClasses`sm:p-0 p-0`\nlet classList2 = myClasses`sm:p-0 p-0`', {
-      parser: 'babel',
-      tailwindFunctions: ['/.*Classes/'],
-    })
+    let result = await format(
+      'let classList1 = twClasses`sm:p-0 p-0`\nlet classList2 = myClasses`sm:p-0 p-0`',
+      {
+        parser: 'babel',
+        tailwindFunctions: ['/.*Classes/'],
+      },
+    )
 
-    expect(result).toEqual('let classList1 = twClasses`p-0 sm:p-0`\nlet classList2 = myClasses`p-0 sm:p-0`')
+    expect(result).toEqual(
+      'let classList1 = twClasses`p-0 sm:p-0`\nlet classList2 = myClasses`p-0 sm:p-0`',
+    )
   })
 
   test('regex flags are supported', async ({ expect }) => {

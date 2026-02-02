@@ -78,7 +78,10 @@ export let javascript: TestEntry[] = [
   t`;<div class={{ '${yes}': '${yes}' }['${yes}']} />`,
   t`;<div class />`,
   t`;<div class="" />`,
-  [`;<div class={\`sm:block inline flex\${someVar}\`} />`, `;<div class={\`inline sm:block flex\${someVar}\`} />`],
+  [
+    `;<div class={\`sm:block inline flex\${someVar}\`} />`,
+    `;<div class={\`inline sm:block flex\${someVar}\`} />`,
+  ],
   [
     `;<div class={\`\${someVar}sm:block md:inline flex\`} />`,
     `;<div class={\`\${someVar}sm:block flex md:inline\`} />`,
@@ -95,9 +98,15 @@ export let javascript: TestEntry[] = [
   [';<div class={` sm:p-0\n  p-0   `} />', ';<div class={`p-0 sm:p-0`} />'],
   [';<div class="flex flex" />', ';<div class="flex" />'],
   [';<div class={`   flex  flex `} />', ';<div class={`flex`} />'],
-  [';<div class={`   flex  flex flex${someVar}block block`} />', ';<div class={`flex flex${someVar}block block`} />'],
+  [
+    ';<div class={`   flex  flex flex${someVar}block block`} />',
+    ';<div class={`flex flex${someVar}block block`} />',
+  ],
   [';<div class={`flex ` + `text-red-500`} />', ';<div class={`flex ` + `text-red-500`} />'],
-  [';<div class={`flex ` + `  ` + `text-red-500`} />', ';<div class={`flex ` + ` ` + `text-red-500`} />'],
+  [
+    ';<div class={`flex ` + `  ` + `text-red-500`} />',
+    ';<div class={`flex ` + ` ` + `text-red-500`} />',
+  ],
 
   t`;<div class={"before:content-['\\\\2248']"} />`,
   t`;<div class={\`before:content-['\\\\2248']\`} />`,
@@ -113,7 +122,11 @@ export let javascript: TestEntry[] = [
   ],
 ]
 javascript = javascript.concat(
-  javascript.map((test) => [test[0].replace(/class/g, 'className'), test[1].replace(/class/g, 'className'), test[2]]),
+  javascript.map((test) => [
+    test[0].replace(/class/g, 'className'),
+    test[1].replace(/class/g, 'className'),
+    test[2],
+  ]),
 )
 
 let vue: TestEntry[] = [
@@ -153,7 +166,10 @@ let vue: TestEntry[] = [
     `<div :class="'sm:p-5 ' + ' flex' + ' underline' + ' sm:m-5'"></div>`,
   ],
 
-  [`<div :class="'before:content-[\\'\\\\2248\\']'" />`, `<div :class="'before:content-[\\'\\\\2248\\']'" />`],
+  [
+    `<div :class="'before:content-[\\'\\\\2248\\']'" />`,
+    `<div :class="'before:content-[\\'\\\\2248\\']'" />`,
+  ],
 ]
 
 let glimmer: TestEntry[] = [
@@ -163,7 +179,10 @@ let glimmer: TestEntry[] = [
   t`<div class='${yes} {{"${yes}"}} ${yes}'></div>`,
   t`<div class='${yes} {{"${yes}"}} {{if someVar "${yes}" "${yes}"}}'></div>`,
   t`<div class='${yes} {{"${yes}"}} {{if someVar "${yes}" "${yes}"}}' {{if someVar "attr='${no}'" "attr='${no}'"}}></div>`,
-  [`<div class='md:inline flex sm:block{{someVar}}'></div>`, `<div class='flex md:inline sm:block{{someVar}}'></div>`],
+  [
+    `<div class='md:inline flex sm:block{{someVar}}'></div>`,
+    `<div class='flex md:inline sm:block{{someVar}}'></div>`,
+  ],
   [
     `<div class='sm:p-0 p-0 {{someVar}}sm:block md:inline flex'></div>`,
     `<div class='p-0 sm:p-0 {{someVar}}sm:block flex md:inline'></div>`,

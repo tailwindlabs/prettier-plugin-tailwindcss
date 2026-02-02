@@ -72,13 +72,17 @@ export async function loadV3(pkgDir: string | null, jsConfig: string | null): Pr
     // that don't exist on their own. This will result in them "not existing" and
     // sorting could be weird since you still require them in order to make the
     // host utitlies work properly. (Thanks Biology)
-    let parasiteUtilities = new Set([prefixCandidate(context, 'group'), prefixCandidate(context, 'peer')])
+    let parasiteUtilities = new Set([
+      prefixCandidate(context, 'group'),
+      prefixCandidate(context, 'peer'),
+    ])
 
     let classNamesWithOrder: [string, bigint | null][] = []
 
     for (let className of classes) {
       let order: bigint | null =
-        generateRules(new Set([className]), context).sort(([a], [z]) => bigSign(z - a))[0]?.[0] ?? null
+        generateRules(new Set([className]), context).sort(([a], [z]) => bigSign(z - a))[0]?.[0] ??
+        null
 
       if (order === null && parasiteUtilities.has(className)) {
         // This will make sure that it is at the very beginning of the
@@ -97,7 +101,9 @@ export async function loadV3(pkgDir: string | null, jsConfig: string | null): Pr
 
   return {
     getClassOrder: (classList: string[]) => {
-      return context.getClassOrder ? context.getClassOrder(classList) : getClassOrderPolyfill(classList)
+      return context.getClassOrder
+        ? context.getClassOrder(classList)
+        : getClassOrderPolyfill(classList)
     },
   }
 }

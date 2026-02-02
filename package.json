@@ -28,7 +28,7 @@
     "pretest": "node scripts/install-fixture-deps.js",
     "test": "vitest",
     "prepublishOnly": "npm run build && node scripts/copy-licenses.js",
-    "format": "prettier \"src/**/*.js\" \"scripts/**/*.js\" \"tests/test.js\" --write --print-width 100 --single-quote --no-semi --plugin-search-dir ./tests",
+    "format": "prettier \"src/**/*.ts\" \"scripts/**/*.js\" \"tests/*.ts\" --write --print-width 100 --single-quote --no-semi",
     "release-channel": "node ./scripts/release-channel.js",
     "release-notes": "node ./scripts/release-notes.js"
   },

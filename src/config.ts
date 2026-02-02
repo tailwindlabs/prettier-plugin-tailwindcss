@@ -28,7 +28,7 @@ import { loadV4 } from './versions/v4'
  * - '/repo'                 -> '/repo/package.json'
  */
 function cacheForDirs<V>(
-  cache: { set(key: string, value: V): void, get(key: string): V | undefined },
+  cache: { set(key: string, value: V): void; get(key: string): V | undefined },
   inputDir: string,
   value: V,
   targetDir: string,
@@ -36,7 +36,7 @@ function cacheForDirs<V>(
 ): void {
   let dir = inputDir
   while (dir !== path.dirname(dir) && dir.length >= targetDir.length) {
-    const key = makeKey(dir);
+    const key = makeKey(dir)
     // Stop caching if we hit an existing entry
     if (cache.get(key) !== undefined) break
 
@@ -157,8 +157,10 @@ export async function getTailwindConfig(options: ParserOptions): Promise<any> {
 
 let prettierConfigCache = expiringMap<string, string | null>(10_000)
 
-async function resolvePrettierConfigPath(filePath: string, inputDir: string): Promise<[string, string | null]> {
-
+async function resolvePrettierConfigPath(
+  filePath: string,
+  inputDir: string,
+): Promise<[string, string | null]> {
   // Check cache for this directory
   let cached = prettierConfigCache.get(inputDir)
   if (cached !== undefined) {

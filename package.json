@@ -161,5 +161,6 @@
     "@ianvs/prettier-plugin-sort-imports": {
       "@prettier/plugin-oxc": "^0.1.2"
     }
-  }
+  },
+  "packageManager": "pnpm@10.28.2"
 }

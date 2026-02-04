@@ -14,7 +14,6 @@ concurrency:
 
 env:
   CI: true
-  CACHE_PREFIX: stable
   NODE_VERSION: 22
 
 jobs:
@@ -22,37 +21,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
 
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
           registry-url: "https://registry.npmjs.org"
 
-      - name: Use cached node_modules
-        id: cache
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-${{ env.NODE_VERSION }}-${{ env.CACHE_PREFIX }}-node_modules-${{ hashFiles('**/package-lock.json') }}
-
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Build Prettier Plugin
-        run: |
-          npm run build
+        run: pnpm run build
 
       - name: Test
-        run: |
-          NODE_OPTIONS=--experimental-vm-modules npm run test
+        run: pnpm run test
 
       - name: Calculate environment variables
         run: |
-          echo "RELEASE_CHANNEL=$(npm run release-channel --silent)" >> $GITHUB_ENV
+          echo "RELEASE_CHANNEL=$(pnpm run release-channel --silent)" >> $GITHUB_ENV
 
       - name: Publish
-        run: npm publish --provenance --tag ${{ env.RELEASE_CHANNEL }}
+        run: pnpm publish --provenance --tag ${{ env.RELEASE_CHANNEL }} --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

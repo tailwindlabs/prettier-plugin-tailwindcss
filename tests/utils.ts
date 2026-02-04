@@ -40,8 +40,6 @@ export function t(strings: TemplateStringsArray, ...values: string[]): TestEntry
 export let pluginPath = path.resolve(__dirname, '../dist/index.mjs')
 
 export async function format(str: string, options: prettier.Options = {}) {
-  let plugin: prettier.Plugin<any> = (await import('../src/index.ts')) as any
-
   let result = await prettier.format(str, {
     semi: false,
     singleQuote: true,

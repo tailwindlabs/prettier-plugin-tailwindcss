@@ -93,7 +93,7 @@ function inlineCssImports(): Plugin {
 }
 
 export default defineConfig({
-  entry: ['./src/index.ts'],
+  entry: ['./src/index.ts', './src/lib.ts'],
   outDir: './dist',
   format: 'esm',
   platform: 'node',

@@ -192,6 +192,25 @@ Once added, tag your strings with the function and the plugin will sort them:
 const mySortedClasses = tw`bg-white p-4 dark:bg-black`
 ```
 
+## Public API
+
+If you want to use the Tailwind class sorting logic outside of Prettier, import from the
+`lib` entrypoint:
+
+```js
+import { createSorter } from 'prettier-plugin-tailwindcss/lib'
+
+let sorter = await createSorter({
+  base: '/path/to/project',
+  configPath: './tailwind.config.js',
+})
+
+let [sorted] = sorter.sortClassAttributes(['sm:bg-tomato bg-red-500'])
+```
+
+If you already know the formatter config file path, pass `formatterConfigPath` to infer
+`base` automatically and improve warning messages.
+
 ### Using regex patterns
 
 Like the `tailwindAttributes` option, the `tailwindFunctions` option also supports regular expressions to match multiple function names. Patterns should be enclosed in forward slashes. Note that JS regex literals are not supported with Prettier.

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Remove top-level await ([#420](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/420))
+- Improve load-time performance ([#420](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/420))
+
 ### Fixed
 
 - Collapse whitespace in template literals with adjacent quasis ([#427](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/427))

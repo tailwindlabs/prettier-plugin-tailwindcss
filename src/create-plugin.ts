@@ -4,6 +4,7 @@ import { createMatcher } from './options'
 import { loadIfExists, maybeResolve } from './resolve'
 import type { TransformOptions } from './transform'
 import type { TransformerEnv } from './types'
+import { isAbsolute } from 'path'
 
 export function createPlugin(transforms: TransformOptions<any>[]) {
   // Prettier parsers and printers may be async functions at definition time.
@@ -62,32 +63,24 @@ async function createParser({
 }) {
   let parser: Parser<any> = { ...original }
 
-  let compatible: { pluginName: string; mod: unknown }[] = []
-
-  for (let pluginName of opts.compatible ?? []) {
-    let mod = await loadIfExistsESM(pluginName)
-    compatible.push({ pluginName, mod })
-  }
-
-  function load(options: ParserOptions<any>) {
+  async function load(options: ParserOptions<any>) {
     let parser: Parser<any> = { ...original }
 
-    for (let { pluginName, mod } of compatible) {
-      let plugin = findEnabledPlugin(options, pluginName, mod)
-      if (plugin) Object.assign(parser, plugin.parsers[name])
+    for (const pluginName of opts.compatible || []) {
+      let plugin = await findEnabledPlugin(options, pluginName)
+      if (plugin?.parsers?.[name]) Object.assign(parser, plugin.parsers[name])
     }
 
     return parser
   }
 
-  parser.preprocess = (code: string, options: ParserOptions) => {
-    let parser = load(options)
-
+  parser.preprocess = async (code: string, options: ParserOptions) => {
+    let parser = await load(options)
     return parser.preprocess ? parser.preprocess(code, options) : code
   }
 
   parser.parse = async (code, options) => {
-    let original = load(options)
+    let original = await load(options)
 
     // @ts-expect-error: `options` is passed twice for compat with older plugins that were written
     // for Prettier v2 but still work with v3.
@@ -189,8 +182,7 @@ async function loadIfExistsESM(name: string): Promise<Plugin<any>> {
   )
 }
 
-function findEnabledPlugin(options: ParserOptions<any>, name: string, mod: any) {
-  let path = maybeResolve(name)
+function findEnabledPlugin(options: ParserOptions<any>, name: string) {
 
   for (let plugin of options.plugins) {
     if (plugin instanceof URL) {
@@ -198,30 +190,17 @@ function findEnabledPlugin(options: ParserOptions<any>, name: string, mod: any) 
       if (plugin.hostname !== '') continue
 
       plugin = plugin.pathname
-    }
-
-    if (typeof plugin === 'string') {
-      if (plugin === name || plugin === path) {
-        return mod
+    } if (typeof plugin !== 'string') {
+      if (!plugin.name) {
+        continue
       }
-
-      continue
+      plugin = plugin.name
     }
 
-    // options.plugins.*.name == name
-    if (plugin.name === name) {
-      return mod
-    }
 
-    // options.plugins.*.name == path
-    if (plugin.name === path) {
-      return mod
-    }
+    if (plugin === name || (isAbsolute(plugin) && plugin.includes(name) && maybeResolve(name) === plugin)) {
+      return loadIfExistsESM(name)
 
-    // basically options.plugins.* == mod
-    // But that can't work because prettier normalizes plugins which destroys top-level object identity
-    if (plugin.parsers && mod.parsers && plugin.parsers == mod.parsers) {
-      return mod
     }
   }
 }

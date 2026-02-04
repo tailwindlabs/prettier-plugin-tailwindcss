@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises'
 import * as path from 'node:path'
-import type { Plugin } from 'rolldown'
-import { defineConfig } from 'tsdown'
+import { defineConfig, Rolldown } from 'tsdown'
+
 
 /**
  * Patches recast to fix template literal spacing issues.
  * @see https://github.com/benjamn/recast/issues/611
  */
-function patchRecast(): Plugin {
+function patchRecast(): Rolldown.Plugin {
   return {
     name: 'patch-recast',
     async load(id) {
@@ -34,7 +34,7 @@ function patchRecast(): Plugin {
 /**
  * Patches jiti to use require for babel import.
  */
-function patchJiti(): Plugin {
+function patchJiti(): Rolldown.Plugin {
   return {
     name: 'patch-jiti',
     async load(id) {
@@ -56,7 +56,7 @@ function patchJiti(): Plugin {
 /**
  * Inlines CSS imports as JavaScript strings.
  */
-function inlineCssImports(): Plugin {
+function inlineCssImports(): Rolldown.Plugin {
   return {
     name: 'inline-css-imports',
     async load(id) {
@@ -94,7 +94,6 @@ function inlineCssImports(): Plugin {
 
 export default defineConfig({
   entry: ['./src/index.ts', './src/lib.ts'],
-  outDir: './dist',
   format: 'esm',
   platform: 'node',
   target: 'node14.21.3',

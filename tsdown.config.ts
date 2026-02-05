@@ -41,7 +41,7 @@ function inlineCssImports(): Rolldown.Plugin {
       }
 
       // Inline preflight in v3
-      if (/corePlugins\.js$/.test(id)) {
+      if (id.endsWith('corePlugins.js')) {
         let preflightPath = path.resolve(path.dirname(id), './css/preflight.css')
         let preflightContent = await readFile(preflightPath, 'utf-8')
         let content = await readFile(id, 'utf-8')
@@ -72,6 +72,7 @@ export default defineConfig({
   dts: true,
   sourcemap: false,
   fixedExtension: true,
+  minify: 'dce-only',
   inlineOnly: false,
   shims: true,
   plugins: [patchJiti(), inlineCssImports()],

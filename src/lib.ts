@@ -82,9 +82,9 @@ export interface Sorter {
    * Each element is an array of class names. Passing a space separated class
    * list in each element is not supported.
    *
-   * When removing duplicates they are replaced with `null`.
+   * Duplicates are removed by default unless `preserveDuplicates` is enabled.
    */
-  sortClassLists(classes: string[][]): (string | null)[][]
+  sortClassLists(classes: string[][]): string[][]
 }
 
 type TailwindConfigOptions = {
@@ -397,12 +397,7 @@ export async function createSorter(opts: SorterOptions): Promise<Sorter> {
           removeDuplicates: !preserveDuplicates,
         })
 
-        let sorted: (string | null)[] = [...result.classList]
-        for (let idx of result.removedIndices) {
-          sorted[idx] = null
-        }
-
-        return sorted
+        return result.classList
       })
     },
 

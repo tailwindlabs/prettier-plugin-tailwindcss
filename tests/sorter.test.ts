@@ -109,7 +109,7 @@ describe('createSorter', () => {
       ])
     })
 
-    test('removes duplicates by default (replaces with null)', async () => {
+    test('removes duplicates by default', async () => {
       let fixtureDir = path.resolve(__dirname, 'fixtures/basic')
       let sorter = await createSorter({
         base: fixtureDir,
@@ -118,7 +118,7 @@ describe('createSorter', () => {
 
       let [sorted] = sorter.sortClassLists([['bg-red-500', 'sm:bg-tomato', 'bg-red-500']])
 
-      expect(sorted).toEqual(['bg-red-500', 'sm:bg-tomato', null])
+      expect(sorted).toEqual(['bg-red-500', 'sm:bg-tomato'])
     })
 
     test('preserves duplicates when option is enabled', async () => {

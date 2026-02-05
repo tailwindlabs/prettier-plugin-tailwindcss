@@ -4,7 +4,7 @@ import prettier from 'prettier'
 import type { ParserOptions } from 'prettier'
 import * as console from './console'
 import { expiringMap } from './expiring-map.js'
-import { getTailwindConfig as getTailwindConfigFromLib } from './lib.js'
+import { getTailwindConfig as getTailwindConfigFromLib } from './sorter.js'
 import type { UnifiedApi } from './types'
 import { cacheForDirs } from './utils.js'
 

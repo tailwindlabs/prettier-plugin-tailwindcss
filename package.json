@@ -16,10 +16,10 @@
       "import": "./dist/index.mjs",
       "default": "./dist/index.mjs"
     },
-    "./lib": {
-      "types": "./dist/lib.d.mts",
-      "import": "./dist/lib.mjs",
-      "default": "./dist/lib.mjs"
+    "./sorter": {
+      "types": "./dist/sorter.d.mts",
+      "import": "./dist/sorter.mjs",
+      "default": "./dist/sorter.mjs"
     }
   },
   "repository": {

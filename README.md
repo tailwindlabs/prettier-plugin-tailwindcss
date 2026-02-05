@@ -195,10 +195,10 @@ const mySortedClasses = tw`bg-white p-4 dark:bg-black`
 ## Public API
 
 If you want to use the Tailwind class sorting logic outside of Prettier, import from the
-`lib` entrypoint:
+`sorter` entrypoint:
 
 ```js
-import { createSorter } from 'prettier-plugin-tailwindcss/lib'
+import { createSorter } from 'prettier-plugin-tailwindcss/sorter'
 
 let sorter = await createSorter({
   base: '/path/to/project',

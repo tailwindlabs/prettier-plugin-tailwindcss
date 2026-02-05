@@ -1,7 +1,7 @@
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from 'vitest'
-import { createSorter } from '../src/lib'
+import { createSorter } from '../src/sorter'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

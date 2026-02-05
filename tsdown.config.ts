@@ -93,7 +93,7 @@ function inlineCssImports(): Rolldown.Plugin {
 }
 
 export default defineConfig({
-  entry: ['./src/index.ts', './src/lib.ts'],
+  entry: ['./src/index.ts', './src/sorter.ts'],
   format: 'esm',
   platform: 'node',
   target: 'node14.21.3',

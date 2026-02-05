@@ -1,4 +1,3 @@
-// @ts-check
 import * as path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import escalade from 'escalade/sync'

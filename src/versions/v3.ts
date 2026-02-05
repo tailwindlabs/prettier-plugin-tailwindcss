@@ -49,15 +49,10 @@ export async function loadV3(pkgDir: string | null, jsConfig: string | null): Pr
     }
   } catch {}
 
-  try {
-    if (jsConfig) {
-      clearModule(jsConfig)
-      let loadedConfig = loadConfig(jsConfig)
-      tailwindConfig = loadedConfig.default ?? loadedConfig
-    }
-  } catch (err) {
-    console.error(`Unable to load your Tailwind CSS v3 config: ${jsConfig}`)
-    throw err
+  if (jsConfig) {
+    clearModule(jsConfig)
+    let loadedConfig = loadConfig(jsConfig)
+    tailwindConfig = loadedConfig.default ?? loadedConfig
   }
 
   // suppress "empty content" warning

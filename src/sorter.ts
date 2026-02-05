@@ -156,9 +156,35 @@ export async function getTailwindConfig(options: TailwindConfigOptions): Promise
   // or because it was automatically located. This means we should use v3.
   if (jsConfig) {
     if (!stylesheet) {
+      // If the config was explicitly provided, always use v3
+      let explicitConfig = !!configPath
+
       return pathToApiMap.remember(`${pkgDir}:${jsConfig}`, async () => {
         const { loadV3 } = await import('./versions/v3')
-        return loadV3(pkgDir, jsConfig)
+
+        try {
+          return await loadV3(pkgDir, jsConfig)
+        } catch (err) {
+          // If loading an auto-detected config fails with stack overflow (often caused
+          // by jiti-based configs like unbuild stubs), fall back to bundled v4.
+          // This commonly occurs in monorepos where a shared tailwind config package
+          // uses unbuild --stub mode.
+          if (!explicitConfig && err instanceof RangeError && err.message.includes('call stack')) {
+            console.warn(
+              'v3-config-load-failed',
+              base,
+              `Failed to load auto-detected Tailwind CSS config at ${jsConfig}. Falling back to bundled v4.`,
+            )
+            const { loadV4 } = await import('./versions/v4')
+            return loadV4(null, null)
+          }
+          console.error(
+            'v3-config-load-error',
+            base,
+            `Unable to load Tailwind CSS v3 config at ${jsConfig}.`,
+          )
+          throw err
+        }
       })
     }
 

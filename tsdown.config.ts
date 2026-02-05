@@ -2,35 +2,6 @@ import { readFile } from 'node:fs/promises'
 import * as path from 'node:path'
 import { defineConfig, Rolldown } from 'tsdown'
 
-
-/**
- * Patches recast to fix template literal spacing issues.
- * @see https://github.com/benjamn/recast/issues/611
- */
-function patchRecast(): Rolldown.Plugin {
-  return {
-    name: 'patch-recast',
-    async load(id) {
-      if (!/recast[\\/]lib[\\/]patcher\.js$/.test(id)) {
-        return null
-      }
-
-      let original = await readFile(id, 'utf8')
-      return {
-        code: original
-          .replace(
-            'var nls = needsLeadingSpace(lines, oldNode.loc, newLines);',
-            'var nls = oldNode.type !== "TemplateElement" && needsLeadingSpace(lines, oldNode.loc, newLines);',
-          )
-          .replace(
-            'var nts = needsTrailingSpace(lines, oldNode.loc, newLines)',
-            'var nts = oldNode.type !== "TemplateElement" && needsTrailingSpace(lines, oldNode.loc, newLines)',
-          ),
-      }
-    },
-  }
-}
-
 /**
  * Patches jiti to use require for babel import.
  */
@@ -103,5 +74,5 @@ export default defineConfig({
   fixedExtension: true,
   inlineOnly: false,
   shims: true,
-  plugins: [patchRecast(), patchJiti(), inlineCssImports()],
+  plugins: [patchJiti(), inlineCssImports()],
 })

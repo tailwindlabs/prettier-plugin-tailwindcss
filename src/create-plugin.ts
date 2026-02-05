@@ -142,7 +142,9 @@ function createPrinter({
   return printer
 }
 
-async function loadPlugins<T>(fns: string[]) {
+type PluginLoad = string | Plugin<any>
+
+async function loadPlugins<T>(fns: PluginLoad[]) {
   let plugin: Plugin<T> = {
     parsers: Object.create(null),
     printers: Object.create(null),
@@ -153,7 +155,7 @@ async function loadPlugins<T>(fns: string[]) {
 
   for (let moduleName of fns) {
     try {
-      let loaded = await loadIfExistsESM(moduleName)
+      let loaded = typeof moduleName === 'string' ? await loadIfExistsESM(moduleName) : moduleName
       Object.assign(plugin.parsers!, loaded.parsers ?? {})
       Object.assign(plugin.printers!, loaded.printers ?? {})
       Object.assign(plugin.options!, loaded.options ?? {})

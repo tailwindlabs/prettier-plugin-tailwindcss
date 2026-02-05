@@ -1077,7 +1077,7 @@ type CssNode = {
 }
 
 let css = defineTransform<CssNode>({
-  load: ['prettier/plugins/postcss'],
+  load: [prettierParserCss],
   compatible: ['prettier-plugin-css-order'],
 
   parsers: {
@@ -1106,10 +1106,10 @@ let js = defineTransform<import('@babel/types').Node>({
   ],
 
   parsers: {
-    babel: { load: ['prettier/plugins/babel'] },
-    'babel-flow': { load: ['prettier/plugins/babel'] },
-    'babel-ts': { load: ['prettier/plugins/babel'] },
-    __js_expression: { load: ['prettier/plugins/babel'] },
+    babel: { load: [prettierParserBabel] },
+    'babel-flow': { load: [prettierParserBabel] },
+    'babel-ts': { load: [prettierParserBabel] },
+    __js_expression: { load: [prettierParserBabel] },
     typescript: { load: ['prettier/plugins/typescript'] },
     meriyah: { load: ['prettier/plugins/meriyah'] },
     acorn: { load: ['prettier/plugins/acorn'] },

@@ -1324,10 +1324,3 @@ export interface PluginOptions {
    */
   tailwindPreserveDuplicates?: boolean
 }
-
-/**
- * Export the public API for creating a sorter from config options
- *
- * The plugin itself will eventually go through this API
- */
-export * from './sorter.js'

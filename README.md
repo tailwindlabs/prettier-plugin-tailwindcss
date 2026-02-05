@@ -192,6 +192,55 @@ Once added, tag your strings with the function and the plugin will sort them:
 const mySortedClasses = tw`bg-white p-4 dark:bg-black`
 ```
 
+## Public API
+
+If you want to use the Tailwind class sorting logic outside of Prettier, import from the
+`sorter` entrypoint:
+
+```js
+import { createSorter } from 'prettier-plugin-tailwindcss/sorter'
+
+let sorter = await createSorter({
+  base: '/path/to/project',
+  stylesheetPath: './app.css',
+})
+
+// Sort HTML class attributes (space-separated strings)
+let sorted = sorter.sortClassAttributes([
+  'sm:bg-tomato bg-red-500',
+  'p-4 m-2'
+])
+// Returns: ['bg-red-500 sm:bg-tomato', 'm-2 p-4']
+
+// Sort class lists (arrays of class names)
+let sortedLists = sorter.sortClassLists([
+  ['sm:bg-tomato', 'bg-red-500'],
+  ['p-4', 'm-2']
+])
+// Returns: [['bg-red-500', 'sm:bg-tomato'], ['m-2', 'p-4']]
+```
+
+### API Options
+
+The `createSorter` function accepts the following options:
+
+- **`base`** (optional): The directory used to resolve relative file paths. Defaults to the current working directory.
+- **`filepath`** (optional): The path to the file being formatted. When provided, Tailwind CSS is resolved relative to this path.
+- **`configPath`** (optional): Path to the Tailwind CSS config file (v3). Paths are resolved relative to `base`.
+- **`stylesheetPath`** (optional): Path to the CSS stylesheet used by Tailwind CSS (v4+). Paths are resolved relative to `base`.
+- **`preserveWhitespace`** (optional): Whether to preserve whitespace around classes. Default: `false`.
+- **`preserveDuplicates`** (optional): Whether to preserve duplicate classes. Default: `false`.
+
+### Sorter Methods
+
+The sorter object returned by `createSorter` has two methods:
+
+- **`sortClassAttributes(classes: string[]): string[]`**
+  Sorts one or more HTML class attributes. Each element should be a space-separated string of class names (like the value of an HTML `class` attribute).
+
+- **`sortClassLists(classes: string[][]): (string | null)[][]`**
+  Sorts one or more class lists. Each element should be an array of individual class names. When removing duplicates (default behavior), duplicate classes are replaced with `null` in the output.
+
 ### Using regex patterns
 
 Like the `tailwindAttributes` option, the `tailwindFunctions` option also supports regular expressions to match multiple function names. Patterns should be enclosed in forward slashes. Note that JS regex literals are not supported with Prettier.

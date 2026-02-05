@@ -10,6 +10,18 @@
   "files": [
     "dist"
   ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
+    },
+    "./sorter": {
+      "types": "./dist/sorter.d.mts",
+      "import": "./dist/sorter.mjs",
+      "default": "./dist/sorter.mjs"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/tailwindlabs/prettier-plugin-tailwindcss"

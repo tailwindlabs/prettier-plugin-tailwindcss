@@ -16,7 +16,9 @@
     "skipLibCheck": true,
     "strict": true,
     "noFallthroughCasesInSwitch": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true  ,
+    
+    "stripInternal": true,
   },
   "include": ["src/*.ts"],
   "exclude": ["node_modules"]

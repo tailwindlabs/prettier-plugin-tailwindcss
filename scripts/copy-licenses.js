@@ -7,17 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const pkg = JSON.parse(await fs.readFile(path.resolve(__dirname, '../package.json'), 'utf8'))
 
-let exclude = [
-  'cpy-cli',
-  'esbuild',
-  'vitest',
-  'license-checker',
-  'prettier',
-  'rimraf',
-  'svelte',
-  'tsup',
-  '@microsoft/api-extractor',
-]
+let exclude = ['vitest', 'license-checker', 'prettier', 'svelte', 'knip']
 
 /** @type {checker.ModuleInfo} */
 let packages = await new Promise((resolve, reject) => {

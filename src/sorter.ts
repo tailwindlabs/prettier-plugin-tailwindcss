@@ -7,8 +7,6 @@ import { resolveJsFrom } from './resolve'
 import { sortClasses, sortClassList } from './sorting.js'
 import type { TransformerEnv, UnifiedApi } from './types'
 import { cacheForDirs } from './utils.js'
-import { loadV3 } from './versions/v3'
-import { loadV4 } from './versions/v4'
 
 export interface SorterOptions {
   /**
@@ -158,7 +156,10 @@ export async function getTailwindConfig(options: TailwindConfigOptions): Promise
   // or because it was automatically located. This means we should use v3.
   if (jsConfig) {
     if (!stylesheet) {
-      return pathToApiMap.remember(`${pkgDir}:${jsConfig}`, () => loadV3(pkgDir, jsConfig))
+      return pathToApiMap.remember(`${pkgDir}:${jsConfig}`, async () => {
+        const { loadV3 } = await import('./versions/v3')
+        return loadV3(pkgDir, jsConfig)
+      })
     }
 
     // In this case the user explicitly gave us a stylesheet and a config.
@@ -172,7 +173,10 @@ export async function getTailwindConfig(options: TailwindConfigOptions): Promise
 
   if (mod && !mod.__unstable__loadDesignSystem) {
     if (!stylesheet) {
-      return pathToApiMap.remember(`${pkgDir}:${jsConfig}`, () => loadV3(pkgDir, jsConfig))
+      return pathToApiMap.remember(`${pkgDir}:${jsConfig}`, async () => {
+        const { loadV3 } = await import('./versions/v3')
+        return loadV3(pkgDir, jsConfig)
+      })
     }
 
     // In this case the user explicitly gave us a stylesheet but their local
@@ -191,7 +195,10 @@ export async function getTailwindConfig(options: TailwindConfigOptions): Promise
     stylesheet ??= `${pkgDir}/theme.css`
   }
 
-  return pathToApiMap.remember(`${pkgDir}:${stylesheet}`, () => loadV4(mod, stylesheet))
+  return pathToApiMap.remember(`${pkgDir}:${stylesheet}`, async () => {
+    const { loadV4 } = await import('./versions/v4')
+    return loadV4(mod, stylesheet)
+  })
 }
 
 let resolvedModCache = expiringMap<string, [any | null, string | null]>(10_000)

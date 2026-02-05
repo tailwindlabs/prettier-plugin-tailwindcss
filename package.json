@@ -36,7 +36,7 @@
     "test": "vitest",
     "prepublishOnly": "npm run build && node scripts/copy-licenses.js",
     "format": "prettier \"src/**/*.ts\" \"scripts/**/*.js\" \"tests/*.ts\" --write --print-width 100 --single-quote --no-semi",
-    "lint": "knip",
+    "lint": "knip && oxlint --type-aware src tests/*.ts",
     "release-channel": "node ./scripts/release-channel.js",
     "release-notes": "node ./scripts/release-notes.js"
   },
@@ -62,6 +62,8 @@
     "license-checker": "^25.0.1",
     "line-column": "^1.0.2",
     "marko": "^5.37.46",
+    "oxlint": "^1.43.0",
+    "oxlint-tsgolint": "^0.11.4",
     "postcss": "^8.5.6",
     "postcss-import": "^16.1.1",
     "prettier": "^3.7.3",

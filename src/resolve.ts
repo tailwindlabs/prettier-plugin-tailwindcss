@@ -43,7 +43,7 @@ export function maybeResolve(name: string) {
     try {
       modpath = resolveJsFrom(fileURLToPath(import.meta.url), name)
       resolveCache.set(name, modpath)
-    } catch (err) {
+    } catch {
       resolveCache.set(name, null)
       return null
     }
@@ -66,7 +66,7 @@ export async function loadIfExists<T>(name: string): Promise<T | null> {
 export function resolveJsFrom(base: string, id: string): string {
   try {
     return esmResolver.resolveSync({}, base, id) || id
-  } catch (err) {
+  } catch {
     return cjsResolver.resolveSync({}, base, id) || id
   }
 }

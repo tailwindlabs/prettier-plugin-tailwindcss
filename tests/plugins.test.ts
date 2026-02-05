@@ -1,6 +1,5 @@
 import { createRequire } from 'node:module'
 import dedent from 'dedent'
-import * as prettier from 'prettier'
 import { test } from 'vitest'
 import { javascript } from './tests.js'
 import type { TestEntry } from './utils.js'

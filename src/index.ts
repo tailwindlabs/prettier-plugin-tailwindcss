@@ -9,7 +9,7 @@ import * as prettierParserCss from 'prettier/plugins/postcss'
 import { createPlugin } from './create-plugin.js'
 import type { Matcher } from './options.js'
 import { sortClasses, sortClassList } from './sorting.js'
-import { defineTransform, type TransformOptions } from './transform.js'
+import { defineTransform } from './transform.js'
 import type { StringChange, TransformerEnv } from './types'
 import { spliceChangesIntoString, visit, type Path } from './utils.js'
 

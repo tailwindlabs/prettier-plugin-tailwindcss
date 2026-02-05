@@ -201,12 +201,12 @@ export async function getTailwindConfig(options: TailwindConfigOptions): Promise
   })
 }
 
-let resolvedModCache = expiringMap<string, [any | null, string | null]>(10_000)
+let resolvedModCache = expiringMap<string, [any, string | null]>(10_000)
 
 async function resolveTailwindPath(
   options: { packageName?: string },
   baseDir: string,
-): Promise<[any | null, string | null]> {
+): Promise<[any, string | null]> {
   let pkgName = options.packageName ?? 'tailwindcss'
   let makeKey = (dir: string) => `${pkgName}:${dir}`
 
@@ -218,7 +218,7 @@ async function resolveTailwindPath(
 
   let resolve = async () => {
     let pkgDir: string | null = null
-    let mod: any | null = null
+    let mod: any = null
 
     try {
       let pkgPath = resolveJsFrom(baseDir, pkgName)
@@ -228,7 +228,7 @@ async function resolveTailwindPath(
       pkgDir = path.dirname(pkgFile)
     } catch {}
 
-    return [mod, pkgDir] as [any | null, string | null]
+    return [mod, pkgDir] as [any, string | null]
   }
 
   let result = await resolve()

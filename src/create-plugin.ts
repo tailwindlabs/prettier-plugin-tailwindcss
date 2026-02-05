@@ -33,7 +33,7 @@ export function createPlugin(transforms: TransformOptions<any>[]) {
       }
     }
 
-    for (let [name, meta] of Object.entries(opts.printers ?? {})) {
+    for (let [name, _meta] of Object.entries(opts.printers ?? {})) {
       printers[name] = async () => {
         let plugin = await loadPlugins(opts.load ?? [])
         let original = plugin.printers?.[name]
@@ -154,17 +154,13 @@ async function loadPlugins<T>(fns: PluginLoad[]) {
   }
 
   for (let moduleName of fns) {
-    try {
-      let loaded = typeof moduleName === 'string' ? await loadIfExistsESM(moduleName) : moduleName
-      Object.assign(plugin.parsers!, loaded.parsers ?? {})
-      Object.assign(plugin.printers!, loaded.printers ?? {})
-      Object.assign(plugin.options!, loaded.options ?? {})
-      Object.assign(plugin.defaultOptions!, loaded.defaultOptions ?? {})
+    let loaded = typeof moduleName === 'string' ? await loadIfExistsESM(moduleName) : moduleName
+    Object.assign(plugin.parsers!, loaded.parsers ?? {})
+    Object.assign(plugin.printers!, loaded.printers ?? {})
+    Object.assign(plugin.options!, loaded.options ?? {})
+    Object.assign(plugin.defaultOptions!, loaded.defaultOptions ?? {})
 
-      plugin.languages = [...(plugin.languages ?? []), ...(loaded.languages ?? [])]
-    } catch (err) {
-      throw err
-    }
+    plugin.languages = [...(plugin.languages ?? []), ...(loaded.languages ?? [])]
   }
 
   return plugin

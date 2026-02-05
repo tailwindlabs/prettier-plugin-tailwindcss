@@ -62,6 +62,11 @@ let fixtures = [
     ext: 'html',
   },
   {
+    name: 'v3: re-exported config with jiti',
+    dir: 'v3-jiti-reexport',
+    ext: 'html',
+  },
+  {
     name: 'plugins',
     dir: 'plugins',
     ext: 'html',

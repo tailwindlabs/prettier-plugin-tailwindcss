@@ -1,0 +1,17 @@
+{
+  "name": "@repo/tailwind-config",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "dependencies": {
+    "jiti": "^2.6.1"
+  }
+}

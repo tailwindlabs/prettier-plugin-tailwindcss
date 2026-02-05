@@ -280,6 +280,6 @@ export let tests: Record<string, TestEntry[]> = {
   acorn: javascript,
   meriyah: javascript,
   mdx: javascript
-    .filter((test) => !/^\/\*/.test(test[0]) && !/^\/\*/.test(test[1]))
+    .filter((test) => !test[0].startsWith('/*') && !test[1].startsWith('/*'))
     .map((test) => [test[0].replace(/^;/, ''), test[1].replace(/^;/, ''), test[2]]),
 }

@@ -7,7 +7,7 @@ export function loadIfExists(name: string): any {
     if (require.resolve(name)) {
       return require(name)
     }
-  } catch (e) {
+  } catch {
     return null
   }
 }

@@ -1,4 +1,4 @@
-import { bench, describe, test } from 'vitest'
+import { describe, test } from 'vitest'
 import type { StringChange } from './types'
 import { spliceChangesIntoString } from './utils'
 

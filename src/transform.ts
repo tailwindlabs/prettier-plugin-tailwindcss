@@ -1,4 +1,4 @@
-import type { AstPath, ParserOptions, Plugin } from 'prettier'
+import type { AstPath, Plugin } from 'prettier'
 import type { TransformerEnv } from './types'
 
 export function defineTransform<T>(opts: TransformOptions<T>) {

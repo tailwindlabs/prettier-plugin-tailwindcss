@@ -1,0 +1,31 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": ["scripts/*.js"],
+  "project": ["src/**/*.ts", "scripts/**/*.js", "tests/**/*.ts"],
+  "ignore": ["src/**/*.d.ts", "tests/fixtures/**"],
+  "ignoreDependencies": [
+    "@ianvs/prettier-plugin-sort-imports",
+    "@prettier/plugin-hermes",
+    "@prettier/plugin-pug",
+    "@shopify/prettier-plugin-liquid",
+    "@trivago/prettier-plugin-sort-imports",
+    "@zackad/prettier-plugin-twig",
+    "prettier-plugin-astro",
+    "prettier-plugin-css-order",
+    "prettier-plugin-jsdoc",
+    "prettier-plugin-marko",
+    "prettier-plugin-multiline-arrays",
+    "prettier-plugin-organize-attributes",
+    "prettier-plugin-organize-imports",
+    "prettier-plugin-sort-imports",
+    "prettier-plugin-svelte",
+    "import-sort-style-module",
+    "marko",
+    "postcss",
+    "postcss-import"
+  ],
+  "rules": {
+    "exports": "off",
+    "types": "off"
+  }
+}

@@ -4,8 +4,9 @@ import prettier from 'prettier'
 import type { ParserOptions } from 'prettier'
 import * as console from './console'
 import { expiringMap } from './expiring-map.js'
-import { cacheForDirs, getTailwindConfig as getTailwindConfigFromLib } from './lib.js'
+import { getTailwindConfig as getTailwindConfigFromLib } from './lib.js'
 import type { UnifiedApi } from './types'
+import { cacheForDirs } from './utils.js'
 
 let prettierConfigCache = expiringMap<string, string | null>(10_000)
 

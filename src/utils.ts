@@ -1,3 +1,4 @@
+import * as path from 'node:path'
 import type { StringChange } from './types'
 
 // For loading prettier plugins only if they exist
@@ -137,4 +138,39 @@ export function spliceChangesIntoString(str: string, changes: StringChange[]) {
 
 export function bigSign(bigIntValue: bigint) {
   return Number(bigIntValue > 0n) - Number(bigIntValue < 0n)
+}
+
+/**
+ * Cache a value for all directories from `inputDir` up to `targetDir` (inclusive).
+ * Stops early if an existing cache entry is found.
+ *
+ * How it works:
+ *
+ * For a file at '/repo/packages/ui/src/Button.tsx' with config at '/repo/package.json'
+ *
+ * `cacheForDirs(cache, '/repo/packages/ui/src', '/repo/package.json', '/repo')`
+ *
+ * Caches:
+ * - '/repo/packages/ui/src' -> '/repo/package.json'
+ * - '/repo/packages/ui'     -> '/repo/package.json'
+ * - '/repo/packages'        -> '/repo/package.json'
+ * - '/repo'                 -> '/repo/package.json'
+ */
+export function cacheForDirs<V>(
+  cache: { set(key: string, value: V): void; get(key: string): V | undefined },
+  inputDir: string,
+  value: V,
+  targetDir: string,
+  makeKey: (dir: string) => string = (dir) => dir,
+): void {
+  let dir = inputDir
+  while (dir !== path.dirname(dir) && dir.length >= targetDir.length) {
+    const key = makeKey(dir)
+    // Stop caching if we hit an existing entry
+    if (cache.get(key) !== undefined) break
+
+    cache.set(key, value)
+    if (dir === targetDir) break
+    dir = path.dirname(dir)
+  }
 }

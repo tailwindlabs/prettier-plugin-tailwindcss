@@ -7,6 +7,7 @@ import { expiringMap } from './expiring-map.js'
 import { resolveJsFrom } from './resolve'
 import { sortClasses, sortClassList } from './sorting.js'
 import type { TransformerEnv, UnifiedApi } from './types'
+import { cacheForDirs } from './utils.js'
 import { loadV3 } from './versions/v3'
 import { loadV4 } from './versions/v4'
 
@@ -98,43 +99,6 @@ type TailwindConfigOptions = {
 function resolveIfRelative(base: string, filePath?: string) {
   if (!filePath) return null
   return path.isAbsolute(filePath) ? filePath : path.resolve(base, filePath)
-}
-
-/**
- * Cache a value for all directories from `inputDir` up to `targetDir` (inclusive).
- * Stops early if an existing cache entry is found.
- *
- * How it works:
- *
- * For a file at '/repo/packages/ui/src/Button.tsx' with config at '/repo/package.json'
- *
- * `cacheForDirs(cache, '/repo/packages/ui/src', '/repo/package.json', '/repo')`
- *
- * Caches:
- * - '/repo/packages/ui/src' -> '/repo/package.json'
- * - '/repo/packages/ui'     -> '/repo/package.json'
- * - '/repo/packages'        -> '/repo/package.json'
- * - '/repo'                 -> '/repo/package.json'
- *
- * @internal
- */
-export function cacheForDirs<V>(
-  cache: { set(key: string, value: V): void; get(key: string): V | undefined },
-  inputDir: string,
-  value: V,
-  targetDir: string,
-  makeKey: (dir: string) => string = (dir) => dir,
-): void {
-  let dir = inputDir
-  while (dir !== path.dirname(dir) && dir.length >= targetDir.length) {
-    const key = makeKey(dir)
-    // Stop caching if we hit an existing entry
-    if (cache.get(key) !== undefined) break
-
-    cache.set(key, value)
-    if (dir === targetDir) break
-    dir = path.dirname(dir)
-  }
 }
 
 let pathToApiMap = expiringMap<string | null, Promise<UnifiedApi>>(10_000)

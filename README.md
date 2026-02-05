@@ -208,9 +208,6 @@ let sorter = await createSorter({
 let [sorted] = sorter.sortClassAttributes(['sm:bg-tomato bg-red-500'])
 ```
 
-If you already know the formatter config file path, pass `formatterConfigPath` to infer
-`base` automatically and improve warning messages.
-
 ### Using regex patterns
 
 Like the `tailwindAttributes` option, the `tailwindFunctions` option also supports regular expressions to match multiple function names. Patterns should be enclosed in forward slashes. Note that JS regex literals are not supported with Prettier.

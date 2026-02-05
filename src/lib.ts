@@ -15,17 +15,9 @@ export interface SorterOptions {
    * The directory used to resolve relative file paths.
    *
    * When not provided this will be:
-   * - Inferred from `formatterConfigPath` if given; otherwise
    * - The current working directory
    */
   base?: string
-
-  /**
-   * The path to the config file containing formatter settings.
-   *
-   * Used for warning context and to infer `base` when not provided.
-   */
-  formatterConfigPath?: string
 
   /**
    * The path to the file being formatted.
@@ -97,7 +89,6 @@ export interface Sorter {
 
 type TailwindConfigOptions = {
   base?: string
-  formatterConfigPath?: string
   filepath?: string
   configPath?: string
   stylesheetPath?: string
@@ -147,11 +138,8 @@ function cacheForDirs<V>(
 let pathToApiMap = expiringMap<string | null, Promise<UnifiedApi>>(10_000)
 
 export async function getTailwindConfig(options: TailwindConfigOptions): Promise<UnifiedApi> {
-  let base =
-    options.base ??
-    (options.formatterConfigPath ? path.dirname(options.formatterConfigPath) : process.cwd())
+  let base = options.base ?? process.cwd()
   let inputDir = options.filepath ? path.dirname(options.filepath) : base
-  let formatterConfigPath = options.formatterConfigPath ?? ''
 
   let configPath = resolveIfRelative(base, options.configPath)
   let stylesheetPath = resolveIfRelative(base, options.stylesheetPath)
@@ -168,7 +156,7 @@ export async function getTailwindConfig(options: TailwindConfigOptions): Promise
   // We resolve this relative to the config file because it is *required*
   // to work with a project's custom config. Given that, resolving it
   // relative to where the path is defined makes the most sense.
-  let stylesheet = resolveStylesheet(stylesheetPath, formatterConfigPath)
+  let stylesheet = resolveStylesheet(stylesheetPath, base)
 
   // Locate *explicit* v3 configs relative to the formatter config file
   //
@@ -208,7 +196,7 @@ export async function getTailwindConfig(options: TailwindConfigOptions): Promise
     // Warn them about this and use the bundled v4.
     console.error(
       'explicit-stylesheet-and-config-together',
-      formatterConfigPath,
+      base,
       `You have specified a Tailwind CSS stylesheet and a Tailwind CSS config at the same time. Use stylesheetPath unless you are using v3. Preferring the stylesheet.`,
     )
   }
@@ -223,7 +211,7 @@ export async function getTailwindConfig(options: TailwindConfigOptions): Promise
     mod = null
     console.error(
       'stylesheet-unsupported',
-      formatterConfigPath,
+      base,
       'You have specified a Tailwind CSS stylesheet but your installed version of Tailwind CSS does not support this feature.',
     )
   }
@@ -317,7 +305,7 @@ function findClosestJsConfig(inputDir: string): string | null {
   return configPath
 }
 
-function resolveStylesheet(stylesheetPath: string | null, formatterConfigPath: string): string | null {
+function resolveStylesheet(stylesheetPath: string | null, base: string): string | null {
   if (!stylesheetPath) return null
 
   if (
@@ -330,7 +318,7 @@ function resolveStylesheet(stylesheetPath: string | null, formatterConfigPath: s
   ) {
     console.error(
       'stylesheet-is-js-file',
-      formatterConfigPath,
+      base,
       "Your `stylesheetPath` option points to a JS/TS config file. You must point to your project's `.css` file for v4 projects.",
     )
   } else if (
@@ -341,13 +329,13 @@ function resolveStylesheet(stylesheetPath: string | null, formatterConfigPath: s
   ) {
     console.error(
       'stylesheet-is-preprocessor-file',
-      formatterConfigPath,
+      base,
       'Your `stylesheetPath` option points to a preprocessor file. This is unsupported and you may get unexpected results.',
     )
   } else if (!stylesheetPath.endsWith('.css')) {
     console.error(
       'stylesheet-is-not-css-file',
-      formatterConfigPath,
+      base,
       'Your `stylesheetPath` option does not point to a CSS file. This is unsupported and you may get unexpected results.',
     )
   }
@@ -361,7 +349,6 @@ export async function createSorter(opts: SorterOptions): Promise<Sorter> {
 
   let api = await getTailwindConfig({
     base: opts.base,
-    formatterConfigPath: opts.formatterConfigPath,
     filepath: opts.filepath,
     configPath: opts.configPath,
     stylesheetPath: opts.stylesheetPath,

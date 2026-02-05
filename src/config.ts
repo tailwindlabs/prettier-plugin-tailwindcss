@@ -32,14 +32,14 @@ function cacheForDirs<V>(
 
 let prettierConfigCache = expiringMap<string, string | null>(10_000)
 
-async function resolvePrettierConfigPath(
+async function resolvePrettierConfigDir(
   filePath: string,
   inputDir: string,
-): Promise<[string, string | null]> {
+): Promise<string> {
   // Check cache for this directory
   let cached = prettierConfigCache.get(inputDir)
   if (cached !== undefined) {
-    return cached ? [path.dirname(cached), cached] : [process.cwd(), null]
+    return cached ?? process.cwd()
   }
 
   const resolve = async () => {
@@ -56,24 +56,24 @@ async function resolvePrettierConfigPath(
 
   // Cache all directories from inputDir up to config location
   if (prettierConfig) {
-    cacheForDirs(prettierConfigCache, inputDir, prettierConfig, path.dirname(prettierConfig))
+    let configDir = path.dirname(prettierConfig)
+    cacheForDirs(prettierConfigCache, inputDir, configDir, configDir)
+    return configDir
   } else {
     prettierConfigCache.set(inputDir, null)
+    return process.cwd()
   }
-
-  return prettierConfig ? [path.dirname(prettierConfig), prettierConfig] : [process.cwd(), null]
 }
 
 export async function getTailwindConfig(options: ParserOptions): Promise<UnifiedApi> {
   let cwd = process.cwd()
   let inputDir = options.filepath ? path.dirname(options.filepath) : cwd
 
-  let [configDir, formatterConfigPath] = await resolvePrettierConfigPath(
+  let configDir = await resolvePrettierConfigDir(
     options.filepath,
     inputDir,
   )
 
-  let base = formatterConfigPath ? path.dirname(formatterConfigPath) : configDir
 
   let configPath =
     options.tailwindConfig && !options.tailwindConfig.endsWith('.css')
@@ -84,7 +84,7 @@ export async function getTailwindConfig(options: ParserOptions): Promise<Unified
   if (!stylesheetPath && options.tailwindEntryPoint) {
     console.warn(
       'entrypoint-is-deprecated',
-      formatterConfigPath ?? '',
+      configDir,
       'Deprecated: Use the `tailwindStylesheet` option for v4 projects instead of `tailwindEntryPoint`.',
     )
     stylesheetPath = options.tailwindEntryPoint
@@ -93,15 +93,14 @@ export async function getTailwindConfig(options: ParserOptions): Promise<Unified
   if (!stylesheetPath && options.tailwindConfig && options.tailwindConfig.endsWith('.css')) {
     console.warn(
       'config-as-css-is-deprecated',
-      formatterConfigPath ?? '',
+      configDir,
       'Deprecated: Use the `tailwindStylesheet` option for v4 projects instead of `tailwindConfig`.',
     )
     stylesheetPath = options.tailwindConfig
   }
 
   return getTailwindConfigFromLib({
-    base,
-    formatterConfigPath: formatterConfigPath ?? undefined,
+    base: configDir,
     filepath: options.filepath,
     configPath,
     stylesheetPath,

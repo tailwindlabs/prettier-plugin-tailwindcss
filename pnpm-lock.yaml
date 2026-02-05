@@ -41,9 +41,6 @@ importers:
       '@zackad/prettier-plugin-twig':
         specifier: ^0.16.0
         version: 0.16.2
-      ast-types:
-        specifier: ^0.14.2
-        version: 0.14.2
       clear-module:
         specifier: ^4.1.2
         version: 4.1.2
@@ -68,9 +65,6 @@ importers:
       jiti:
         specifier: ^2.6.0
         version: 2.6.1
-      jsesc:
-        specifier: ^3.1.0
-        version: 3.1.0
       license-checker:
         specifier: ^25.0.1
         version: 25.0.1
@@ -119,9 +113,6 @@ importers:
       pug-lexer:
         specifier: ^5.0.1
         version: 5.0.1
-      recast:
-        specifier: 0.20.5
-        version: 0.20.5
       resolve-from:
         specifier: ^5.0.0
         version: 5.0.0
@@ -1121,10 +1112,6 @@ packages:
     resolution: {integrity: sha512-trmleAnZ2PxN/loHWVhhx1qeOHSRXq4TDsBBxq3GqeJitfk3+jTQ+v/C1km/KYq9M7wKqCewMh+/NAvVH7m+bw==}
     engines: {node: '>=20.19.0'}
 
-  ast-types@0.14.2:
-    resolution: {integrity: sha512-O0yuUDnZeQDL+ncNGlJ78BiO4jnYI3bvMsD5prT0/nsgijG/LpNBIr63gTjVTNsiGkgQhiyCShTgxt8oXOrklA==}
-    engines: {node: '>=4'}
-
   axobject-query@4.1.0:
     resolution: {integrity: sha512-qIj0G9wZbMGNLjLmg1PT6v2mE9AH2zlnADJD/2tC6E00hgmhUOfEB6greHPAfLRSufHqROIUTkw6E+M3lH0PTQ==}
     engines: {node: '>= 0.4'}
@@ -1403,11 +1390,6 @@ packages:
 
   esm-env@1.2.2:
     resolution: {integrity: sha512-Epxrv+Nr/CaL4ZcFGPJIYLWFom+YeV1DqMLHJoEd9SYRxNbaFruBwfEX/kkHUJf55j2+TUbmDcmuilbP1TmXHA==}
-
-  esprima@4.0.1:
-    resolution: {integrity: sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==}
-    engines: {node: '>=4'}
-    hasBin: true
 
   esrap@2.2.2:
     resolution: {integrity: sha512-zA6497ha+qKvoWIK+WM9NAh5ni17sKZKhbS5B3PoYbBvaYHZWoS33zmFybmyqpn07RLUxSmn+RCls2/XF+d0oQ==}
@@ -2117,10 +2099,6 @@ packages:
   readdirp@3.6.0:
     resolution: {integrity: sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==}
     engines: {node: '>=8.10.0'}
-
-  recast@0.20.5:
-    resolution: {integrity: sha512-E5qICoPoNL4yU0H0NoBDntNB0Q5oMSNh9usFctYniLBluTthi3RsQVBXIJNbApOlvSwW/RGxIuokPcAc59J5fQ==}
-    engines: {node: '>= 4'}
 
   relative-import-path@1.0.0:
     resolution: {integrity: sha512-ZvbtoduKQmD4PZeJPfH6Ql21qUWhaMxiHkIsH+FUnZqKDwNIXBtGg5zRZyHWomiGYk8n5+KMBPK7Mi4D0XWfNg==}
@@ -3418,10 +3396,6 @@ snapshots:
       estree-walker: 3.0.3
       pathe: 2.0.3
 
-  ast-types@0.14.2:
-    dependencies:
-      tslib: 2.8.1
-
   axobject-query@4.1.0: {}
 
   balanced-match@1.0.2: {}
@@ -3681,8 +3655,6 @@ snapshots:
   escape-string-regexp@1.0.5: {}
 
   esm-env@1.2.2: {}
-
-  esprima@4.0.1: {}
 
   esrap@2.2.2:
     dependencies:
@@ -4452,13 +4424,6 @@ snapshots:
     dependencies:
       picomatch: 2.3.1
 
-  recast@0.20.5:
-    dependencies:
-      ast-types: 0.14.2
-      esprima: 4.0.1
-      source-map: 0.6.1
-      tslib: 2.8.1
-
   relative-import-path@1.0.0: {}
 
   require-from-string@2.0.2: {}
@@ -4765,7 +4730,8 @@ snapshots:
       - synckit
       - vue-tsc
 
-  tslib@2.8.1: {}
+  tslib@2.8.1:
+    optional: true
 
   type-detect@0.1.1: {}
 

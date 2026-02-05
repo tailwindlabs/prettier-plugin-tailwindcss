@@ -4,31 +4,8 @@ import prettier from 'prettier'
 import type { ParserOptions } from 'prettier'
 import * as console from './console'
 import { expiringMap } from './expiring-map.js'
-import { getTailwindConfig as getTailwindConfigFromLib } from './lib.js'
+import { cacheForDirs, getTailwindConfig as getTailwindConfigFromLib } from './lib.js'
 import type { UnifiedApi } from './types'
-
-/**
- * Cache a value for all directories from `inputDir` up to `targetDir` (inclusive).
- * Stops early if an existing cache entry is found.
- */
-function cacheForDirs<V>(
-  cache: { set(key: string, value: V): void; get(key: string): V | undefined },
-  inputDir: string,
-  value: V,
-  targetDir: string,
-  makeKey: (dir: string) => string = (dir) => dir,
-): void {
-  let dir = inputDir
-  while (dir !== path.dirname(dir) && dir.length >= targetDir.length) {
-    const key = makeKey(dir)
-    // Stop caching if we hit an existing entry
-    if (cache.get(key) !== undefined) break
-
-    cache.set(key, value)
-    if (dir === targetDir) break
-    dir = path.dirname(dir)
-  }
-}
 
 let prettierConfigCache = expiringMap<string, string | null>(10_000)
 

@@ -115,8 +115,10 @@ function resolveIfRelative(base: string, filePath?: string) {
  * - '/repo/packages/ui'     -> '/repo/package.json'
  * - '/repo/packages'        -> '/repo/package.json'
  * - '/repo'                 -> '/repo/package.json'
+ *
+ * @internal
  */
-function cacheForDirs<V>(
+export function cacheForDirs<V>(
   cache: { set(key: string, value: V): void; get(key: string): V | undefined },
   inputDir: string,
   value: V,
@@ -137,6 +139,10 @@ function cacheForDirs<V>(
 
 let pathToApiMap = expiringMap<string | null, Promise<UnifiedApi>>(10_000)
 
+/**
+ * Get a Tailwind CSS API instance based on the provided options.
+ * @internal
+ */
 export async function getTailwindConfig(options: TailwindConfigOptions): Promise<UnifiedApi> {
   let base = options.base ?? process.cwd()
   let inputDir = options.filepath ? path.dirname(options.filepath) : base

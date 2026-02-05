@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "rules": {
+    "no-unused-vars": "off",
+    "no-useless-catch": "off",
+    "unicorn/prefer-string-starts-ends-with": "off",
+    "typescript/no-redundant-type-constituents": "off",
+    "typescript/unbound-method": "off"
+  }
+}

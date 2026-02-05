@@ -30,6 +30,10 @@ type Visitor<T, Meta extends Record<string, unknown>> = (
 
 type Visitors<T, Meta extends Record<string, unknown>> = Record<string, Visitor<T, Meta>>
 
+function isNodeLike(value: any): value is { type: string } {
+  return typeof value?.type === 'string'
+}
+
 // https://lihautan.com/manipulating-ast-with-javascript/
 export function visit<T extends {}, Meta extends Record<string, unknown>>(
   ast: T,
@@ -51,7 +55,7 @@ export function visit<T extends {}, Meta extends Record<string, unknown>>(
       const child = node[keys[i]]
       if (Array.isArray(child)) {
         for (let j = 0; j < child.length; j++) {
-          if (child[j] !== null) {
+          if (isNodeLike(child[j])) {
             let newMeta = { ...meta }
             let newPath = [
               {
@@ -67,7 +71,7 @@ export function visit<T extends {}, Meta extends Record<string, unknown>>(
             _visit(child[j], newPath, newMeta)
           }
         }
-      } else if (typeof child?.type === 'string') {
+      } else if (isNodeLike(child)) {
         let newMeta = { ...meta }
         let newPath = [
           {

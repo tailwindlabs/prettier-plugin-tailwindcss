@@ -349,6 +349,22 @@ function resolveStylesheet(stylesheetPath: string | null, base: string): string 
   return stylesheetPath
 }
 
+/**
+ * Creates a sorter instance for sorting Tailwind CSS classes.
+ *
+ * This function initializes a sorter with the specified Tailwind CSS configuration.
+ * The sorter can be used to sort class attributes (space-separated strings) or
+ * class lists (arrays of class names).
+
+ * @example
+ * ```ts
+ * const sorter = await createSorter({})
+ *
+ * // Sort class lists
+ * const sorted = sorter.sortClassLists([['p-4', 'm-2']])
+ * // Returns: [['m-2', 'p-4']]
+ * ```
+ */
 export async function createSorter(opts: SorterOptions): Promise<Sorter> {
   let preserveDuplicates = opts.preserveDuplicates ?? false
   let preserveWhitespace = opts.preserveWhitespace ?? false

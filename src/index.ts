@@ -1,15 +1,11 @@
 // @ts-ignore
 import type * as Liquid from '@shopify/prettier-plugin-liquid/dist/types.js'
-import * as astTypes from 'ast-types'
-// @ts-ignore
-import jsesc from 'jsesc'
 // @ts-ignore
 import lineColumn from 'line-column'
 import * as prettierParserAngular from 'prettier/plugins/angular'
 import * as prettierParserBabel from 'prettier/plugins/babel'
 import * as prettierParserCss from 'prettier/plugins/postcss'
 // @ts-ignore
-import * as recast from 'recast'
 import { createPlugin } from './create-plugin.js'
 import type { Matcher } from './options.js'
 import { sortClasses, sortClassList } from './sorting.js'
@@ -97,115 +93,126 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
 function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
   let { matcher } = env
 
-  let ast = recast.parse(`let __prettier_temp__ = ${attr.value}`, {
-    parser: prettierParserBabel.parsers['babel-ts'],
-  })
-
-  function* ancestors<N, V>(path: import('ast-types/lib/node-path').NodePath<N, V>) {
-    yield path
-
-    while (path.parentPath) {
-      path = path.parentPath
-      yield path
-    }
-  }
+  let expressionPrefix = 'let __prettier_temp__ = '
+  let source = `${expressionPrefix}${attr.value}`
+  let ast = prettierParserBabel.parsers['babel-ts'].parse(source, env.options)
 
   let didChange = false
+  let changes: StringChange[] = []
 
-  astTypes.visit(ast, {
-    visitLiteral(path) {
-      let entries = Array.from(ancestors(path))
-      let concat = entries.find((entry) => {
-        return (
-          entry.parent &&
-          entry.parent.value &&
-          entry.parent.value.type === 'BinaryExpression' &&
-          entry.parent.value.operator === '+'
-        )
-      })
+  function findConcatEntry(path: Path<any, any>) {
+    return path.find(
+      (entry) => entry.parent?.type === 'BinaryExpression' && entry.parent.operator === '+',
+    )
+  }
 
-      if (isStringLiteral(path.node)) {
-        let sorted = sortStringLiteral(path.node, {
-          env,
-          collapseWhitespace: {
-            start: concat?.name !== 'right',
-            end: concat?.name !== 'left',
-          },
-        })
+  function addChange(start: number | null | undefined, end: number | null | undefined, after: string) {
+    if (start == null || end == null) return
 
-        if (sorted) {
-          didChange = true
+    let offsetStart = start - expressionPrefix.length
+    let offsetEnd = end - expressionPrefix.length
 
-          // https://github.com/benjamn/recast/issues/171#issuecomment-224996336
-          // @ts-ignore
-          let quote = path.node.extra.raw[0]
-          let value = jsesc(path.node.value, {
-            quotes: quote === "'" ? 'single' : 'double',
-          })
-          // @ts-ignore
-          path.node.value = new String(quote + value + quote)
-        }
-      }
-      this.traverse(path)
-    },
+    if (offsetStart < 0 || offsetEnd < 0) return
 
-    visitTemplateLiteral(path) {
-      let entries = Array.from(ancestors(path))
-      let concat = entries.find((entry) => {
-        return (
-          entry.parent &&
-          entry.parent.value &&
-          entry.parent.value.type === 'BinaryExpression' &&
-          entry.parent.value.operator === '+'
-        )
-      })
+    didChange = true
+    changes.push({
+      start: offsetStart,
+      end: offsetEnd,
+      before: attr.value.slice(offsetStart, offsetEnd),
+      after,
+    })
+  }
 
-      let sorted = sortTemplateLiteral(path.node, {
+  visit(ast, {
+    StringLiteral(node, path) {
+      let concat = findConcatEntry(path)
+      let sorted = sortStringLiteral(node, {
         env,
         collapseWhitespace: {
-          start: concat?.name !== 'right',
-          end: concat?.name !== 'left',
+          start: concat?.key !== 'right',
+          end: concat?.key !== 'left',
         },
       })
 
       if (sorted) {
-        didChange = true
-      }
-
-      this.traverse(path)
-    },
-
-    visitTaggedTemplateExpression(path) {
-      let entries = Array.from(ancestors(path))
-      let concat = entries.find((entry) => {
-        return (
-          entry.parent &&
-          entry.parent.value &&
-          entry.parent.value.type === 'BinaryExpression' &&
-          entry.parent.value.operator === '+'
-        )
-      })
-
-      if (isSortableTemplateExpression(path.node, matcher)) {
-        let sorted = sortTemplateLiteral(path.node.quasi, {
-          env,
-          collapseWhitespace: {
-            start: concat?.name !== 'right',
-            end: concat?.name !== 'left',
-          },
-        })
-
-        if (sorted) {
-          didChange = true
+        // @ts-ignore
+        let raw = node.extra?.raw ?? node.raw
+        if (typeof raw === 'string') {
+          addChange(node.start, node.end, raw)
         }
       }
+    },
 
-      this.traverse(path)
+    Literal(node: any, path) {
+      if (!isStringLiteral(node)) return
+
+      let concat = findConcatEntry(path)
+      let sorted = sortStringLiteral(node, {
+        env,
+        collapseWhitespace: {
+          start: concat?.key !== 'right',
+          end: concat?.key !== 'left',
+        },
+      })
+
+      if (sorted) {
+        // @ts-ignore
+        let raw = node.extra?.raw ?? node.raw
+        if (typeof raw === 'string') {
+          addChange(node.start, node.end, raw)
+        }
+      }
+    },
+
+    TemplateLiteral(node, path) {
+      let concat = findConcatEntry(path)
+      let originalQuasis = node.quasis.map((quasi) => quasi.value.raw)
+      let sorted = sortTemplateLiteral(node, {
+        env,
+        collapseWhitespace: {
+          start: concat?.key !== 'right',
+          end: concat?.key !== 'left',
+        },
+      })
+
+      if (sorted) {
+        for (let i = 0; i < node.quasis.length; i++) {
+          let quasi = node.quasis[i]
+          if (quasi.value.raw !== originalQuasis[i]) {
+            addChange(quasi.start, quasi.end, quasi.value.raw)
+          }
+        }
+      }
+    },
+
+    TaggedTemplateExpression(node, path) {
+      if (!isSortableTemplateExpression(node, matcher)) {
+        return
+      }
+
+      let concat = findConcatEntry(path)
+      let originalQuasis = node.quasi.quasis.map((quasi) => quasi.value.raw)
+      let sorted = sortTemplateLiteral(node.quasi, {
+        env,
+        collapseWhitespace: {
+          start: concat?.key !== 'right',
+          end: concat?.key !== 'left',
+        },
+      })
+
+      if (sorted) {
+        for (let i = 0; i < node.quasi.quasis.length; i++) {
+          let quasi = node.quasi.quasis[i]
+          if (quasi.value.raw !== originalQuasis[i]) {
+            addChange(quasi.start, quasi.end, quasi.value.raw)
+          }
+        }
+      }
     },
   })
 
   if (didChange) {
-    attr.value = recast.print(ast.program.body[0].declarations[0].init).code
+    attr.value = spliceChangesIntoString(attr.value, changes)
   }
 }
 
@@ -510,16 +517,14 @@ function sortTemplateLiteral(
 }
 
 function isSortableTemplateExpression(
-  node:
-    | import('@babel/types').TaggedTemplateExpression
-    | import('ast-types').namedTypes.TaggedTemplateExpression,
+  node: import('@babel/types').TaggedTemplateExpression,
   matcher: Matcher,
 ): boolean {
   return isSortableExpression(node.tag, matcher)
 }
 
 function isSortableCallExpression(
-  node: import('@babel/types').CallExpression | import('ast-types').namedTypes.CallExpression,
+  node: import('@babel/types').CallExpression,
   matcher: Matcher,
 ): boolean {
   if (!node.arguments?.length) return false
@@ -528,10 +533,7 @@ function isSortableCallExpression(
 }
 
 function isSortableExpression(
-  node:
-    | import('@babel/types').Expression
-    | import('@babel/types').V8IntrinsicIdentifier
-    | import('ast-types').namedTypes.ASTNode,
+  node: import('@babel/types').Expression | import('@babel/types').V8IntrinsicIdentifier,
   matcher: Matcher,
 ): boolean {
   // Traverse property accesses and function calls to find the leading ident

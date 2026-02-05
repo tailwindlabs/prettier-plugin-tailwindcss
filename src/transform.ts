@@ -1,4 +1,4 @@
-import type { AstPath, ParserOptions } from 'prettier'
+import type { AstPath, ParserOptions, Plugin } from 'prettier'
 import type { TransformerEnv } from './types'
 
 export function defineTransform<T>(opts: TransformOptions<T>) {
@@ -19,7 +19,7 @@ export interface TransformOptions<T> {
   /**
    * Load the given plugins for the parsers and printers
    */
-  load?: string[]
+  load?: Array<string | Plugin<any>>
 
   /**
    * A list of compatible, third-party plugins for this transformation step
@@ -39,7 +39,7 @@ export interface TransformOptions<T> {
       /**
        * Load the given plugins for the parsers and printers
        */
-      load?: string[]
+      load?: Array<string | Plugin<any>>
 
       /**
        * Static attributes that are supported by default

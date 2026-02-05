@@ -1,11 +1,12 @@
 // @ts-check
 import * as path from 'node:path'
+import { pathToFileURL } from 'node:url'
 import clearModule from 'clear-module'
+import { createJiti } from 'jiti'
 // @ts-ignore
 import { generateRules as generateRulesFallback } from 'tailwindcss-v3/lib/lib/generateRules'
 // @ts-ignore
 import { createContext as createContextFallback } from 'tailwindcss-v3/lib/lib/setupContextUtils'
-import loadConfigFallback from 'tailwindcss-v3/loadConfig'
 import resolveConfigFallback from 'tailwindcss-v3/resolveConfig'
 import type { RequiredConfig } from 'tailwindcss-v3/types/config.js'
 import type { UnifiedApi } from '../types'
@@ -36,7 +37,6 @@ export async function loadV3(pkgDir: string | null, jsConfig: string | null): Pr
   let createContext = createContextFallback
   let generateRules: GenerateRules = generateRulesFallback
   let resolveConfig = resolveConfigFallback
-  let loadConfig = loadConfigFallback
   let tailwindConfig: RequiredConfig = { content: [] }
 
   try {
@@ -44,16 +44,19 @@ export async function loadV3(pkgDir: string | null, jsConfig: string | null): Pr
       resolveConfig = require(path.join(pkgDir, 'resolveConfig'))
       createContext = require(path.join(pkgDir, 'lib/lib/setupContextUtils')).createContext
       generateRules = require(path.join(pkgDir, 'lib/lib/generateRules')).generateRules
-      // Prior to `tailwindcss@3.3.0` this won't exist so we load it last
-      loadConfig = require(path.join(pkgDir, 'loadConfig'))
     }
   } catch {}
 
   try {
     if (jsConfig) {
       clearModule(jsConfig)
-      let loadedConfig = loadConfig(jsConfig)
-      tailwindConfig = loadedConfig.default ?? loadedConfig
+      let jiti = createJiti(import.meta.url, {
+        moduleCache: false,
+        fsCache: false,
+        interopDefault: true,
+      })
+      let url = pathToFileURL(jsConfig)
+      tailwindConfig = await jiti.import<RequiredConfig>(url.href, { default: true })
     }
   } catch (err) {
     console.error(`Unable to load your Tailwind CSS v3 config: ${jsConfig}`)

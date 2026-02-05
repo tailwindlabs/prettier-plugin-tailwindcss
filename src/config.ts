@@ -46,11 +46,18 @@ export async function getTailwindConfig(options: ParserOptions): Promise<Unified
   let cwd = process.cwd()
   let inputDir = options.filepath ? path.dirname(options.filepath) : cwd
 
-  let configDir = await resolvePrettierConfigDir(
-    options.filepath,
-    inputDir,
-  )
+  // Only resolve prettier config dir if we need it for relative path resolution
+  let needsPrettierConfig =
+    (options.tailwindConfig && !path.isAbsolute(options.tailwindConfig)) ||
+    (options.tailwindStylesheet && !path.isAbsolute(options.tailwindStylesheet)) ||
+    (options.tailwindEntryPoint && !path.isAbsolute(options.tailwindEntryPoint))
 
+  let configDir: string
+  if (needsPrettierConfig) {
+    configDir = await resolvePrettierConfigDir(options.filepath, inputDir)
+  } else {
+    configDir = cwd
+  }
 
   let configPath =
     options.tailwindConfig && !options.tailwindConfig.endsWith('.css')

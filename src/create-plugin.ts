@@ -1,10 +1,10 @@
+import { isAbsolute } from 'path'
 import type { Parser, ParserOptions, Plugin, Printer } from 'prettier'
 import { getTailwindConfig } from './config'
 import { createMatcher } from './options'
 import { loadIfExists, maybeResolve } from './resolve'
-import type { TransformOptions } from './transform'
+import type { PluginLoad, TransformOptions } from './transform'
 import type { TransformerEnv } from './types'
-import { isAbsolute } from 'path'
 
 export function createPlugin(transforms: TransformOptions<any>[]) {
   // Prettier parsers and printers may be async functions at definition time.
@@ -142,8 +142,6 @@ function createPrinter({
   return printer
 }
 
-type PluginLoad = string | Plugin<any>
-
 async function loadPlugins<T>(fns: PluginLoad[]) {
   let plugin: Plugin<T> = {
     parsers: Object.create(null),
@@ -153,8 +151,8 @@ async function loadPlugins<T>(fns: PluginLoad[]) {
     languages: [],
   }
 
-  for (let moduleName of fns) {
-    let loaded = typeof moduleName === 'string' ? await loadIfExistsESM(moduleName) : moduleName
+  for (let source of fns) {
+    let loaded = await loadPlugin(source)
     Object.assign(plugin.parsers!, loaded.parsers ?? {})
     Object.assign(plugin.printers!, loaded.printers ?? {})
     Object.assign(plugin.options!, loaded.options ?? {})
@@ -166,39 +164,50 @@ async function loadPlugins<T>(fns: PluginLoad[]) {
   return plugin
 }
 
-async function loadIfExistsESM(name: string): Promise<Plugin<any>> {
-  let mod = await loadIfExists<Plugin<any>>(name)
+const EMPTY_PLUGIN: Plugin<any> = {
+  parsers: {},
+  printers: {},
+  languages: [],
+  options: {},
+  defaultOptions: {},
+}
 
-  return (
-    mod ?? {
-      parsers: {},
-      printers: {},
-      languages: [],
-      options: {},
-      defaultOptions: {},
-    }
-  )
+async function loadPlugin(source: PluginLoad): Promise<Plugin<any>> {
+  if ('importer' in source && typeof source.importer === 'function') {
+    return normalizePlugin(await source.importer())
+  }
+
+  return source
+}
+
+function normalizePlugin(source: unknown): Plugin<any> {
+  if (source === null || typeof source !== 'object') return EMPTY_PLUGIN
+  let maybeModule = source as { default?: unknown }
+  let plugin = maybeModule.default
+  return (plugin && typeof plugin === 'object' ? plugin : source) as Plugin<any>
 }
 
 function findEnabledPlugin(options: ParserOptions<any>, name: string) {
-
   for (let plugin of options.plugins) {
     if (plugin instanceof URL) {
       if (plugin.protocol !== 'file:') continue
       if (plugin.hostname !== '') continue
 
       plugin = plugin.pathname
-    } if (typeof plugin !== 'string') {
+    }
+
+    if (typeof plugin !== 'string') {
       if (!plugin.name) {
         continue
       }
       plugin = plugin.name
     }
 
-
-    if (plugin === name || (isAbsolute(plugin) && plugin.includes(name) && maybeResolve(name) === plugin)) {
-      return loadIfExistsESM(name)
-
+    if (
+      plugin === name ||
+      (isAbsolute(plugin) && plugin.includes(name) && maybeResolve(name) === plugin)
+    ) {
+      return loadIfExists<Plugin<any>>(name)
     }
   }
 }

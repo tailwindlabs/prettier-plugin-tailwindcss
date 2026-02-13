@@ -106,7 +106,11 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
     )
   }
 
-  function addChange(start: number | null | undefined, end: number | null | undefined, after: string) {
+  function addChange(
+    start: number | null | undefined,
+    end: number | null | undefined,
+    after: string,
+  ) {
     if (start == null || end == null) return
 
     let offsetStart = start - expressionPrefix.length
@@ -1038,7 +1042,7 @@ type HtmlNode =
 let html = defineTransform<HtmlNode>({
   staticAttrs: ['class'],
 
-  load: ['prettier/plugins/html'],
+  load: [{ name: 'prettier/plugins/html', importer: () => import('prettier/plugins/html') }],
   compatible: ['prettier-plugin-organize-attributes'],
 
   parsers: {
@@ -1060,7 +1064,7 @@ type GlimmerNode =
 
 let glimmer = defineTransform<GlimmerNode>({
   staticAttrs: ['class'],
-  load: ['prettier/plugins/glimmer'],
+  load: [{ name: 'prettier/plugins/glimmer', importer: () => import('prettier/plugins/glimmer') }],
 
   parsers: {
     glimmer: {},
@@ -1110,15 +1114,46 @@ let js = defineTransform<import('@babel/types').Node>({
     'babel-flow': { load: [prettierParserBabel] },
     'babel-ts': { load: [prettierParserBabel] },
     __js_expression: { load: [prettierParserBabel] },
-    typescript: { load: ['prettier/plugins/typescript'] },
-    meriyah: { load: ['prettier/plugins/meriyah'] },
-    acorn: { load: ['prettier/plugins/acorn'] },
-    flow: { load: ['prettier/plugins/flow'] },
-    oxc: { load: ['@prettier/plugin-oxc'] },
-    'oxc-ts': { load: ['@prettier/plugin-oxc'] },
-    hermes: { load: ['@prettier/plugin-hermes'] },
+    typescript: {
+      load: [
+        {
+          name: 'prettier/plugins/typescript',
+          importer: () => import('prettier/plugins/typescript'),
+        },
+      ],
+    },
+    meriyah: {
+      load: [
+        { name: 'prettier/plugins/meriyah', importer: () => import('prettier/plugins/meriyah') },
+      ],
+    },
+    acorn: {
+      load: [{ name: 'prettier/plugins/acorn', importer: () => import('prettier/plugins/acorn') }],
+    },
+    flow: {
+      load: [{ name: 'prettier/plugins/flow', importer: () => import('prettier/plugins/flow') }],
+    },
+    oxc: {
+      load: [{ name: '@prettier/plugin-oxc', importer: () => import('@prettier/plugin-oxc') }],
+    },
+    'oxc-ts': {
+      load: [{ name: '@prettier/plugin-oxc', importer: () => import('@prettier/plugin-oxc') }],
+    },
+    hermes: {
+      load: [
+        { name: '@prettier/plugin-hermes', importer: () => import('@prettier/plugin-hermes') },
+      ],
+    },
     astroExpressionParser: {
-      load: ['prettier-plugin-astro'],
+      load: [
+        {
+          name: 'prettier-plugin-astro',
+          importer: () => {
+            // @ts-expect-error - This plugin doesn't have types
+            return import('prettier-plugin-astro')
+          },
+        },
+      ],
       staticAttrs: ['class'],
       dynamicAttrs: ['class:list'],
     },
@@ -1133,7 +1168,7 @@ type SvelteNode = import('svelte/compiler').AST.SvelteNode & {
 
 let svelte = defineTransform<SvelteNode>({
   staticAttrs: ['class'],
-  load: ['prettier-plugin-svelte'],
+  load: [{ name: 'prettier-plugin-svelte', importer: () => import('prettier-plugin-svelte') }],
 
   parsers: {
     svelte: {},
@@ -1179,7 +1214,15 @@ type AstroNode =
 let astro = defineTransform<AstroNode>({
   staticAttrs: ['class', 'className'],
   dynamicAttrs: ['class:list', 'className'],
-  load: ['prettier-plugin-astro'],
+  load: [
+    {
+      name: 'prettier-plugin-astro',
+      importer: () => {
+        // @ts-expect-error - This plugin doesn't have types
+        return import('prettier-plugin-astro')
+      },
+    },
+  ],
 
   parsers: {
     astro: {},
@@ -1192,7 +1235,7 @@ type MarkoNode = import('@marko/compiler').types.Node
 
 let marko = defineTransform<MarkoNode>({
   staticAttrs: ['class'],
-  load: ['prettier-plugin-marko'],
+  load: [{ name: 'prettier-plugin-marko', importer: () => import('prettier-plugin-marko') }],
 
   parsers: {
     marko: {},
@@ -1224,7 +1267,15 @@ type TwigNode =
 
 let twig = defineTransform<TwigNode>({
   staticAttrs: ['class'],
-  load: ['@zackad/prettier-plugin-twig'],
+  load: [
+    {
+      name: '@zackad/prettier-plugin-twig',
+      importer: () => {
+        // @ts-expect-error - This plugin doesn't have types
+        return import('@zackad/prettier-plugin-twig')
+      },
+    },
+  ],
 
   parsers: {
     twig: {},
@@ -1240,7 +1291,7 @@ interface PugNode {
 
 let pug = defineTransform<PugNode>({
   staticAttrs: ['class'],
-  load: ['@prettier/plugin-pug'],
+  load: [{ name: '@prettier/plugin-pug', importer: () => import('@prettier/plugin-pug') }],
 
   parsers: {
     pug: {},
@@ -1259,7 +1310,12 @@ type LiquidNode =
 
 let liquid = defineTransform<LiquidNode>({
   staticAttrs: ['class'],
-  load: ['@shopify/prettier-plugin-liquid'],
+  load: [
+    {
+      name: '@shopify/prettier-plugin-liquid',
+      importer: () => import('@shopify/prettier-plugin-liquid'),
+    },
+  ],
 
   parsers: { 'liquid-html': {} },
 

@@ -7,14 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Export public sorting APIs to `/sorter` ([#438](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/438))
+
 ### Changed
+
+- Switch from npm to pnpm ([#436](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/436))
+- Migrate build system from esbuild to tsdown ([#435](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/435))
+- Enable `minify: "dce-only"` in tsdown ([#447](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/447))
+- Add oxlint with type-aware linting ([#445](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/445))
+- Add knip for detecting unused files and dependencies ([#444](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/444))
+- Add formatting check to CI and fix format script ([#434](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/434))
+- Change release-insiders workflow to manual trigger only
+
+### Improved
 
 - Remove top-level await ([#420](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/420))
 - Improve load-time performance ([#420](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/420))
+- Improve config resolution caching with directory-based cache ([#432](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/432))
+- Load compatible plugins on demand and tighten plugin detection ([#437](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/437))
+- Load v3/v4 modules only when needed ([#439](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/439))
+- Remove recast/ast-types deps and optimize dynamic JS attribute handling ([#440](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/440))
+- Remove unused deps ([#441](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/441))
+- Use the plugin that has already been imported rather than dynamically importing it again ([#442](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/442))
+- Skip visiting non-node children ([#443](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/443))
+- Optimize whitespace-only class detection ([#429](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/429))
 
 ### Fixed
 
+- Fix v3 config loading with Jiti re-exports ([#448](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/448))
 - Collapse whitespace in template literals with adjacent quasis ([#427](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/427))
+- Improve `canCollapseWhitespaceIn` handling for `"tailwindPreserveWhitespace": true` ([#428](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/428))
 
 ## [0.7.2] - 2025-12-01
 

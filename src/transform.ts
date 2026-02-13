@@ -5,6 +5,13 @@ export function defineTransform<T>(opts: TransformOptions<T>) {
   return opts
 }
 
+export interface LazyPluginLoad {
+  name: string
+  importer: () => Promise<unknown>
+}
+
+export type PluginLoad = LazyPluginLoad | Plugin<any>
+
 export interface TransformOptions<T> {
   /**
    * Static attributes that are supported by default
@@ -19,7 +26,7 @@ export interface TransformOptions<T> {
   /**
    * Load the given plugins for the parsers and printers
    */
-  load?: Array<string | Plugin<any>>
+  load?: PluginLoad[]
 
   /**
    * A list of compatible, third-party plugins for this transformation step
@@ -39,7 +46,7 @@ export interface TransformOptions<T> {
       /**
        * Load the given plugins for the parsers and printers
        */
-      load?: Array<string | Plugin<any>>
+      load?: PluginLoad[]
 
       /**
        * Static attributes that are supported by default

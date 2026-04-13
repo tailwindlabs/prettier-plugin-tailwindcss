@@ -1,8 +1,10 @@
 name: Release
 
 on:
-  release:
-    types: [published]
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
 
 permissions:
   contents: read
@@ -14,7 +16,7 @@ concurrency:
 
 env:
   CI: true
-  NODE_VERSION: 22
+  NODE_VERSION: 24
 
 jobs:
   build:
@@ -22,6 +24,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve version
+        run: |
+          SHA_SHORT=$(git rev-parse --short HEAD)
+          echo "SHA_SHORT=$SHA_SHORT" >> $GITHUB_ENV
+
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            VERSION=0.0.0-insiders.$SHA_SHORT
+          fi
+
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -36,17 +51,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Calculate environment variables
+        run: |
+          echo "RELEASE_CHANNEL=$(node ./scripts/release-channel.js $VERSION)" >> $GITHUB_ENV
+
+      - name: Version package for insiders release
+        if: github.ref_type != 'tag'
+        run: pnpm version ${{ env.VERSION }} --force --no-git-tag-version
+
       - name: Build Prettier Plugin
         run: pnpm run build
 
       - name: Test
         run: pnpm run test
 
-      - name: Calculate environment variables
-        run: |
-          echo "RELEASE_CHANNEL=$(pnpm run release-channel --silent)" >> $GITHUB_ENV
-
       - name: Publish
         run: pnpm publish --provenance --tag ${{ env.RELEASE_CHANNEL }} --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -45,7 +45,7 @@ jobs:
 
       - name: Get release notes
         run: |
-          RELEASE_NOTES=$(pnpm run release-notes --silent)
+          RELEASE_NOTES=$(pnpm run --silent release-notes)
           echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
           echo "$RELEASE_NOTES" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV

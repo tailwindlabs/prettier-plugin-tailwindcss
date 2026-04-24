@@ -3,8 +3,8 @@ name: Release
 on:
   push:
     branches: [main]
-    tags:
-      - 'v*'
+  release:
+    types: [published]
 
 permissions:
   contents: read
@@ -30,8 +30,9 @@ jobs:
           SHA_SHORT=$(git rev-parse --short HEAD)
           echo "SHA_SHORT=$SHA_SHORT" >> $GITHUB_ENV
 
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            VERSION=${{ github.event.release.tag_name }}
+            VERSION=${VERSION#v}
           else
             VERSION=0.0.0-insiders.$SHA_SHORT
           fi
@@ -56,7 +57,7 @@ jobs:
           echo "RELEASE_CHANNEL=$(node ./scripts/release-channel.js $VERSION)" >> $GITHUB_ENV
 
       - name: Version package for insiders release
-        if: github.ref_type != 'tag'
+        if: github.event_name != 'release'
         run: pnpm version ${{ env.VERSION }} --force --no-git-tag-version
 
       - name: Build Prettier Plugin

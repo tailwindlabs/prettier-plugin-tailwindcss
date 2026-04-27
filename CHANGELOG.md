@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Nothing yet!
 
+## [0.7.4] - 2026-04-27
+
+- Nothing yet!
+
 ## [0.7.2] - 2025-12-01
 
 ### Fixed
@@ -34,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support regular expression patterns for function names ([#405](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/405))
 
 ### Changed
+
 - Improved monorepo support by loading Tailwind CSS relative to the input file instead of prettier config file ([#386](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/386))
 - Improved monorepo support by loading v3 configs relative to the input file instead of prettier config file ([#386](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/386))
 - Fallback to Tailwind CSS v4 instead of v3 by default ([#390](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/390))
@@ -41,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Drop support for `prettier-plugin-import-sort` ([#385](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/385))
 
 ### Fixed
+
 - Handle quote escapes in LESS when sorting `@apply` ([#392](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/392))
 - Fix whitespace removal inside nested concat and template expressions ([#396](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/396))
 
@@ -403,7 +409,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.2...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.4...HEAD
+[0.7.4]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.2...v0.7.4
 [0.7.2]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.14...v0.7.0

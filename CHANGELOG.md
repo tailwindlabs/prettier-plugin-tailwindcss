@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Nothing yet!
+
+## [0.8.0] - 2026-04-27
+
 ### Changed
 
 - Require at least Prettier 3.7.x ([#420](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/420))
- 
+
 ### Added
 
 - Export public sorting APIs to `/sorter` ([#438](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/438))
@@ -427,7 +431,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.3...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.3...v0.8.0
 [0.7.3]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.0...v0.7.1

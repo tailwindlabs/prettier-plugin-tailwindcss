@@ -7,21 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Require at least Prettier 3.7.x ([#420](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/420))
+ 
 ### Added
 
 - Export public sorting APIs to `/sorter` ([#438](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/438))
 
-### Changed
-
-- Switch from npm to pnpm ([#436](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/436))
-- Migrate build system from esbuild to tsdown ([#435](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/435))
-- Enable `minify: "dce-only"` in tsdown ([#447](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/447))
-- Add oxlint with type-aware linting ([#445](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/445))
-- Add knip for detecting unused files and dependencies ([#444](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/444))
-- Add formatting check to CI and fix format script ([#434](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/434))
-- Change release-insiders workflow to manual trigger only
-
-### Improved
+### Fixed
 
 - Remove top-level await ([#420](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/420))
 - Improve load-time performance ([#420](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/420))
@@ -33,9 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use the plugin that has already been imported rather than dynamically importing it again ([#442](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/442))
 - Skip visiting non-node children ([#443](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/443))
 - Optimize whitespace-only class detection ([#429](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/429))
-
-### Fixed
-
 - Fix v3 config loading with Jiti re-exports ([#448](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/448))
 - Collapse whitespace in template literals with adjacent quasis ([#427](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/427))
 - Improve `canCollapseWhitespaceIn` handling for `"tailwindPreserveWhitespace": true` ([#428](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/428))
@@ -65,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support regular expression patterns for function names ([#405](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/405))
 
 ### Changed
+
 - Improved monorepo support by loading Tailwind CSS relative to the input file instead of prettier config file ([#386](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/386))
 - Improved monorepo support by loading v3 configs relative to the input file instead of prettier config file ([#386](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/386))
 - Fallback to Tailwind CSS v4 instead of v3 by default ([#390](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/390))
@@ -72,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Drop support for `prettier-plugin-import-sort` ([#385](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/385))
 
 ### Fixed
+
 - Handle quote escapes in LESS when sorting `@apply` ([#392](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/392))
 - Fix whitespace removal inside nested concat and template expressions ([#396](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/396))
 
@@ -434,7 +427,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.2...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.3...HEAD
+[0.7.3]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.6.14...v0.7.0

@@ -16,7 +16,7 @@ const pkg = JSON.parse(await fs.readFile(path.resolve(__dirname, '../package.jso
 
 let version = process.argv[2] || process.env.npm_package_version || pkg.version
 
-let match = /\d+\.\d+\.\d+-(.*)\.\d+/g.exec(version)
+let match = /\d+\.\d+\.\d+-(.*)\./g.exec(version)
 if (match) {
   console.log(match[1])
 } else {

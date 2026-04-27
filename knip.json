@@ -5,6 +5,7 @@
   "ignore": ["src/**/*.d.ts", "tests/fixtures/**"],
   "ignoreDependencies": [
     "@ianvs/prettier-plugin-sort-imports",
+    "@prettier/plugin-oxc",
     "@prettier/plugin-hermes",
     "@prettier/plugin-pug",
     "@shopify/prettier-plugin-liquid",

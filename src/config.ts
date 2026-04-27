@@ -10,6 +10,13 @@ import { cacheForDirs } from './utils.js'
 
 let prettierConfigCache = expiringMap<string, string | null>(10_000)
 
+// Tracks the last successfully resolved config directory. This is used as a
+// fallback when formatting embedded code blocks (e.g., tsx inside markdown)
+// where Prettier sets a synthetic filepath like "dummy.tsx" that cannot be used
+// for config resolution — especially in environments where process.cwd() does
+// not point to the project directory (e.g., the VS Code extension host).
+let lastResolvedConfigDir: string | null = null
+
 async function resolvePrettierConfigDir(
   filePath: string,
   inputDir: string,
@@ -17,7 +24,7 @@ async function resolvePrettierConfigDir(
   // Check cache for this directory
   let cached = prettierConfigCache.get(inputDir)
   if (cached !== undefined) {
-    return cached ?? process.cwd()
+    return cached ?? lastResolvedConfigDir ?? process.cwd()
   }
 
   const resolve = async () => {
@@ -35,11 +42,12 @@ async function resolvePrettierConfigDir(
   // Cache all directories from inputDir up to config location
   if (prettierConfig) {
     let configDir = path.dirname(prettierConfig)
+    lastResolvedConfigDir = configDir
     cacheForDirs(prettierConfigCache, inputDir, configDir, configDir)
     return configDir
   } else {
     prettierConfigCache.set(inputDir, null)
-    return process.cwd()
+    return lastResolvedConfigDir ?? process.cwd()
   }
 }
 

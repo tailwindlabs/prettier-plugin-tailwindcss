@@ -7,18 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
-
-## [0.7.3] - 2026-04-23
-
 ### Changed
 
-- Remove top-level await ([#420](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/420))
-- Improve load-time performance ([#420](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/420))
+- Require at least Prettier 3.7.x ([#420](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/420))
+ 
+### Added
+
+- Export public sorting APIs to `/sorter` ([#438](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/438))
 
 ### Fixed
 
+- Remove top-level await ([#420](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/420))
+- Improve load-time performance ([#420](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/420))
+- Improve config resolution caching with directory-based cache ([#432](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/432))
+- Load compatible plugins on demand and tighten plugin detection ([#437](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/437))
+- Load v3/v4 modules only when needed ([#439](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/439))
+- Remove recast/ast-types deps and optimize dynamic JS attribute handling ([#440](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/440))
+- Remove unused deps ([#441](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/441))
+- Use the plugin that has already been imported rather than dynamically importing it again ([#442](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/442))
+- Skip visiting non-node children ([#443](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/443))
+- Optimize whitespace-only class detection ([#429](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/429))
+- Fix v3 config loading with Jiti re-exports ([#448](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/448))
 - Collapse whitespace in template literals with adjacent quasis ([#427](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/427))
+- Improve `canCollapseWhitespaceIn` handling for `"tailwindPreserveWhitespace": true` ([#428](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/428))
 
 ## [0.7.2] - 2025-12-01
 

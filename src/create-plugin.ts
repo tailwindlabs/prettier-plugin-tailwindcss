@@ -75,8 +75,39 @@ async function createParser({
   }
 
   parser.preprocess = async (code: string, options: ParserOptions) => {
-    let parser = await load(options)
-    return parser.preprocess ? parser.preprocess(code, options) : code
+    const compatibleNames = opts.compatible ?? []
+
+    const normalizePluginName = (pluginName: string) => {
+      const slashed = pluginName.replace(/\\/g, '/')
+
+      return compatibleNames.find((compatibleName) => slashed.includes(compatibleName)) ?? pluginName
+    }
+
+    const patchedOptions = {
+      ...options,
+      plugins: options.plugins.map((plugin) => {
+        if (typeof plugin === 'string') {
+          return plugin
+        }
+
+        if (plugin instanceof URL) {
+          return plugin
+        }
+
+        if (!plugin.name) {
+          return plugin
+        }
+
+        return {
+          ...plugin,
+          name: normalizePluginName(plugin.name),
+        }
+      }),
+    }
+
+    const parser = await load(patchedOptions)
+
+    return parser.preprocess ? parser.preprocess(code, patchedOptions) : code
   }
 
   parser.parse = async (code, options) => {
@@ -105,13 +136,7 @@ async function createParser({
   return parser
 }
 
-function createPrinter({
-  original,
-  opts,
-}: {
-  original: Printer<any>
-  opts: TransformOptions<any>
-}) {
+function createPrinter({ original, opts }: { original: Printer<any>; opts: TransformOptions<any> }) {
   let printer: Printer<any> = { ...original }
 
   let reprint = opts.reprint
@@ -203,10 +228,7 @@ function findEnabledPlugin(options: ParserOptions<any>, name: string) {
       plugin = plugin.name
     }
 
-    if (
-      plugin === name ||
-      (isAbsolute(plugin) && plugin.includes(name) && maybeResolve(name) === plugin)
-    ) {
+    if (plugin === name || (isAbsolute(plugin) && plugin.includes(name) && maybeResolve(name) === plugin)) {
       return loadIfExists<Plugin<any>>(name)
     }
   }

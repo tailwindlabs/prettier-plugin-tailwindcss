@@ -231,6 +231,27 @@ describe('regex matching', () => {
     expect(result).toEqual('<div :data-classes="`p-0 sm:p-0`"></div>')
   })
 
+  test('does not re-escape JSX attribute values that use HTML entities', async ({ expect }) => {
+    // JSX attribute values are pass-through: HTML entity references must
+    // survive sorting unchanged, not be decoded and re-escaped.
+    let result = await format(`;<div className="sm:p-0 foo-&#34;bar&#34; p-0" />`, {
+      parser: 'babel',
+    })
+
+    expect(result).toEqual(`;<div className="foo-&#34;bar&#34; p-0 sm:p-0" />`)
+  })
+
+  test('preserves escaped quotes inside JS string in Vue :class', async ({ expect }) => {
+    // Inside a Vue :class="..." attribute the JS string MUST stay single-quoted
+    // (outer attribute already uses "), so an inner ' has to remain escaped as \'.
+    let input = `<template><button :class="cn('text-sm [&_svg:not([class*=\\'size-\\'])]:size-4 flex p-2', props.class)"></button></template>`
+    let expected = `<template><button :class="cn('flex p-2 text-sm [&_svg:not([class*=\\'size-\\'])]:size-4', props.class)"></button></template>`
+
+    let result = await format(input, { parser: 'vue' })
+
+    expect(result).toEqual(expected)
+  })
+
   test('works with Angular property bindings', async ({ expect }) => {
     let result = await format('<div [dataClasses]="`sm:p-0 p-0`"></div>', {
       parser: 'angular',
@@ -286,5 +307,44 @@ describe('regex matching', () => {
 
       expect(result).toEqual('<div [[dataClasses]]="`p-0 sm:p-0`"></div>')
     })
+  })
+})
+
+describe('escape sequences in JS string literals', () => {
+  test('babel: JSX expression container with escaped quote in arbitrary variant', async ({
+    expect,
+  }) => {
+    // Exercises sortStringLiteral via transformJavaScript directly
+    // (distinct from the Vue path that goes through transformDynamicJsAttribute).
+    let input = `;<div className={"text-sm [&_svg:not([class*=\\'size-\\'])]:size-4 flex p-2"} />`
+    let expected = `;<div className={"flex p-2 text-sm [&_svg:not([class*=\\'size-\\'])]:size-4"} />`
+
+    let result = await format(input, { parser: 'babel' })
+
+    expect(result).toEqual(expected)
+  })
+
+  test('typescript: literal via tailwindFunctions preserves escaped quote', async ({ expect }) => {
+    // Exercises the `node.raw =` branch (TS Literal without `node.extra`).
+    let input = `let x = tw("text-sm [&_svg:not([class*=\\'size-\\'])]:size-4 flex p-2")`
+    let expected = `let x = tw("flex p-2 text-sm [&_svg:not([class*=\\'size-\\'])]:size-4")`
+
+    let result = await format(input, {
+      parser: 'typescript',
+      tailwindFunctions: ['tw'],
+    })
+
+    expect(result).toEqual(expected)
+  })
+
+  test('babel: JS whitespace escape as class separator is not sorted', async ({ expect }) => {
+    // Documented trade-off: a string like "sm:p-0\np-0" has no whitespace in its raw form,
+    // so sortClasses sees it as a single token and skips it.
+    let input = `;<div className={"sm:p-0\\np-0"} />`
+    let expected = `;<div className={'sm:p-0\\np-0'} />`
+
+    let result = await format(input, { parser: 'babel' })
+
+    expect(result).toEqual(expected)
   })
 })

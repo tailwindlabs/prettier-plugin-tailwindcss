@@ -13,7 +13,6 @@ import { defineTransform } from './transform.js'
 import type { StringChange, TransformerEnv } from './types'
 import { spliceChangesIntoString, visit, type Path } from './utils.js'
 
-const ESCAPE_SEQUENCE_PATTERN = /\\(['"\\nrtbfv0-7xuU])/g
 function tryParseAngularAttribute(value: string, env: TransformerEnv) {
   try {
     return prettierParserAngular.parsers.__ng_directive.parse(value, env.options)
@@ -415,43 +414,36 @@ function sortStringLiteral(
     collapseWhitespace?: false | { start: boolean; end: boolean }
   },
 ) {
-  let result = sortClasses(node.value, {
-    env,
-    removeDuplicates,
-    collapseWhitespace,
-  })
-
-  let didChange = result !== node.value
-
-  if (!didChange) return false
-
-  node.value = result
-
-  // Preserve the original escaping level for the new content
+  // Sort the raw source representation directly
+  // so escape sequences ride along with their tokens.
+  // This mirrors how `sortTemplateLiteral` handles quasis
+  // and lets us avoid a fragile cooked → raw re-encoding pass.
+  //
+  // Trade-off:
+  // Literals that use a whitespace escape sequence (e.g. `\n` as a JS escape) as the class separator
+  // look like a single non-whitespace token in raw form, so we skip sorting them.
+  // Rewriting the raw from the sorted cooked value would require re-introducing the cooked → raw re-encoding,
+  // and with it the JSX/HTML-entity discrimination problem.
   let raw = node.extra?.raw ?? node.raw
   let quote = raw[0]
-  let originalRawContent = raw.slice(1, -1)
-  let originalValue = node.extra?.rawValue ?? node.value
+  let rawContent = raw.slice(1, -1)
 
+  let sortedRaw = sortClasses(rawContent, { env, removeDuplicates, collapseWhitespace })
+  if (sortedRaw === rawContent) return false
+
+  // Reuse the raw sort when raw and cooked are byte-identical (no escapes).
+  // Avoids a second `getClassOrder` pass, the dominant cost in `sortClasses`.
+  let sortedCooked =
+    rawContent === node.value
+      ? sortedRaw
+      : sortClasses(node.value, { env, removeDuplicates, collapseWhitespace })
+  node.value = sortedCooked
+
+  let newRaw = quote + sortedRaw + quote
   if (node.extra) {
-    // The original list has ecapes so we ensure that the sorted list also
-    // maintains those by replacing backslashes from escape sequences.
-    //
-    // It seems that TypeScript-based ASTs don't need this special handling
-    // which is why this is guarded inside the `node.extra` check
-    if (originalRawContent !== originalValue && originalValue.includes('\\')) {
-      result = result.replace(ESCAPE_SEQUENCE_PATTERN, '\\\\$1')
-    }
-
-    // JavaScript (StringLiteral)
-    node.extra = {
-      ...node.extra,
-      rawValue: result,
-      raw: quote + result + quote,
-    }
+    node.extra = { ...node.extra, rawValue: sortedCooked, raw: newRaw }
   } else {
-    // TypeScript (Literal)
-    node.raw = quote + result + quote
+    node.raw = newRaw
   }
 
   return true

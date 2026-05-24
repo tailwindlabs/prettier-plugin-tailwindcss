@@ -75,7 +75,7 @@
     "prettier-plugin-organize-attributes": "^1.0.0",
     "prettier-plugin-organize-imports": "^4.2.0",
     "prettier-plugin-sort-imports": "^1.8.8",
-    "prettier-plugin-svelte": "^3.4.0",
+    "prettier-plugin-svelte": "^4.0.1",
     "pug-lexer": "^5.0.1",
     "svelte": "^5.38.2",
     "tailwindcss-v3": "npm:tailwindcss@^3.4.18",

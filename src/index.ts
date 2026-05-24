@@ -945,14 +945,16 @@ function transformSvelte(ast: any, env: TransformerEnv) {
       continue
     }
 
-    for (let i = 0; i < attr.value.length; i++) {
-      let value = attr.value[i]
+    let values = getSvelteAttributeValues(attr)
+
+    for (let i = 0; i < values.length; i++) {
+      let value = values[i]
       if (value.type === 'Text') {
         let same = value.raw === value.data
         value.raw = sortClasses(value.raw, {
           env,
           ignoreFirst: i > 0 && !/^\s/.test(value.raw),
-          ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.raw),
+          ignoreLast: i < values.length - 1 && !/\s$/.test(value.raw),
           removeDuplicates: true,
           collapseWhitespace: false,
         })
@@ -961,11 +963,11 @@ function transformSvelte(ast: any, env: TransformerEnv) {
           : sortClasses(value.data, {
               env,
               ignoreFirst: i > 0 && !/^\s/.test(value.data),
-              ignoreLast: i < attr.value.length - 1 && !/\s$/.test(value.data),
+              ignoreLast: i < values.length - 1 && !/\s$/.test(value.data),
               removeDuplicates: true,
               collapseWhitespace: false,
             })
-      } else if (value.type === 'MustacheTag') {
+      } else if (value.type === 'MustacheTag' || value.type === 'ExpressionTag') {
         visit(value.expression, {
           Literal(node) {
             if (isStringLiteral(node)) {
@@ -1010,27 +1012,46 @@ function transformSvelte(ast: any, env: TransformerEnv) {
     }
   }
 
-  for (let child of ast.children ?? []) {
+  for (let child of getSvelteChildNodes(ast)) {
     transformSvelte(child, env)
   }
+}
 
-  if (ast.type === 'IfBlock') {
-    for (let child of ast.else?.children ?? []) {
-      transformSvelte(child, env)
-    }
+function getSvelteAttributeValues(attr: any) {
+  if (Array.isArray(attr.value)) return attr.value
+  if (attr.value && typeof attr.value === 'object') return [attr.value]
+  return []
+}
+
+function getSvelteChildNodes(node: any) {
+  let children = []
+
+  for (let key of [
+    'children',
+    'nodes',
+    'fragment',
+    'html',
+    'else',
+    'consequent',
+    'alternate',
+    'body',
+    'fallback',
+    'pending',
+    'then',
+    'catch',
+  ]) {
+    children.push(...getSvelteNodes(node[key]))
   }
 
-  if (ast.type === 'AwaitBlock') {
-    let nodes = [ast.pending, ast.then, ast.catch]
+  return children
+}
 
-    for (let child of nodes) {
-      transformSvelte(child, env)
-    }
-  }
-
-  if (ast.html) {
-    transformSvelte(ast.html, env)
-  }
+function getSvelteNodes(value: any) {
+  if (Array.isArray(value)) return value.filter((node) => node?.type)
+  if (Array.isArray(value?.nodes)) return value.nodes
+  if (Array.isArray(value?.children)) return value.children
+  if (value?.type) return [value]
+  return []
 }
 
 export { options } from './options.js'

@@ -411,8 +411,8 @@ import Custom from '../components/Custom.astro'
         t`<div class={\`${yes} \${'${yes}' + \`${yes}\`} ${yes}\`} />`,
         t`<div class={\`${no}\${someVar}${no}\`} />`,
         [
-          `<Component class={cn('bottom-0 sticky transition-all justify-end', { 'shadow-inverse-lg': active })} />`,
-          `<Component class={cn('sticky bottom-0 justify-end transition-all', { 'shadow-inverse-lg': active })} />`,
+          `<Component class={cn('bottom-0 sticky transition-all justify-end', { 'bg-red-500': active })} />`,
+          `<Component class={cn('sticky bottom-0 justify-end transition-all', { 'bg-red-500': active })} />`,
         ],
         t`<div class="${yes} {\`${yes}\`}" />`,
         t`<div let:class={clazz} class="${yes} {clazz}" />`,

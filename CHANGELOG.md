@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Preserve escape sequences when sorting JS string literals so escaped quotes inside attribute-bound class strings (e.g. Vue `:class="cn('...')"`) round-trip correctly
+- Preserve escape sequences when sorting JS string literals so escaped quotes inside attribute-bound class strings (e.g. Vue `:class="cn('...')"`) round-trip correctly (#461)
 
 ## [0.8.0] - 2026-04-27
 

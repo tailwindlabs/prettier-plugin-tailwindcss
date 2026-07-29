@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing yet!
+### Fixed
+
+- Fix "Missing visitor keys for 'undefined'" error when multiple copies of Prettier exist in a dependency tree ([#469](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/issues/469))
 
 ## [0.8.1] - 2026-07-15
 

@@ -160,4 +160,24 @@ describe('fixtures', () => {
       expect(formatted.trim()).toEqual(expected.trim())
     })
   }
+
+  // https://github.com/tailwindlabs/prettier-plugin-tailwindcss/issues/469
+  test.concurrent('multiple copies of Prettier in a dependency tree', async ({ expect }) => {
+    let fixturePath = path.resolve(__dirname, 'fixtures/prettier-mismatch')
+    let pluginCopyPath = path.resolve(fixturePath, 'plugin-dist')
+
+    // Copy the built plugin into the fixture so it resolves the fixture's
+    // copy of Prettier while the CLI runs the repo's copy
+    await fs.cp(path.resolve(__dirname, '../dist'), pluginCopyPath, { recursive: true })
+
+    let inputPath = path.resolve(fixturePath, 'index.html')
+    let outputPath = path.resolve(fixturePath, 'output.html')
+    let cmd = `${binPath} ${inputPath} --plugin ${pluginCopyPath}/index.mjs`
+
+    let results = await execAsync(cmd)
+    let formatted = results.stdout.replace(/\r\n/g, '\n')
+    let expected = await fs.readFile(outputPath, 'utf-8').then((c) => c.replace(/\r\n/g, '\n'))
+
+    expect(formatted.trim()).toEqual(expected.trim())
+  })
 })

@@ -1065,6 +1065,15 @@ let html = defineTransform<HtmlNode>({
     vue: { dynamicAttrs: [':class', 'v-bind:class'] },
   },
 
+  // Use the printer from the same `prettier/plugins/html` module the parsers
+  // come from. When multiple copies of Prettier exist in a dependency tree the
+  // AST produced by our copy may not match what the running Prettier's builtin
+  // printer expects (e.g. Prettier v3.7 renamed the HTML AST `type` field to
+  // `kind`) causing a "Missing visitor keys for 'undefined'" error.
+  printers: {
+    html: {},
+  },
+
   transform: transformHtml,
 })
 

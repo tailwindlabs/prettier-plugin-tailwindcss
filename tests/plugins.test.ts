@@ -350,7 +350,7 @@ let tests: PluginTest[] = [
 
         [
           `{<div class="p-20 bg-red-100 w-full"></div>}`,
-          `{(<div class="w-full bg-red-100 p-20" />)}`,
+          `{<div class="w-full bg-red-100 p-20"></div>}`,
         ],
         [
           `<style>
@@ -389,7 +389,7 @@ import Custom from '../components/Custom.astro'
         ],
         [
           `<div class:list={[' flex ' + ' underline ' + ' block ']}></div>`,
-          `<div class:list={['flex ' + ' underline' + ' block']}></div>`,
+          `<div class:list={['flex ' + ' underline ' + ' block']}></div>`,
         ],
       ],
     },

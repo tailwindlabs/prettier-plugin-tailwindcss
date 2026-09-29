@@ -635,14 +635,16 @@ function transformJavaScript(ast: import('@babel/types').Node, env: TransformerE
         return
       }
 
-      if (!matcher.hasStaticAttr(node.name.name)) {
-        return
-      }
-
+      let name = node.name.name
       if (isStringLiteral(node.value)) {
-        sortStringLiteral(node.value, { env })
+        if (matcher.hasStaticAttr(name)) {
+          sortStringLiteral(node.value, { env })
+        }
       } else if (node.value.type === 'JSXExpressionContainer') {
-        sortInside(node.value)
+        // Dynamic attrs (e.g. Astro's `class:list`) only carry expressions, never plain strings
+        if (matcher.hasStaticAttr(name) || matcher.hasDynamicAttr(name)) {
+          sortInside(node.value)
+        }
       }
     },
 
@@ -742,6 +744,14 @@ function transformCss(ast: any, env: TransformerEnv) {
 }
 
 function transformAstro(ast: any, env: TransformerEnv) {
+  // prettier-plugin-astro v1+ produces an ESTree/JSX AST via @astrojs/compiler-rs.
+  // Attributes are `JSXAttribute` nodes whose values are `Literal`s or expression containers,
+  // so the JavaScript transform can handle them directly.
+  if (ast.type === 'AstroRoot') {
+    transformJavaScript(ast.template, env)
+    return
+  }
+
   let { matcher } = env
 
   if (ast.type === 'element' || ast.type === 'custom-element' || ast.type === 'component') {
@@ -1157,6 +1167,8 @@ let js = defineTransform<import('@babel/types').Node>({
         { name: '@prettier/plugin-hermes', importer: () => import('@prettier/plugin-hermes') },
       ],
     },
+    // Only exposed by prettier-plugin-astro 0.x.
+    // v1 parses expressions as part of the main `astro` AST.
     astroExpressionParser: {
       load: [
         {
@@ -1212,6 +1224,11 @@ let svelte = defineTransform<SvelteNode>({
 })
 
 type AstroNode =
+  // prettier-plugin-astro 1.x
+  // `template` is an ESTree + JSX AST emitted by @astrojs/compiler-rs (oxc).
+  // Typed loosely, see the note on `transformJavaScript`.
+  | { type: 'AstroRoot'; template: unknown }
+  // prettier-plugin-astro 0.x
   | { type: 'element'; attributes: Extract<AstroNode, { type: 'attribute' }>[] }
   | {
       type: 'custom-element'

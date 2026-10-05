@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Restore class sorting in Astro templates when using `prettier-plugin-astro` v1 ([#473](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/473))
+- Collapse whitespace and remove duplicate classes in Svelte `class` attributes and the string and template literals inside them, as already happens in other languages
 
 ## [0.8.1] - 2026-07-15
 

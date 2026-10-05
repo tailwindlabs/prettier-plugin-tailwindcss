@@ -432,45 +432,23 @@ import Custom from '../components/Custom.astro'
         t`{#await promise()} <div class="${yes}" /> {:then} <div class="${yes}" /> {/await}`,
         t`{#await promise() then} <div class="${yes}" /> {/await}`,
 
-        // Whitespace removal is applied by Svelte itself
         [
           `<div class=" sm:flex   underline  block"></div>`,
-          `<div class=" block underline sm:flex"></div>`,
+          `<div class="block underline sm:flex"></div>`,
         ],
-
-        // Whitespace removal does not work in Svelte
-        // due to how Svelte's parser and printer work
-        // (the length of the text MUST NOT change)
         [
           `<div class={' flex ' + ' underline ' + ' block '}></div>`,
-          `<div class={' flex ' + ' underline ' + ' block '}></div>`,
+          `<div class={'flex ' + ' underline ' + ' block'}></div>`,
         ],
 
         // Escapes
         t`<div class={"before:content-['\\\\2248']"}></div>`,
 
-        // Preserve whitespace in template strings
-        // This test has lots of whitespace to ensure that the Svelte
-        // parser doesn't produce invalid syntax as output since it breaks
-        // when changing the length of the text.
-        [
-          `<div\n class={\`underline \n flex\`}></div>`,
-          `<div\n  class={\`flex \n underline\`}\n></div>`,
-        ],
+        [`<div\n class={\`underline \n flex\`}></div>`, `<div class={\`flex underline\`}></div>`],
 
-        // Duplicates can be removed in simple attributes
         [`<div class="flex flex underline flex flex"></div>`, `<div class="flex underline"></div>`],
-
-        // Duplicates cannot be removed in string literals otherwise invalid
-        // code will be produced during printing.
-        [`<div class={'flex underline flex'}></div>`, `<div class={'flex flex underline'}></div>`],
-
-        // Duplicates cannot be removed in template literals otherwise invalid
-        // code will be produced during printing.
-        [
-          `<div class={\`flex underline flex\`}></div>`,
-          `<div class={\`flex flex underline\`}></div>`,
-        ],
+        [`<div class={'flex underline flex'}></div>`, `<div class={'flex underline'}></div>`],
+        [`<div class={\`flex underline flex\`}></div>`, `<div class={\`flex underline\`}></div>`],
       ],
     },
   },

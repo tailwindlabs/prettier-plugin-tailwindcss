@@ -953,12 +953,13 @@ function transformSvelte(ast: any, env: TransformerEnv) {
       let value = values[i]
       if (value.type === 'Text') {
         let same = value.raw === value.data
+        let collapseWhitespace = { start: i === 0, end: i === values.length - 1 }
         value.raw = sortClasses(value.raw, {
           env,
           ignoreFirst: i > 0 && !/^\s/.test(value.raw),
           ignoreLast: i < values.length - 1 && !/\s$/.test(value.raw),
           removeDuplicates: true,
-          collapseWhitespace: false,
+          collapseWhitespace,
         })
         value.data = same
           ? value.raw
@@ -967,17 +968,26 @@ function transformSvelte(ast: any, env: TransformerEnv) {
               ignoreFirst: i > 0 && !/^\s/.test(value.data),
               ignoreLast: i < values.length - 1 && !/\s$/.test(value.data),
               removeDuplicates: true,
-              collapseWhitespace: false,
+              collapseWhitespace,
             })
       } else if (value.type === 'MustacheTag' || value.type === 'ExpressionTag') {
+        let prev = values[i - 1]
+        let next = values[i + 1]
+        let atStart = !prev || (prev.type === 'Text' && /\s$/.test(prev.raw))
+        let atEnd = !next || (next.type === 'Text' && /^\s/.test(next.raw))
+
+        let collapseWhitespaceIn = (path: Path<any, any>) => {
+          let collapse = canCollapseWhitespaceIn(path, env)
+          return collapse && { start: collapse.start && atStart, end: collapse.end && atEnd }
+        }
+
         visit(value.expression, {
-          Literal(node) {
+          Literal(node, path) {
             if (isStringLiteral(node)) {
               let before = node.raw
               let sorted = sortStringLiteral(node, {
                 env,
-                removeDuplicates: false,
-                collapseWhitespace: false,
+                collapseWhitespace: collapseWhitespaceIn(path),
               })
 
               if (sorted) {
@@ -990,12 +1000,11 @@ function transformSvelte(ast: any, env: TransformerEnv) {
               }
             }
           },
-          TemplateLiteral(node) {
+          TemplateLiteral(node, path) {
             let before = node.quasis.map((quasi: any) => quasi.value.raw)
             let sorted = sortTemplateLiteral(node, {
               env,
-              removeDuplicates: false,
-              collapseWhitespace: false,
+              collapseWhitespace: collapseWhitespaceIn(path),
             })
 
             if (sorted) {
@@ -1220,6 +1229,50 @@ let svelte = defineTransform<SvelteNode>({
     }))
 
     options.originalText = spliceChangesIntoString(options.originalText, stringChanges)
+
+    // The Svelte printer slices `originalText` by node offsets, so every offset
+    // after an edit that changed length has to move with it
+    if (stringChanges.every((change) => change.after.length === change.end - change.start)) return
+
+    let ends: number[] = []
+    let deltas: number[] = []
+    let delta = 0
+
+    for (let change of stringChanges) {
+      delta += change.after.length - (change.end - change.start)
+      ends.push(change.end)
+      deltas.push(delta)
+    }
+
+    let shift = (offset: number) => {
+      let lo = 0
+      let hi = ends.length
+      while (lo < hi) {
+        let mid = (lo + hi) >>> 1
+        if (ends[mid] <= offset) lo = mid + 1
+        else hi = mid
+      }
+      return lo === 0 ? offset : offset + deltas[lo - 1]
+    }
+
+    let seen = new Set<object>()
+    let stack: Array<Record<string, unknown>> = [path.root]
+
+    while (stack.length) {
+      let node = stack.pop()!
+      if (seen.has(node)) continue
+      seen.add(node)
+
+      if (typeof node.start === 'number') node.start = shift(node.start)
+      if (typeof node.end === 'number') node.end = shift(node.end)
+
+      for (let key in node) {
+        let child = node[key]
+        if (key !== 'loc' && typeof child === 'object' && child !== null) {
+          stack.push(child as Record<string, unknown>)
+        }
+      }
+    }
   },
 })
 

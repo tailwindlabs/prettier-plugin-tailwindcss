@@ -525,6 +525,40 @@ import Custom from '../components/Custom.astro'
       ],
     },
   },
+
+  // Ensures that @trivago/prettier-plugin-sort-imports plugin also works
+  // when used together with the svelte plugin, sorting imports inside a
+  // Svelte file's `<script>` block.
+  {
+    plugins: ['@trivago/prettier-plugin-sort-imports', 'prettier-plugin-svelte'],
+    options: {
+      importOrder: ['^@one/(.*)$', '^@two/(.*)$', '^[./]'],
+      importOrderSortSpecifiers: true,
+    },
+    tests: {
+      svelte: [
+        [
+          dedent`
+            <script>
+              import './three'
+              import '@two/file'
+              import '@one/file'
+            </script>
+            <div class="sm:p-0 p-0"></div>
+          `,
+          dedent`
+            <script>
+              import '@one/file'
+              import '@two/file'
+              import './three'
+            </script>
+
+            <div class="p-0 sm:p-0"></div>
+          `,
+        ],
+      ],
+    },
+  },
 ]
 
 for (const group of tests) {

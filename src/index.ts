@@ -1193,6 +1193,10 @@ type SvelteNode = import('svelte/compiler').AST.SvelteNode & {
 
 let svelte = defineTransform<SvelteNode>({
   staticAttrs: ['class'],
+  // Enforce README's "Compatibility with other Prettier plugins" with Svelte
+  // Only `@trivago/prettier-plugin-sort-imports` implements Svelte support.
+  // The other accepted import-sorting plugins do not register a `svelte` parser.
+  compatible: ['@trivago/prettier-plugin-sort-imports'],
   load: [{ name: 'prettier-plugin-svelte', importer: () => import('prettier-plugin-svelte') }],
 
   parsers: {

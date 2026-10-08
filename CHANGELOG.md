@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Don't remove escape sequences when sorting classes in JavaScript string literals, which could produce invalid code in Vue attribute expressions ([#461](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/461))
 - Restore class sorting in Svelte markup and dynamic `class={...}` expressions when using `prettier-plugin-svelte` v4 ([#462](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/462))
+- Enable compatibility with `@trivago/prettier-plugin-sort-imports` when using `prettier-plugin-svelte` ([#466](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/466))
 
 ## [0.8.0] - 2026-04-27
 

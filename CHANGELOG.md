@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Restore class sorting in Astro templates when using `prettier-plugin-astro` v1 ([#473](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/473))
+
+## [0.8.1] - 2026-07-15
+
+### Fixed
+
 - Don't remove escape sequences when sorting classes in JavaScript string literals, which could produce invalid code in Vue attribute expressions ([#461](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/461))
 - Restore class sorting in Svelte markup and dynamic `class={...}` expressions when using `prettier-plugin-svelte` v4 ([#462](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/462))
 - Enable compatibility with `@trivago/prettier-plugin-sort-imports` when using `prettier-plugin-svelte` ([#466](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/466))
@@ -435,7 +441,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix error when using nullish coalescing operator in Vue/Angular ([#2](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/2))
 
-[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.8.0...HEAD
+[unreleased]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.3...v0.8.0
 [0.7.3]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/tailwindlabs/prettier-plugin-tailwindcss/compare/v0.7.1...v0.7.2

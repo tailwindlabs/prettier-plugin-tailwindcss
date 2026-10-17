@@ -520,7 +520,7 @@ function isSortableTemplateExpression(
 }
 
 function isSortableCallExpression(
-  node: import('@babel/types').CallExpression,
+  node: import('@babel/types').CallExpression | import('@babel/types').OptionalCallExpression,
   matcher: Matcher,
 ): boolean {
   if (!node.arguments?.length) return false
@@ -533,10 +533,15 @@ function isSortableExpression(
   matcher: Matcher,
 ): boolean {
   // Traverse property accesses and function calls to find the leading ident
-  while (node.type === 'CallExpression' || node.type === 'MemberExpression') {
-    if (node.type === 'CallExpression') {
+  while (
+    node.type === 'CallExpression' ||
+    node.type === 'OptionalCallExpression' ||
+    node.type === 'MemberExpression' ||
+    node.type === 'OptionalMemberExpression'
+  ) {
+    if (node.type === 'CallExpression' || node.type === 'OptionalCallExpression') {
       node = node.callee
-    } else if (node.type === 'MemberExpression') {
+    } else {
       node = node.object
     }
   }
@@ -650,6 +655,18 @@ function transformJavaScript(ast: import('@babel/types').Node, env: TransformerE
 
     CallExpression(node) {
       node = node as import('@babel/types').CallExpression
+
+      if (!isSortableCallExpression(node, matcher)) {
+        return
+      }
+
+      node.arguments.forEach((arg) => sortInside(arg))
+    },
+
+    // Babel represents calls inside an optional chain (e.g. `fn?.()`) as a
+    // separate node type rather than a `CallExpression` with `optional: true`
+    OptionalCallExpression(node) {
+      node = node as import('@babel/types').OptionalCallExpression
 
       if (!isSortableCallExpression(node, matcher)) {
         return

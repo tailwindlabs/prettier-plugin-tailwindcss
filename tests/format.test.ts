@@ -310,6 +310,24 @@ describe('regex matching', () => {
   })
 })
 
+describe('optional calls', () => {
+  for (let parser of ['babel', 'babel-ts', 'typescript', 'acorn']) {
+    test(`optional calls to sortable functions are sorted (${parser})`, async ({ expect }) => {
+      let result = await format(
+        `let a = clsx?.('sm:p-0 p-0')\nlet b = tw?.foo('sm:p-0 p-0')\nlet c = tw.foo?.('sm:p-0 p-0')`,
+        {
+          parser,
+          tailwindFunctions: ['clsx', 'tw'],
+        },
+      )
+
+      expect(result).toEqual(
+        `let a = clsx?.('p-0 sm:p-0')\nlet b = tw?.foo('p-0 sm:p-0')\nlet c = tw.foo?.('p-0 sm:p-0')`,
+      )
+    })
+  }
+})
+
 describe('escape sequences in JS string literals', () => {
   test('babel: JSX expression container with escaped quote in arbitrary variant', async ({
     expect,

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Restore class sorting in Astro templates when using `prettier-plugin-astro` v1 ([#473](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/473))
+- Restore import sorting in Vue files when using `@trivago/prettier-plugin-sort-imports` ([#484](https://github.com/tailwindlabs/prettier-plugin-tailwindcss/pull/484))
 
 ## [0.8.1] - 2026-07-15
 

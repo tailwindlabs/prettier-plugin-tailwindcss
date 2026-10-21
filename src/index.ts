@@ -1066,7 +1066,7 @@ let html = defineTransform<HtmlNode>({
   staticAttrs: ['class'],
 
   load: [{ name: 'prettier/plugins/html', importer: () => import('prettier/plugins/html') }],
-  compatible: ['prettier-plugin-organize-attributes'],
+  compatible: ['prettier-plugin-organize-attributes', '@trivago/prettier-plugin-sort-imports'],
 
   parsers: {
     html: {},

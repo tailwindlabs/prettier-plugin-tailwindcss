@@ -50,6 +50,7 @@
     "@shopify/prettier-plugin-liquid": "^1.10.0",
     "@trivago/prettier-plugin-sort-imports": "^6.0.0",
     "@types/node": "^24.3.0",
+    "@vue/compiler-sfc": "^3.5.44",
     "@zackad/prettier-plugin-twig": "^0.16.0",
     "clear-module": "^4.1.2",
     "dedent": "^1.6.0",

@@ -44,6 +44,25 @@ let tests: PluginTest[] = [
     },
   },
   {
+    plugins: ['@trivago/prettier-plugin-sort-imports'],
+    options: {
+      importOrder: ['^@one/(.*)$', '^@two/(.*)$', '^[./]'],
+      importOrderSortSpecifiers: true,
+
+      // Prettier picks a different `vue` parser when `filepath` is set, which
+      // is what the CLI and editor integrations do
+      filepath: 'test.vue',
+    },
+    tests: {
+      vue: [
+        [
+          `<script setup>\nimport './three'\nimport '@two/file'\nimport '@one/file'\n</script>\n\n<template><div class="sm:p-0 p-0"></div></template>`,
+          `<script setup>\nimport '@one/file'\nimport '@two/file'\nimport './three'\n</script>\n\n<template><div class="p-0 sm:p-0"></div></template>`,
+        ],
+      ],
+    },
+  },
+  {
     plugins: ['@ianvs/prettier-plugin-sort-imports'],
     options: {
       importOrder: ['^@tailwindcss/(.*)$', '^@babel/(.*)$', '^[./]'],

@@ -37,7 +37,7 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
 
   visit(directiveAst, {
     StringLiteral(node, path) {
-      if (!node.value) return
+      if (!node.value || isClassCondition(path)) return
 
       let collapseWhitespace = canCollapseWhitespaceIn(path, env)
 
@@ -53,7 +53,7 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
     },
 
     TemplateLiteral(node, path) {
-      if (!node.quasis.length) return
+      if (!node.quasis.length || isClassCondition(path)) return
 
       let collapseWhitespace = canCollapseWhitespaceIn(path, env)
 
@@ -128,6 +128,7 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
 
   visit(ast, {
     StringLiteral(node, path) {
+      if (isClassCondition(path)) return
       let concat = findConcatEntry(path)
       let sorted = sortStringLiteral(node, {
         env,
@@ -147,7 +148,7 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
     },
 
     Literal(node: any, path) {
-      if (!isStringLiteral(node)) return
+      if (!isStringLiteral(node) || isClassCondition(path)) return
 
       let concat = findConcatEntry(path)
       let sorted = sortStringLiteral(node, {
@@ -168,6 +169,7 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
     },
 
     TemplateLiteral(node, path) {
+      if (isClassCondition(path)) return
       let concat = findConcatEntry(path)
       let originalQuasis = node.quasis.map((quasi) => quasi.value.raw)
       let sorted = sortTemplateLiteral(node, {
@@ -189,6 +191,7 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
     },
 
     TaggedTemplateExpression(node, path) {
+      if (isClassCondition(path)) return
       if (!isSortableTemplateExpression(node, matcher)) {
         return
       }
@@ -280,7 +283,7 @@ function transformGlimmer(ast: any, env: TransformerEnv) {
     },
 
     StringLiteral(node, path, meta) {
-      if (!meta.sortTextNodes) {
+      if (!meta.sortTextNodes || isClassCondition(path)) {
         return
       }
 
@@ -548,6 +551,28 @@ function isSortableExpression(
   return false
 }
 
+function isClassCondition(
+  path: Path<{ type: string; operator?: string; path?: { original?: string } }, unknown>,
+) {
+  // Conditions consume exact input strings, not emitted class lists. Check the
+  // whole subtree; || and ?? can themselves return classes, unlike &&'s left side.
+  return path.some(({ parent, key, index }) => {
+    if (!parent) return false
+    if (parent.type === 'ConditionalExpression' && key === 'test') return true
+    if (parent.type === 'BinaryExpression' && parent.operator !== '+') return true
+    if (parent.type === 'LogicalExpression' && parent.operator === '&&' && key === 'left') {
+      return true
+    }
+
+    return (
+      (parent.type === 'MustacheStatement' || parent.type === 'SubExpression') &&
+      (parent.path?.original === 'if' || parent.path?.original === 'unless') &&
+      key === 'params' &&
+      index === 0
+    )
+  })
+}
+
 function canCollapseWhitespaceIn(
   path: Path<import('@babel/types').Node, any>,
   env: TransformerEnv,
@@ -607,6 +632,7 @@ function transformJavaScript(ast: import('@babel/types').Node, env: TransformerE
 
   function sortInside(ast: import('@babel/types').Node) {
     visit(ast, (node, path) => {
+      if (isClassCondition(path)) return false
       let collapseWhitespace = canCollapseWhitespaceIn(path, env)
 
       if (isStringLiteral(node)) {
@@ -622,7 +648,8 @@ function transformJavaScript(ast: import('@babel/types').Node, env: TransformerE
   }
 
   visit(ast, {
-    JSXAttribute(node) {
+    JSXAttribute(node, path) {
+      if (isClassCondition(path)) return false
       node = node as import('@babel/types').JSXAttribute
 
       if (!node.value) {
@@ -648,7 +675,8 @@ function transformJavaScript(ast: import('@babel/types').Node, env: TransformerE
       }
     },
 
-    CallExpression(node) {
+    CallExpression(node, path) {
+      if (isClassCondition(path)) return false
       node = node as import('@babel/types').CallExpression
 
       if (!isSortableCallExpression(node, matcher)) {
@@ -659,6 +687,7 @@ function transformJavaScript(ast: import('@babel/types').Node, env: TransformerE
     },
 
     TaggedTemplateExpression(node, path) {
+      if (isClassCondition(path)) return false
       node = node as import('@babel/types').TaggedTemplateExpression
 
       if (!isSortableTemplateExpression(node, matcher)) {
@@ -971,7 +1000,8 @@ function transformSvelte(ast: any, env: TransformerEnv) {
             })
       } else if (value.type === 'MustacheTag' || value.type === 'ExpressionTag') {
         visit(value.expression, {
-          Literal(node) {
+          Literal(node, path) {
+            if (isClassCondition(path)) return
             if (isStringLiteral(node)) {
               let before = node.raw
               let sorted = sortStringLiteral(node, {
@@ -990,7 +1020,8 @@ function transformSvelte(ast: any, env: TransformerEnv) {
               }
             }
           },
-          TemplateLiteral(node) {
+          TemplateLiteral(node, path) {
+            if (isClassCondition(path)) return
             let before = node.quasis.map((quasi: any) => quasi.value.raw)
             let sorted = sortTemplateLiteral(node, {
               env,

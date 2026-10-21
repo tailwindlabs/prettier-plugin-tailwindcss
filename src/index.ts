@@ -1,3 +1,4 @@
+import type { Node as JavaScriptNode } from '@babel/types'
 // @ts-ignore
 import type * as Liquid from '@shopify/prettier-plugin-liquid/dist/types.js'
 // @ts-ignore
@@ -34,10 +35,13 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
   }
 
   let changes: StringChange[] = []
+  let preserveObjectKey = createObjectKeyGuard((key, path) =>
+    sortClasses(key.value, { env, collapseWhitespace: canCollapseWhitespaceIn(path, env) }),
+  )
 
   visit(directiveAst, {
     StringLiteral(node, path) {
-      if (!node.value) return
+      if (!node.value || preserveObjectKey(path)) return
 
       let collapseWhitespace = canCollapseWhitespaceIn(path, env)
 
@@ -53,7 +57,7 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
     },
 
     TemplateLiteral(node, path) {
-      if (!node.quasis.length) return
+      if (!node.quasis.length || preserveObjectKey(path)) return
 
       let collapseWhitespace = canCollapseWhitespaceIn(path, env)
 
@@ -105,6 +109,17 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
     )
   }
 
+  let preserveObjectKey = createObjectKeyGuard((key, path) => {
+    let concat = findConcatEntry(path)
+    return normalizedObjectKey(key, {
+      env,
+      collapseWhitespace: {
+        start: concat?.key !== 'right',
+        end: concat?.key !== 'left',
+      },
+    })
+  })
+
   function addChange(
     start: number | null | undefined,
     end: number | null | undefined,
@@ -128,6 +143,7 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
 
   visit(ast, {
     StringLiteral(node, path) {
+      if (preserveObjectKey(path)) return
       let concat = findConcatEntry(path)
       let sorted = sortStringLiteral(node, {
         env,
@@ -147,7 +163,7 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
     },
 
     Literal(node: any, path) {
-      if (!isStringLiteral(node)) return
+      if (!isStringLiteral(node) || preserveObjectKey(path)) return
 
       let concat = findConcatEntry(path)
       let sorted = sortStringLiteral(node, {
@@ -168,6 +184,7 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
     },
 
     TemplateLiteral(node, path) {
+      if (preserveObjectKey(path)) return
       let concat = findConcatEntry(path)
       let originalQuasis = node.quasis.map((quasi) => quasi.value.raw)
       let sorted = sortTemplateLiteral(node, {
@@ -189,6 +206,7 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
     },
 
     TaggedTemplateExpression(node, path) {
+      if (preserveObjectKey(path)) return
       if (!isSortableTemplateExpression(node, matcher)) {
         return
       }
@@ -449,9 +467,11 @@ function sortStringLiteral(
   return true
 }
 
-function isStringLiteral(node: any) {
+function isStringLiteral<T extends { type: string; value?: unknown }>(
+  node: T,
+): node is T & { value: string } {
   return (
-    node.type === 'StringLiteral' || (node.type === 'Literal' && typeof node.value === 'string')
+    (node.type === 'StringLiteral' || node.type === 'Literal') && typeof node.value === 'string'
   )
 }
 
@@ -548,6 +568,128 @@ function isSortableExpression(
   return false
 }
 
+interface ClassObjectKey {
+  type: string
+  name?: unknown
+  value?: unknown
+  raw?: string
+  extra?: { raw?: string; rawValue?: unknown }
+  properties?: ClassObjectProperty[]
+}
+
+interface ClassObjectProperty {
+  type: string
+  computed?: boolean
+  key?: ClassObjectKey
+}
+
+function normalizedObjectKey(
+  key: ClassObjectKey & { value: string },
+  options: Parameters<typeof sortStringLiteral>[1],
+) {
+  let candidate = { ...key }
+  if (!sortStringLiteral(candidate, options)) return key.value
+
+  let raw = candidate.extra?.raw ?? candidate.raw
+  if (typeof raw !== 'string') throw new TypeError('Expected raw source for a class-object key')
+  if (raw.slice(1, -1) === candidate.value) return candidate.value
+
+  // The printer emits raw source; independently sorted cooked metadata can
+  // describe a different key when an escape represents class whitespace.
+  let parsed = prettierParserBabel.parsers.babel.parse(`(${raw})`, options.env.options)
+  return parsed.program.body[0].expression.value
+}
+
+function createObjectKeyGuard(
+  normalize: (
+    key: ClassObjectKey & { value: string },
+    path: Path<JavaScriptNode, unknown>,
+  ) => string,
+) {
+  let plans = new WeakMap<object, Set<ClassObjectKey>>()
+
+  function plan(properties: ClassObjectProperty[], path: Path<JavaScriptNode, unknown>) {
+    let entries: { key: ClassObjectKey; before: string; after: string }[] = []
+    for (let property of properties) {
+      let key = property.key
+      if (
+        !['ObjectProperty', 'ObjectMethod', 'Property'].includes(property.type) ||
+        property.computed ||
+        !key ||
+        (key.type === 'Identifier' && typeof key.name !== 'string') ||
+        (key.type !== 'Identifier' &&
+          !isStringLiteral(key) &&
+          typeof key.value !== 'number' &&
+          typeof key.value !== 'bigint' &&
+          key.type !== 'BigIntLiteral')
+      ) {
+        // Treat spread/computed forms conservatively without evaluating expressions.
+        return new Set(properties.flatMap(({ key }) => (key ? [key] : [])))
+      }
+
+      let before =
+        typeof key.name === 'string' && key.type === 'Identifier' ? key.name : String(key.value)
+      entries.push({ key, before, after: isStringLiteral(key) ? normalize(key, path) : before })
+    }
+
+    // Existing duplicates may move together, but merging or splitting identities
+    // would change which property's condition wins at runtime.
+    let beforeToAfter = new Map<string, Set<string>>()
+    let afterToBefore = new Map<string, Set<string>>()
+    for (let { before, after } of entries) {
+      let afters = beforeToAfter.get(before) ?? new Set<string>()
+      afters.add(after)
+      beforeToAfter.set(before, afters)
+      let befores = afterToBefore.get(after) ?? new Set<string>()
+      befores.add(before)
+      afterToBefore.set(after, befores)
+    }
+
+    let preserved = new Set<ClassObjectKey>()
+    for (let { key, before, after } of entries) {
+      if (
+        beforeToAfter.get(before)!.size > 1 ||
+        afterToBefore.get(after)!.size > 1 ||
+        (after !== before && beforeToAfter.has(after)) ||
+        (after === '__proto__' && after !== before)
+      ) {
+        preserved.add(key)
+      }
+    }
+    return preserved
+  }
+
+  return (path: Path<JavaScriptNode, unknown>) => {
+    for (let i = 0; i < path.length; i++) {
+      let entry = path[i]
+      if (entry.key !== 'key') continue
+      let object = path[i + 1]?.parent
+      if (object?.type !== 'ObjectExpression' || !object.properties) continue
+
+      // Keys supplied through an object spread can collide with its outer
+      // siblings even when the nested object has no local collision.
+      for (let j = i + 1; j < path.length; j++) {
+        if (
+          path[j].parent?.type === 'SpreadElement' &&
+          path[j].key === 'argument' &&
+          path[j + 1]?.parent?.type === 'ObjectExpression'
+        ) {
+          return true
+        }
+      }
+
+      let preserved = plans.get(object)
+      if (!preserved) {
+        // Plan all siblings before the first mutation; later visits only read it.
+        preserved = plan(object.properties, path)
+        plans.set(object, preserved)
+      }
+      if (preserved.has(entry.node)) return true
+    }
+    return false
+  }
+}
+
 function canCollapseWhitespaceIn(
   path: Path<import('@babel/types').Node, any>,
   env: TransformerEnv,
@@ -604,10 +746,17 @@ function canCollapseWhitespaceIn(
 // good enough. The actual AST we should be using is probably estree + ts.
 function transformJavaScript(ast: import('@babel/types').Node, env: TransformerEnv) {
   let { matcher } = env
+  let preserveObjectKey = createObjectKeyGuard((key, path) =>
+    normalizedObjectKey(key, { env, collapseWhitespace: canCollapseWhitespaceIn(path, env) }),
+  )
 
-  function sortInside(ast: import('@babel/types').Node) {
+  function sortInside(ast: JavaScriptNode, outerPath: Path<JavaScriptNode, unknown>) {
     visit(ast, (node, path) => {
-      let collapseWhitespace = canCollapseWhitespaceIn(path, env)
+      let fullPath = [...path, ...outerPath]
+      if (preserveObjectKey(fullPath)) return false
+      // Keys need stable context across reentries without changing other strings' trim policy.
+      let isObjectKey = path[0].key === 'key' && path[1]?.parent?.type === 'ObjectExpression'
+      let collapseWhitespace = canCollapseWhitespaceIn(isObjectKey ? fullPath : path, env)
 
       if (isStringLiteral(node)) {
         sortStringLiteral(node, { env, collapseWhitespace })
@@ -622,7 +771,8 @@ function transformJavaScript(ast: import('@babel/types').Node, env: TransformerE
   }
 
   visit(ast, {
-    JSXAttribute(node) {
+    JSXAttribute(node, path) {
+      if (preserveObjectKey(path)) return false
       node = node as import('@babel/types').JSXAttribute
 
       if (!node.value) {
@@ -643,22 +793,24 @@ function transformJavaScript(ast: import('@babel/types').Node, env: TransformerE
       } else if (node.value.type === 'JSXExpressionContainer') {
         // Dynamic attrs (e.g. Astro's `class:list`) only carry expressions, never plain strings
         if (matcher.hasStaticAttr(name) || matcher.hasDynamicAttr(name)) {
-          sortInside(node.value)
+          sortInside(node.value, path)
         }
       }
     },
 
-    CallExpression(node) {
+    CallExpression(node, path) {
+      if (preserveObjectKey(path)) return false
       node = node as import('@babel/types').CallExpression
 
       if (!isSortableCallExpression(node, matcher)) {
         return
       }
 
-      node.arguments.forEach((arg) => sortInside(arg))
+      node.arguments.forEach((arg) => sortInside(arg, path))
     },
 
     TaggedTemplateExpression(node, path) {
+      if (preserveObjectKey(path)) return false
       node = node as import('@babel/types').TaggedTemplateExpression
 
       if (!isSortableTemplateExpression(node, matcher)) {
@@ -941,6 +1093,9 @@ function transformPug(ast: any, env: TransformerEnv) {
 
 function transformSvelte(ast: any, env: TransformerEnv) {
   let { matcher, changes } = env
+  let preserveObjectKey = createObjectKeyGuard((key) =>
+    normalizedObjectKey(key, { env, removeDuplicates: false, collapseWhitespace: false }),
+  )
 
   for (let attr of ast.attributes ?? []) {
     if (!matcher.hasStaticAttr(attr.name) || attr.type !== 'Attribute') {
@@ -971,7 +1126,8 @@ function transformSvelte(ast: any, env: TransformerEnv) {
             })
       } else if (value.type === 'MustacheTag' || value.type === 'ExpressionTag') {
         visit(value.expression, {
-          Literal(node) {
+          Literal(node, path) {
+            if (preserveObjectKey(path)) return
             if (isStringLiteral(node)) {
               let before = node.raw
               let sorted = sortStringLiteral(node, {
@@ -990,7 +1146,8 @@ function transformSvelte(ast: any, env: TransformerEnv) {
               }
             }
           },
-          TemplateLiteral(node) {
+          TemplateLiteral(node, path) {
+            if (preserveObjectKey(path)) return
             let before = node.quasis.map((quasi: any) => quasi.value.raw)
             let sorted = sortTemplateLiteral(node, {
               env,

@@ -40,15 +40,23 @@ function transformDynamicAngularAttribute(attr: any, env: TransformerEnv) {
       if (!node.value) return
 
       let collapseWhitespace = canCollapseWhitespaceIn(path, env)
+      let quote = attr.value[node.start]
+      let sorted = sortClasses(node.value, { env, collapseWhitespace })
+
+      // Angular supplies cooked values, but these replacements target raw source.
+      // Unicode control escapes avoid relying on JavaScript-only escape forms.
+      let after = sorted
+        // oxlint-disable-next-line no-control-regex -- Raw string output must encode control characters.
+        .replace(/[\\\u0000-\u001f]/g, (char) =>
+          char === '\\' ? '\\\\' : `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`,
+        )
+        .replaceAll(quote, `\\${quote}`)
 
       changes.push({
         start: node.start + 1,
         end: node.end - 1,
-        before: node.value,
-        after: sortClasses(node.value, {
-          env,
-          collapseWhitespace,
-        }),
+        before: attr.value.slice(node.start + 1, node.end - 1),
+        after,
       })
     },
 

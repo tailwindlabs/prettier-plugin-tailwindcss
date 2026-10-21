@@ -10,10 +10,7 @@ import { cacheForDirs } from './utils.js'
 
 let prettierConfigCache = expiringMap<string, string | null>(10_000)
 
-async function resolvePrettierConfigDir(
-  filePath: string,
-  inputDir: string,
-): Promise<string> {
+async function resolvePrettierConfigDir(filePath: string, inputDir: string): Promise<string> {
   // Check cache for this directory
   let cached = prettierConfigCache.get(inputDir)
   if (cached !== undefined) {

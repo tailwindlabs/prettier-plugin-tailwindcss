@@ -99,12 +99,6 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
   let didChange = false
   let changes: StringChange[] = []
 
-  function findConcatEntry(path: Path<any, any>) {
-    return path.find(
-      (entry) => entry.parent?.type === 'BinaryExpression' && entry.parent.operator === '+',
-    )
-  }
-
   function addChange(
     start: number | null | undefined,
     end: number | null | undefined,
@@ -128,13 +122,10 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
 
   visit(ast, {
     StringLiteral(node, path) {
-      let concat = findConcatEntry(path)
+      let collapseWhitespace = canCollapseWhitespaceIn(path, env)
       let sorted = sortStringLiteral(node, {
         env,
-        collapseWhitespace: {
-          start: concat?.key !== 'right',
-          end: concat?.key !== 'left',
-        },
+        collapseWhitespace,
       })
 
       if (sorted) {
@@ -149,13 +140,10 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
     Literal(node: any, path) {
       if (!isStringLiteral(node)) return
 
-      let concat = findConcatEntry(path)
+      let collapseWhitespace = canCollapseWhitespaceIn(path, env)
       let sorted = sortStringLiteral(node, {
         env,
-        collapseWhitespace: {
-          start: concat?.key !== 'right',
-          end: concat?.key !== 'left',
-        },
+        collapseWhitespace,
       })
 
       if (sorted) {
@@ -168,14 +156,11 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
     },
 
     TemplateLiteral(node, path) {
-      let concat = findConcatEntry(path)
+      let collapseWhitespace = canCollapseWhitespaceIn(path, env)
       let originalQuasis = node.quasis.map((quasi) => quasi.value.raw)
       let sorted = sortTemplateLiteral(node, {
         env,
-        collapseWhitespace: {
-          start: concat?.key !== 'right',
-          end: concat?.key !== 'left',
-        },
+        collapseWhitespace,
       })
 
       if (sorted) {
@@ -193,14 +178,11 @@ function transformDynamicJsAttribute(attr: any, env: TransformerEnv) {
         return
       }
 
-      let concat = findConcatEntry(path)
+      let collapseWhitespace = canCollapseWhitespaceIn(path, env)
       let originalQuasis = node.quasi.quasis.map((quasi) => quasi.value.raw)
       let sorted = sortTemplateLiteral(node.quasi, {
         env,
-        collapseWhitespace: {
-          start: concat?.key !== 'right',
-          end: concat?.key !== 'left',
-        },
+        collapseWhitespace,
       })
 
       if (sorted) {

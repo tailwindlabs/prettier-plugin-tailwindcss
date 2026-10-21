@@ -163,7 +163,7 @@ let vue: TestEntry[] = [
   [`<div :class="' flex ' + ' underline '"></div>`, `<div :class="'flex ' + ' underline'"></div>`],
   [
     `<div :class="' sm:p-5 ' + ' flex ' + ' underline ' + ' sm:m-5 '"></div>`,
-    `<div :class="'sm:p-5 ' + ' flex' + ' underline' + ' sm:m-5'"></div>`,
+    `<div :class="'sm:p-5 ' + ' flex ' + ' underline ' + ' sm:m-5'"></div>`,
   ],
 
   [

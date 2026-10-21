@@ -284,20 +284,54 @@ function transformGlimmer(ast: any, env: TransformerEnv) {
         return
       }
 
-      let concat = path.find((entry) => {
-        return (
-          entry.parent &&
-          entry.parent.type === 'SubExpression' &&
-          entry.parent.path.original === 'concat'
-        )
-      })
+      let hasBefore = false
+      let hasAfter = false
+      let startSeparated = false
+      let endSeparated = false
+      let inConcat = false
+
+      // A known separator closes that edge before an outer composition can
+      // attach to it, but cannot undo a partial token already found inside.
+      for (let entry of path) {
+        let parent = entry.parent
+        let parts
+        if (parent?.type === 'ConcatStatement' && entry.key === 'parts') {
+          parts = parent.parts
+        } else if (
+          (parent?.type === 'MustacheStatement' || parent?.type === 'SubExpression') &&
+          parent.path.original === 'concat' &&
+          entry.key === 'params'
+        ) {
+          parts = parent.params
+          inConcat = true
+        } else {
+          continue
+        }
+
+        let prev = parts[entry.index! - 1]
+        let next = parts[entry.index! + 1]
+        let prevText =
+          prev?.type === 'TextNode' ? prev.chars : prev?.type === 'StringLiteral' ? prev.value : ''
+        let nextText =
+          next?.type === 'TextNode' ? next.chars : next?.type === 'StringLiteral' ? next.value : ''
+
+        if (!startSeparated && prev) {
+          startSeparated = /[\t\r\f\n ]$/.test(prevText)
+          hasBefore ||= !startSeparated
+        }
+        if (!endSeparated && next) {
+          endSeparated = /^[\t\r\f\n ]/.test(nextText)
+          hasAfter ||= !endSeparated
+        }
+      }
 
       node.value = sortClasses(node.value, {
         env,
-        ignoreLast: Boolean(concat) && !/[^\S\r\n]$/.test(node.value),
+        ignoreFirst: hasBefore && !/^[\t\r\f\n ]/.test(node.value),
+        ignoreLast: hasAfter && !/[\t\r\f\n ]$/.test(node.value),
         collapseWhitespace: {
           start: false,
-          end: !concat,
+          end: !inConcat && !hasAfter,
         },
       })
     },

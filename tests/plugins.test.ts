@@ -406,9 +406,10 @@ import Custom from '../components/Custom.astro'
         t`<div class="{someVar} ${yes}" />`,
         t`<div class="${yes} {someVar} ${yes}" />`,
         t`<div class={'${yes}'} />`,
-        t`<div class={'${yes}' + '${yes}'} />`,
+        // Adjacent operands share a partial token, so their boundary tokens stay attached.
+        t`<div class={'${no}' + '${no}'} />`,
         t`<div class={\`${yes}\`} />`,
-        t`<div class={\`${yes} \${'${yes}' + \`${yes}\`} ${yes}\`} />`,
+        t`<div class={\`${yes} \${'${no}' + \`${no}\`} ${yes}\`} />`,
         t`<div class={\`${no}\${someVar}${no}\`} />`,
         [
           `<Component class={cn('bottom-0 sticky transition-all justify-end', { 'bg-red-500': active })} />`,

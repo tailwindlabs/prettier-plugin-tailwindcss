@@ -407,10 +407,14 @@ function sortStringLiteral(
   {
     env,
     removeDuplicates,
+    ignoreFirst,
+    ignoreLast,
     collapseWhitespace = { start: true, end: true },
   }: {
     env: TransformerEnv
     removeDuplicates?: false
+    ignoreFirst?: boolean
+    ignoreLast?: boolean
     collapseWhitespace?: false | { start: boolean; end: boolean }
   },
 ) {
@@ -428,7 +432,13 @@ function sortStringLiteral(
   let quote = raw[0]
   let rawContent = raw.slice(1, -1)
 
-  let sortedRaw = sortClasses(rawContent, { env, removeDuplicates, collapseWhitespace })
+  let sortedRaw = sortClasses(rawContent, {
+    env,
+    removeDuplicates,
+    collapseWhitespace,
+    ignoreFirst: ignoreFirst && !/^[\t\r\f\n ]/.test(rawContent),
+    ignoreLast: ignoreLast && !/[\t\r\f\n ]$/.test(rawContent),
+  })
   if (sortedRaw === rawContent) return false
 
   // Reuse the raw sort when raw and cooked are byte-identical (no escapes).
@@ -436,7 +446,13 @@ function sortStringLiteral(
   let sortedCooked =
     rawContent === node.value
       ? sortedRaw
-      : sortClasses(node.value, { env, removeDuplicates, collapseWhitespace })
+      : sortClasses(node.value, {
+          env,
+          removeDuplicates,
+          collapseWhitespace,
+          ignoreFirst: ignoreFirst && !/^[\t\r\f\n ]/.test(node.value),
+          ignoreLast: ignoreLast && !/[\t\r\f\n ]$/.test(node.value),
+        })
   node.value = sortedCooked
 
   let newRaw = quote + sortedRaw + quote
@@ -460,10 +476,14 @@ function sortTemplateLiteral(
   {
     env,
     removeDuplicates,
+    ignoreFirst,
+    ignoreLast,
     collapseWhitespace = { start: true, end: true },
   }: {
     env: TransformerEnv
     removeDuplicates?: false
+    ignoreFirst?: boolean
+    ignoreLast?: boolean
     collapseWhitespace?: false | { start: boolean; end: boolean }
   },
 ) {
@@ -478,12 +498,9 @@ function sortTemplateLiteral(
     quasi.value.raw = sortClasses(quasi.value.raw, {
       env,
       removeDuplicates,
-      // Is not the first "item" and does not start with a space
-      ignoreFirst: i > 0 && !/^\s/.test(quasi.value.raw),
-
-      // Is between two expressions
-      // And does not end with a space
-      ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.raw),
+      // Interpolations and enclosing concatenations can attach to either edge.
+      ignoreFirst: (ignoreFirst || i > 0) && !/^\s/.test(quasi.value.raw),
+      ignoreLast: (ignoreLast || i < node.expressions.length) && !/\s$/.test(quasi.value.raw),
 
       collapseWhitespace: collapseWhitespace && {
         start: collapseWhitespace && collapseWhitespace.start && i === 0,
@@ -495,8 +512,9 @@ function sortTemplateLiteral(
       ? quasi.value.raw
       : sortClasses(quasi.value.cooked, {
           env,
-          ignoreFirst: i > 0 && !/^\s/.test(quasi.value.cooked),
-          ignoreLast: i < node.expressions.length && !/\s$/.test(quasi.value.cooked),
+          ignoreFirst: (ignoreFirst || i > 0) && !/^\s/.test(quasi.value.cooked),
+          ignoreLast:
+            (ignoreLast || i < node.expressions.length) && !/\s$/.test(quasi.value.cooked),
           removeDuplicates,
           collapseWhitespace: collapseWhitespace && {
             start: collapseWhitespace && collapseWhitespace.start && i === 0,
@@ -942,6 +960,20 @@ function transformPug(ast: any, env: TransformerEnv) {
 function transformSvelte(ast: any, env: TransformerEnv) {
   let { matcher, changes } = env
 
+  function concatenationEdges(path: Path<{ type: string; operator?: string }, unknown>) {
+    let ignoreFirst = false
+    let ignoreLast = false
+
+    // An outer concatenation can attach through an intervening conditional.
+    for (let entry of path) {
+      if (entry.parent?.type !== 'BinaryExpression' || entry.parent.operator !== '+') continue
+      ignoreFirst ||= entry.key === 'right'
+      ignoreLast ||= entry.key === 'left'
+    }
+
+    return { ignoreFirst, ignoreLast }
+  }
+
   for (let attr of ast.attributes ?? []) {
     if (!matcher.hasStaticAttr(attr.name) || attr.type !== 'Attribute') {
       continue
@@ -971,11 +1003,12 @@ function transformSvelte(ast: any, env: TransformerEnv) {
             })
       } else if (value.type === 'MustacheTag' || value.type === 'ExpressionTag') {
         visit(value.expression, {
-          Literal(node) {
+          Literal(node, path) {
             if (isStringLiteral(node)) {
               let before = node.raw
               let sorted = sortStringLiteral(node, {
                 env,
+                ...concatenationEdges(path),
                 removeDuplicates: false,
                 collapseWhitespace: false,
               })
@@ -990,10 +1023,11 @@ function transformSvelte(ast: any, env: TransformerEnv) {
               }
             }
           },
-          TemplateLiteral(node) {
+          TemplateLiteral(node, path) {
             let before = node.quasis.map((quasi: any) => quasi.value.raw)
             let sorted = sortTemplateLiteral(node, {
               env,
+              ...concatenationEdges(path),
               removeDuplicates: false,
               collapseWhitespace: false,
             })
